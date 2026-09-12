@@ -2,7 +2,7 @@
 
 ParsiNegar Desktop is a standalone Qt 6 application for preparing Persian and other supported right-to-left text for software with incomplete shaping or bidirectional-text support. It is a separate product from the Omarchy ParsiNegar Express plugin and will not require Python, Node.js, npm, Omarchy, or Quickshell on an end user's computer.
 
-The current scaffold opens a minimal resizable window, embeds the pinned JavaScript dependencies, and loads the bundled Vazirmatn font. Conversion and the full desktop interface are added in later implementation steps.
+The current scaffold opens a minimal resizable window, embeds the pinned JavaScript dependencies and conversion core, and loads the bundled Vazirmatn font. A native Qt test harness executes the complete conversion fixture matrix through `QJSEngine`; the interactive conversion interface is added in a later implementation step.
 
 ## Development requirements
 
@@ -57,7 +57,7 @@ Replace the example prefix with the installed Qt version and compiler kit. For a
 
 ## Smoke check
 
-The `resource_smoke` CTest starts the real application with an offscreen Qt platform, verifies the embedded JavaScript files exist, waits for the bundled Vazirmatn font to load, and exits. The `license_inventory` CTest requires every vendored artifact and its associated notices.
+The `resource_smoke` CTest starts the real application with an offscreen Qt platform, verifies the embedded JavaScript files exist, waits for the bundled Vazirmatn font to load, and exits. The `license_inventory` CTest requires every vendored artifact and its associated notices. The `conversion_core` CTest loads the embedded production scripts in `QJSEngine` and verifies conversions, profiles, settings, mappings, and resource limits without Node.js.
 
 ## Repository boundaries
 

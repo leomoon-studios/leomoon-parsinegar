@@ -15,7 +15,9 @@ The complete supplied notices and library documentation are retained below `vend
 
 ## Application behavior reference
 
-The future conversion core is pinned to LeoMoon Studios' ParsiNegar commit `09745df108c4f809575c6788d899bf867cd32c31`. Its rules and fixtures currently live in the independent `omarchy-parsinegar-express` repository and will be copied with their provenance when the conversion-core implementation step begins.
+The conversion core is pinned to LeoMoon Studios' ParsiNegar commit `09745df108c4f809575c6788d899bf867cd32c31`. `qml/core/ParsiNegar.js`, `ReshaperSettings.js`, `InterfaceStrings.js`, and `ResourceLimits.js` are byte-for-byte copies of the tested host-independent files from Omarchy ParsiNegar Express. `tests/fixtures/ParsiNegarFixtures.js` preserves the plugin's 213 ordered Maryam pairs, 42 hand-derived conversion cases, rule-stage fixtures, and original 69-line editor corpus.
+
+The native `tests/core_tests.cpp` harness loads the embedded production scripts, the unchanged JsBidi and JsParsiReshaper builds, and the fixture oracle through `QJSEngine`. `tests/CoreTests.js` contains the runtime-neutral assertions ported from the plugin's Node.js conversion, settings, and resource-limit suites.
 
 ## Update procedure
 

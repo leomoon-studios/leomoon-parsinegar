@@ -20,6 +20,10 @@ bool verifyEmbeddedResources()
         ":/qt/qml/LeoMoon/ParsiNegar/vendor/js-bidi.js",
         ":/qt/qml/LeoMoon/ParsiNegar/vendor/js-parsi-reshaper.js",
         ":/qt/qml/LeoMoon/ParsiNegar/vendor/typr.js",
+        ":/qt/qml/LeoMoon/ParsiNegar/qml/core/InterfaceStrings.js",
+        ":/qt/qml/LeoMoon/ParsiNegar/qml/core/ParsiNegar.js",
+        ":/qt/qml/LeoMoon/ParsiNegar/qml/core/ReshaperSettings.js",
+        ":/qt/qml/LeoMoon/ParsiNegar/qml/core/ResourceLimits.js",
     };
 
     for (const auto *resource : resources) {

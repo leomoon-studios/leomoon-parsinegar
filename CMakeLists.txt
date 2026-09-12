@@ -42,6 +42,10 @@ qt_add_qml_module(parsinegar_desktop
         vendor/js-bidi.js
         vendor/js-parsi-reshaper.js
         vendor/typr.js
+        qml/core/InterfaceStrings.js
+        qml/core/ParsiNegar.js
+        qml/core/ReshaperSettings.js
+        qml/core/ResourceLimits.js
 )
 
 target_link_libraries(parsinegar_desktop PRIVATE
@@ -80,5 +84,33 @@ if(BUILD_TESTING)
     set_tests_properties(resource_smoke PROPERTIES
         ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QPA_PLATFORMTHEME=;QT_QUICK_BACKEND=software"
         TIMEOUT 10
+    )
+
+    qt_add_executable(parsinegar_core_tests
+        tests/core_tests.cpp
+    )
+
+    target_link_libraries(parsinegar_core_tests PRIVATE
+        Qt6::Core
+        Qt6::Qml
+        Qt6::Test
+    )
+
+    qt_add_resources(parsinegar_core_tests core_test_resources
+        PREFIX /
+        FILES
+            vendor/js-bidi.js
+            vendor/js-parsi-reshaper.js
+            qml/core/InterfaceStrings.js
+            qml/core/ParsiNegar.js
+            qml/core/ReshaperSettings.js
+            qml/core/ResourceLimits.js
+            tests/fixtures/ParsiNegarFixtures.js
+            tests/CoreTests.js
+    )
+
+    add_test(
+        NAME conversion_core
+        COMMAND parsinegar_core_tests
     )
 endif()
