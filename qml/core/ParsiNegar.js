@@ -354,7 +354,7 @@ var ParsiNegar = (function () {
   function reorderParagraphs(text, bidiApi) {
     var parts = text.split(/(\r\n|[\r\n\u2029])/);
     for (var index = 0; index < parts.length; index += 2) {
-      parts[index] = requireText(bidiApi.getDisplay(parts[index]));
+      if (parts[index] !== "") parts[index] = requireText(bidiApi.getDisplay(parts[index]));
     }
     return parts.join("");
   }

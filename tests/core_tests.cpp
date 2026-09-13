@@ -44,7 +44,7 @@ void CoreTests::productionCoreSuite()
     QVERIFY(passed.isNumber());
     QVERIFY(total.isNumber());
     QCOMPARE(passed.toInt(), total.toInt());
-    QCOMPARE(total.toInt(), 592);
+    QCOMPARE(total.toInt(), 593);
 }
 
 QTEST_GUILESS_MAIN(CoreTests)

@@ -137,6 +137,24 @@ var CoreTestResults;
         jsonEqual(calls, ["one", "two", "three", "four"]);
     });
 
+    test("automatic paragraph ordering skips empty paragraphs", function () {
+        var calls = [];
+        var ordering = {
+            getDisplay: function (text) {
+                calls.push(text);
+                return "[" + text + "]";
+            }
+        };
+        var shaper = { reshape: function (text) { return text; } };
+        equal(
+            core.convert("one\n\nthree\n", "unicode", {
+                reverseWords: true,
+                autoParagraphDirection: true
+            }, ordering, shaper),
+            "[one]\n\n[three]\n");
+        jsonEqual(calls, ["one", "three"]);
+    });
+
     test("frozen conversion options remain unchanged", function () {
         var ligatures = Object.freeze({ "RIAL SIGN": true, "ARABIC LIGATURE ALLAH": false });
         var reshaperOptions = Object.freeze({

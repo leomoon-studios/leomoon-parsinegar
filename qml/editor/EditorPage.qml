@@ -10,6 +10,7 @@ FocusScope {
     required property var controller
     required property Typography typography
     property var textDirectionService: null
+    property bool syncingEditor: false
     readonly property alias editorItem: editor
     readonly property alias editorScroll: editorScroll
 
@@ -31,10 +32,21 @@ FocusScope {
 
     function syncEditorFromController() {
         if (textDirectionService !== null) {
-            if (textDirectionService.plainText(editor.textDocument) !== controller.sourceText)
-                textDirectionService.setPlainText(editor.textDocument, controller.sourceText)
+            if (textDirectionService.plainText(editor.textDocument) !== controller.sourceText) {
+                syncingEditor = true
+                try {
+                    textDirectionService.setPlainText(editor.textDocument, controller.sourceText)
+                } finally {
+                    syncingEditor = false
+                }
+            }
         } else if (editor.text !== controller.sourceText) {
-            editor.text = controller.sourceText
+            syncingEditor = true
+            try {
+                editor.text = controller.sourceText
+            } finally {
+                syncingEditor = false
+            }
         }
     }
 
@@ -109,7 +121,8 @@ FocusScope {
                                 : text
                             if (root.controller.sourceText !== source)
                                 root.controller.sourceText = source
-                            root.updateParagraphDirections()
+                            if (!root.syncingEditor)
+                                root.updateParagraphDirections()
                         }
                         font.family: AppTheme.fontFamily
                         font.pixelSize: AppTheme.fontBody

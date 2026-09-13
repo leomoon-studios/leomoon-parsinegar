@@ -6,8 +6,7 @@ var InterfaceStrings = (function () {
   var values = {
     en: {
       "app.title": "ParsiNegar Desktop", "app.subtitle": "Text tools for Persian, Arabic, Urdu, Kurdish, and Hebrew.", "theme.light": "Light theme", "theme.dark": "Dark theme",
-      "editor.title": "ParsiNegar Express",
-      "editor.subtitle": "Shape text for applications that need presentation forms or cannot provide native right-to-left support.", "editor.source": "Source text", "editor.characterCount": "%1 of %2 characters",
+      "editor.source": "Source text", "editor.characterCount": "%1 of %2 characters",
       "toggle.reverse": "Apply bidi visual ordering", "toggle.reverseDescription": "For applications that do not handle right-to-left layout",
       "toggle.video": "Special convert for VideoStudio Pro", "toggle.videoDescription": "Available in Compatibility mode",
       "placeholder": "Enter your text…", "mode.unicode": "Unicode mode", "mode.compatibility": "Compatibility mode",
@@ -46,8 +45,7 @@ var InterfaceStrings = (function () {
     },
     fa: {
       "app.title": "پارسی‌نگار دسکتاپ", "app.subtitle": "ابزارهای متن پارسی، عربی، اردو، کردی و عبری", "theme.light": "پوستهٔ روشن", "theme.dark": "پوستهٔ تیره",
-      "editor.title": "پارسی‌نگار اکسپرس",
-      "editor.subtitle": "متن را برای برنامه‌هایی شکل دهید که از فرم‌های نمایشی یا چیدمان راست‌به‌چپ پشتیبانی نمی‌کنند.", "editor.source": "متن مبدأ", "editor.characterCount": "%1 از %2 نویسه",
+      "editor.source": "متن مبدأ", "editor.characterCount": "%1 از %2 نویسه",
       "toggle.reverse": "اعمال ترتیب نمایشی دوجهته", "toggle.reverseDescription": "برای برنامه‌هایی که چیدمان راست‌به‌چپ را پشتیبانی نمی‌کنند",
       "toggle.video": "تبدیل ویژه برای VideoStudio Pro", "toggle.videoDescription": "در حالت سازگاری در دسترس است",
       "placeholder": "متن خود را وارد کنید…", "mode.unicode": "حالت یونیکد", "mode.compatibility": "حالت سازگاری",

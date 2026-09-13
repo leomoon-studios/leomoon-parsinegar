@@ -57,7 +57,9 @@ Button {
                 font.pixelSize: AppTheme.fontBody
                 font.weight: Font.DemiBold
                 color: AppTheme.foreground
-                wrapMode: Text.Wrap
+                wrapMode: Text.NoWrap
+                maximumLineCount: 1
+                elide: Text.ElideRight
             }
 
             Label {

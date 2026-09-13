@@ -13,8 +13,6 @@ QtObject {
     readonly property bool iconFontReady: iconFontLoader.status === FontLoader.Ready
     readonly property bool iconFontFailed: iconFontLoader.status === FontLoader.Error
     readonly property string iconFontFamily: iconFontReady ? iconFontLoader.name : fontFamily
-    readonly property string iconTextDirectionLtr: "\ue247"
-    readonly property string iconTextDirectionRtl: "\ue248"
     readonly property string iconLightMode: "\ue518"
     readonly property string iconDarkMode: "\ue51c"
     readonly property string iconSettings: "\ue8b8"
