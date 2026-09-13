@@ -28,6 +28,8 @@ qt_add_library(parsinegar_native_services STATIC)
 target_sources(parsinegar_native_services PRIVATE
     src/services/ClipboardBridge.cpp
     src/services/ClipboardBridge.h
+    src/services/ClipboardKeeper.cpp
+    src/services/ClipboardKeeper.h
     src/services/FileBridge.cpp
     src/services/FileBridge.h
     src/services/SettingsStore.cpp
@@ -182,7 +184,10 @@ if(BUILD_TESTING)
 
     target_compile_definitions(parsinegar_service_tests PRIVATE
         PARSINEGAR_TEST_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
+        PARSINEGAR_TEST_APP_PATH="$<TARGET_FILE:parsinegar_desktop>"
     )
+
+    add_dependencies(parsinegar_service_tests parsinegar_desktop)
 
     target_link_libraries(parsinegar_service_tests PRIVATE
         Qt6::Core

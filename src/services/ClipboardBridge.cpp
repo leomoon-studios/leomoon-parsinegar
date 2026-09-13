@@ -1,4 +1,5 @@
 #include "ClipboardBridge.h"
+#include "ClipboardKeeper.h"
 
 #include <QClipboard>
 #include <QGuiApplication>
@@ -27,8 +28,33 @@ bool ClipboardBridge::copyText(const QString &text)
         return false;
     }
 
+    m_lastCopiedText = text;
+    m_hasCopiedText = true;
     clearError();
     emit copied(text);
+    return true;
+}
+
+bool ClipboardBridge::persistCopiedText()
+{
+#if defined(Q_OS_LINUX)
+    QClipboard *clipboard = QGuiApplication::clipboard();
+    const QString platformName = QGuiApplication::platformName();
+    const bool ownershipPlatform = platformName.startsWith(QStringLiteral("wayland"))
+        || platformName == QStringLiteral("xcb");
+    if (!ownershipPlatform || !m_hasCopiedText || clipboard == nullptr
+        || clipboard->text(QClipboard::Clipboard) != m_lastCopiedText
+        || !clipboard->ownsClipboard()) {
+        return true;
+    }
+
+    QString errorMessage;
+    if (!ClipboardKeeper::startDetached(m_lastCopiedText, &errorMessage)) {
+        setError(QStringLiteral("CLIPBOARD_PERSISTENCE_FAILED"), errorMessage);
+        return false;
+    }
+    m_hasCopiedText = false;
+#endif
     return true;
 }
 

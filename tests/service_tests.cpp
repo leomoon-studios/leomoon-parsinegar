@@ -1,4 +1,5 @@
 #include "services/ClipboardBridge.h"
+#include "services/ClipboardKeeper.h"
 #include "services/FileBridge.h"
 #include "services/SettingsStore.h"
 
@@ -20,6 +21,7 @@ class ServiceTests final : public QObject
 private slots:
     void initTestCase();
     void clipboardRoundTrip();
+    void clipboardKeeperHandoff();
     void settingsUsePlatformLocation();
     void settingsRoundTripAtomically();
     void settingsDelegateSchemaRecovery();
@@ -72,6 +74,32 @@ void ServiceTests::clipboardRoundTrip()
     QCOMPARE(copiedSpy.count(), 1);
     QCOMPARE(failureSpy.count(), 0);
     QVERIFY(bridge.lastError().isEmpty());
+}
+
+void ServiceTests::clipboardKeeperHandoff()
+{
+    QString errorMessage;
+    const QString sample = QStringLiteral("پارسی نگار\nשלום 123");
+    bool hasCustomLifetime = false;
+    const int customLifetime = qEnvironmentVariableIntValue(
+        "PARSINEGAR_KEEPER_TEST_LIFETIME_MS", &hasCustomLifetime);
+    const int lifetimeMilliseconds = hasCustomLifetime ? customLifetime : 50;
+    QVERIFY2(
+        ClipboardKeeper::startDetached(
+            sample,
+            &errorMessage,
+            lifetimeMilliseconds,
+            QString::fromUtf8(PARSINEGAR_TEST_APP_PATH)),
+        qPrintable(errorMessage));
+    QVERIFY(errorMessage.isEmpty());
+
+    const QString oversized(ClipboardKeeper::maximumPayloadBytes + 1, QLatin1Char('x'));
+    QVERIFY(!ClipboardKeeper::startDetached(
+        oversized, &errorMessage, 50, QString::fromUtf8(PARSINEGAR_TEST_APP_PATH)));
+    QVERIFY(!errorMessage.isEmpty());
+    QVERIFY(!ClipboardKeeper::startDetached(
+        sample, &errorMessage, -1, QString::fromUtf8(PARSINEGAR_TEST_APP_PATH)));
+    QVERIFY(!errorMessage.isEmpty());
 }
 
 void ServiceTests::settingsUsePlatformLocation()

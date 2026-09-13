@@ -1,4 +1,5 @@
 #include "services/ClipboardBridge.h"
+#include "services/ClipboardKeeper.h"
 #include "services/FileBridge.h"
 #include "services/SettingsStore.h"
 
@@ -57,6 +58,11 @@ int main(int argc, char *argv[])
     application.setDesktopFileName(QString::fromUtf8(applicationId));
     application.setWindowIcon(QIcon(QStringLiteral(":/qt/qml/LeoMoon/ParsiNegar/assets/app-icon.svg")));
 
+    QString clipboardTransferPath;
+    if (ClipboardKeeper::invocationTransferPath(application.arguments(), &clipboardTransferPath)) {
+        return ClipboardKeeper::run(clipboardTransferPath);
+    }
+
     QQuickStyle::setStyle(QStringLiteral("Basic"));
 
     if (!verifyEmbeddedResources()) {
@@ -69,6 +75,15 @@ int main(int argc, char *argv[])
     qmlRegisterSingletonInstance("LeoMoon.ParsiNegar.Native", 1, 0, "ClipboardBridge", &clipboardBridge);
     qmlRegisterSingletonInstance("LeoMoon.ParsiNegar.Native", 1, 0, "SettingsStore", &settingsStore);
     qmlRegisterSingletonInstance("LeoMoon.ParsiNegar.Native", 1, 0, "FileBridge", &fileBridge);
+
+    application.setQuitOnLastWindowClosed(false);
+    QObject::connect(&application, &QGuiApplication::lastWindowClosed, &clipboardBridge, [&application, &clipboardBridge]() {
+        if (!clipboardBridge.persistCopiedText()) {
+            qWarning("Could not preserve clipboard text after closing the window: %s",
+                     qPrintable(clipboardBridge.lastError()));
+        }
+        application.quit();
+    });
 
     QQmlApplicationEngine engine;
     engine.setInitialProperties({

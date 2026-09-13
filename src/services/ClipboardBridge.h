@@ -15,6 +15,7 @@ public:
 
     Q_INVOKABLE bool copyText(const QString &text);
     Q_INVOKABLE QString readText();
+    [[nodiscard]] bool persistCopiedText();
 
 signals:
     void copied(const QString &text);
@@ -26,4 +27,6 @@ private:
     void setError(const QString &code, const QString &message);
 
     QString m_lastError;
+    QString m_lastCopiedText;
+    bool m_hasCopiedText = false;
 };
