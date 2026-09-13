@@ -61,15 +61,23 @@ Button {
             }
 
             Label {
+                id: descriptionLabel
+                objectName: "descriptionLabel"
                 Layout.fillWidth: true
                 text: control.description
                 font.family: AppTheme.fontFamily
                 font.pixelSize: AppTheme.fontCaption
                 color: AppTheme.muted
-                wrapMode: Text.Wrap
+                wrapMode: Text.NoWrap
+                maximumLineCount: 1
+                elide: Text.ElideRight
             }
         }
     }
+
+    ToolTip.visible: hovered && descriptionLabel.truncated
+    ToolTip.delay: 500
+    ToolTip.text: description
 
     background: Rectangle {
         color: control.selected

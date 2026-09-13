@@ -18,8 +18,8 @@ ApplicationWindow {
 
     width: 900
     height: 720
-    minimumWidth: 480
-    minimumHeight: 420
+    minimumWidth: 640
+    minimumHeight: 450
     visible: true
     title: qsTr("ParsiNegar Desktop")
     color: AppTheme.background
