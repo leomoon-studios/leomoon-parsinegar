@@ -22,6 +22,26 @@ find_package(Qt6 6.5 REQUIRED COMPONENTS
 
 qt_standard_project_setup(REQUIRES 6.5)
 
+qt_add_library(parsinegar_native_services STATIC)
+
+target_sources(parsinegar_native_services PRIVATE
+    src/services/ClipboardBridge.cpp
+    src/services/ClipboardBridge.h
+    src/services/FileBridge.cpp
+    src/services/FileBridge.h
+    src/services/SettingsStore.cpp
+    src/services/SettingsStore.h
+)
+
+target_include_directories(parsinegar_native_services PUBLIC
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+
+target_link_libraries(parsinegar_native_services PUBLIC
+    Qt6::Core
+    Qt6::Gui
+)
+
 qt_add_executable(parsinegar_desktop
     src/main.cpp
 )
@@ -54,6 +74,7 @@ target_link_libraries(parsinegar_desktop PRIVATE
     Qt6::Qml
     Qt6::Quick
     Qt6::QuickControls2
+    parsinegar_native_services
 )
 
 set_target_properties(parsinegar_desktop PROPERTIES
@@ -112,5 +133,30 @@ if(BUILD_TESTING)
     add_test(
         NAME conversion_core
         COMMAND parsinegar_core_tests
+    )
+
+    qt_add_executable(parsinegar_service_tests
+        tests/service_tests.cpp
+    )
+
+    target_compile_definitions(parsinegar_service_tests PRIVATE
+        PARSINEGAR_TEST_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
+    )
+
+    target_link_libraries(parsinegar_service_tests PRIVATE
+        Qt6::Core
+        Qt6::Gui
+        Qt6::Test
+        parsinegar_native_services
+    )
+
+    add_test(
+        NAME native_services
+        COMMAND parsinegar_service_tests
+    )
+
+    set_tests_properties(native_services PROPERTIES
+        ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QPA_PLATFORMTHEME="
+        TIMEOUT 20
     )
 endif()

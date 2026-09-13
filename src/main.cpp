@@ -1,3 +1,7 @@
+#include "services/ClipboardBridge.h"
+#include "services/FileBridge.h"
+#include "services/SettingsStore.h"
+
 #include <QCoreApplication>
 #include <QElapsedTimer>
 #include <QFile>
@@ -6,6 +10,7 @@
 #include <QQuickStyle>
 #include <QTimer>
 #include <QVariant>
+#include <qqml.h>
 
 #include <array>
 
@@ -53,6 +58,13 @@ int main(int argc, char *argv[])
     if (!verifyEmbeddedResources()) {
         return EXIT_FAILURE;
     }
+
+    ClipboardBridge clipboardBridge;
+    SettingsStore settingsStore;
+    FileBridge fileBridge;
+    qmlRegisterSingletonInstance("LeoMoon.ParsiNegar.Native", 1, 0, "ClipboardBridge", &clipboardBridge);
+    qmlRegisterSingletonInstance("LeoMoon.ParsiNegar.Native", 1, 0, "SettingsStore", &settingsStore);
+    qmlRegisterSingletonInstance("LeoMoon.ParsiNegar.Native", 1, 0, "FileBridge", &fileBridge);
 
     QQmlApplicationEngine engine;
     QObject::connect(
