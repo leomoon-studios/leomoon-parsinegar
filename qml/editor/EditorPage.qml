@@ -50,7 +50,10 @@ FocusScope {
         }
     }
 
-    Component.onCompleted: syncEditorFromController()
+    Component.onCompleted: {
+        syncEditorFromController()
+        updateParagraphDirections()
+    }
 
     Connections {
         target: root.controller
@@ -131,6 +134,8 @@ FocusScope {
                         color: AppTheme.foreground
                         selectionColor: AppTheme.accent
                         selectedTextColor: AppTheme.accentText
+                        cursorVisible: false
+                        horizontalAlignment: length === 0 ? TextEdit.AlignRight : TextEdit.AlignLeft
                         wrapMode: TextEdit.Wrap
                         textFormat: root.textDirectionService !== null
                             ? TextEdit.RichText
@@ -139,6 +144,18 @@ FocusScope {
                         persistentSelection: true
                         padding: AppTheme.spacingMedium
                         Accessible.name: qsTr("Source text editor")
+
+                        Rectangle {
+                            id: editorCursor
+                            objectName: "editorCursor"
+                            x: editor.cursorRectangle.x
+                            y: editor.cursorRectangle.y
+                            width: Math.max(1, AppTheme.focusBorderWidth)
+                            height: editor.cursorRectangle.height
+                            color: AppTheme.foreground
+                            visible: editor.activeFocus && editor.selectionStart === editor.selectionEnd
+                            z: 1
+                        }
 
                         background: Rectangle {
                             color: AppTheme.withAlpha(AppTheme.foreground, AppTheme.darkMode ? 0.035 : 0.02)

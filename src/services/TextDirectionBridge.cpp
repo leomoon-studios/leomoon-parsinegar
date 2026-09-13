@@ -34,7 +34,7 @@ QQuickTextDocument *textDocumentWrapper(QObject *object)
 
 void applyParagraphFormats(QTextDocument *document)
 {
-    Qt::LayoutDirection inheritedDirection = Qt::LeftToRight;
+    Qt::LayoutDirection inheritedDirection = Qt::RightToLeft;
     QTextCursor cursor(document);
     bool editBlockStarted = false;
     for (QTextBlock block = document->begin(); block.isValid(); block = block.next()) {

@@ -318,6 +318,9 @@ void ServiceTests::textDirectionBridgeAlignsRenderedParagraphs()
 
     QVERIFY(bridge.setPlainText(wrapper, QStringLiteral(".")));
     QVERIFY(bridge.applyAutomaticDirection(wrapper));
+    QTRY_COMPARE(document->begin().blockFormat().alignment(), Qt::AlignRight | Qt::AlignAbsolute);
+    QVERIFY(bridge.setPlainText(wrapper, QStringLiteral("E")));
+    QVERIFY(bridge.applyAutomaticDirection(wrapper));
     QTRY_COMPARE(document->begin().blockFormat().alignment(), Qt::AlignLeft | Qt::AlignAbsolute);
     QVERIFY(bridge.setPlainText(wrapper, QStringLiteral("س")));
     QVERIFY(bridge.applyAutomaticDirection(wrapper));
