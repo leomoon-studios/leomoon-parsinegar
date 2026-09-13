@@ -2,12 +2,12 @@
 
 ParsiNegar Desktop is a standalone Qt 6 application for preparing Persian and other supported right-to-left text for software with incomplete shaping or bidirectional-text support. It is a separate product from the Omarchy ParsiNegar Express plugin and will not require Python, Node.js, npm, Omarchy, or Quickshell on an end user's computer.
 
-The current scaffold opens a minimal resizable window, embeds the pinned JavaScript dependencies and conversion core, and loads the bundled Vazirmatn font. A native Qt test harness executes the complete conversion fixture matrix through `QJSEngine`. Narrow C++ services provide clipboard, platform settings, exact font-byte reads, and atomic SVG writes; the interactive conversion interface is added in a later implementation step.
+The current desktop foundation opens a branded, resizable window with application-owned light and dark palettes, Vazirmatn-aware typography, visible keyboard focus, and reusable controls. It embeds the pinned JavaScript dependencies and conversion core, while narrow C++ services provide clipboard, platform settings, exact font-byte reads, and atomic SVG writes. The interactive conversion editor is added in the next implementation step.
 
 ## Development requirements
 
 - CMake 3.21 or newer
-- Qt 6.5 or newer with Core, Gui, Qml, Quick, Quick Controls 2, and Test development components
+- Qt 6.5 or newer with Core, Gui, Qml, Quick, Quick Controls 2, Quick Test, and Test development components
 - A C++17 compiler supported by the selected Qt release: GCC or Clang on Linux, Apple Clang on macOS, or MSVC on Windows
 - Ninja is recommended but not required
 
@@ -21,7 +21,7 @@ Configure, build, test, lint, and run from the repository root:
 cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug
 cmake --build build
 ctest --test-dir build --output-on-failure
-cmake --build build --target parsinegar_desktop_qmllint
+cmake --build build --target parsinegar_ui_qmllint
 ./build/ParsiNegar
 ```
 
@@ -35,7 +35,7 @@ Configure with the Qt installation prefix when CMake cannot discover Qt automati
 cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH="$HOME/Qt/6.8.0/macos"
 cmake --build build
 ctest --test-dir build --output-on-failure
-cmake --build build --target parsinegar_desktop_qmllint
+cmake --build build --target parsinegar_ui_qmllint
 open build/ParsiNegar.app
 ```
 
@@ -49,7 +49,7 @@ Run these commands in a Developer PowerShell whose architecture matches the inst
 cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH=C:\Qt\6.8.0\msvc2022_64
 cmake --build build
 ctest --test-dir build --output-on-failure
-cmake --build build --target parsinegar_desktop_qmllint
+cmake --build build --target parsinegar_ui_qmllint
 .\build\ParsiNegar.exe
 ```
 
@@ -57,7 +57,7 @@ Replace the example prefix with the installed Qt version and compiler kit. For a
 
 ## Smoke check
 
-The `resource_smoke` CTest starts the real application with an offscreen Qt platform, verifies the embedded JavaScript files exist, waits for the bundled Vazirmatn font to load, and exits. The `license_inventory` CTest requires every vendored artifact and its associated notices. The `conversion_core` CTest loads the embedded production scripts in `QJSEngine` and verifies conversions, profiles, settings, mappings, and resource limits without Node.js. The `native_services` CTest exercises platform paths, atomic persistence, exact font reads, local-URL boundaries, failure signals, clipboard round trips, and size limits.
+The `resource_smoke` CTest starts the real application with an offscreen Qt platform, verifies the embedded resources, waits for the bundled Vazirmatn font to load, and exits. The `license_inventory` CTest requires every vendored artifact and its associated notices. The `conversion_core` CTest loads the embedded production scripts in `QJSEngine` and verifies conversions, profiles, settings, mappings, and resource limits without Node.js. The `native_services` CTest exercises platform paths, atomic persistence, exact font reads, local-URL boundaries, failure signals, clipboard round trips, and size limits. The `desktop_shell` Qt Quick Test checks responsive window geometry, visible keyboard focus, control behavior, font fallback, and light/dark palette contrast; `qml_import_boundaries` prevents desktop QML from acquiring Omarchy or Quickshell imports.
 
 ## Repository boundaries
 

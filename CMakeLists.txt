@@ -17,6 +17,7 @@ find_package(Qt6 6.5 REQUIRED COMPONENTS
     Qml
     Quick
     QuickControls2
+    QuickTest
     Test
 )
 
@@ -42,21 +43,44 @@ target_link_libraries(parsinegar_native_services PUBLIC
     Qt6::Gui
 )
 
-qt_add_executable(parsinegar_desktop
-    src/main.cpp
-)
-
 set_source_files_properties(qml/Main.qml PROPERTIES
     QT_RESOURCE_ALIAS Main.qml
 )
 
-qt_add_qml_module(parsinegar_desktop
+set_source_files_properties(qml/theme/AppTheme.qml PROPERTIES
+    QT_QML_SINGLETON_TYPE TRUE
+    QT_RESOURCE_ALIAS AppTheme.qml
+)
+
+set_source_files_properties(qml/components/BusySpinner.qml PROPERTIES QT_RESOURCE_ALIAS BusySpinner.qml)
+set_source_files_properties(qml/components/LetterBadge.qml PROPERTIES QT_RESOURCE_ALIAS LetterBadge.qml)
+set_source_files_properties(qml/components/Typography.qml PROPERTIES QT_RESOURCE_ALIAS Typography.qml)
+set_source_files_properties(qml/controls/AppButton.qml PROPERTIES QT_RESOURCE_ALIAS AppButton.qml)
+set_source_files_properties(qml/controls/AppToggle.qml PROPERTIES QT_RESOURCE_ALIAS AppToggle.qml)
+set_source_files_properties(qml/controls/NumericField.qml PROPERTIES QT_RESOURCE_ALIAS NumericField.qml)
+set_source_files_properties(qml/controls/PageHeader.qml PROPERTIES QT_RESOURCE_ALIAS PageHeader.qml)
+set_source_files_properties(qml/controls/StatusMessage.qml PROPERTIES QT_RESOURCE_ALIAS StatusMessage.qml)
+
+qt_add_library(parsinegar_ui STATIC)
+
+qt_add_qml_module(parsinegar_ui
     URI LeoMoon.ParsiNegar
     VERSION 1.0
     RESOURCE_PREFIX /qt/qml
+    OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/LeoMoon/ParsiNegar"
     QML_FILES
         qml/Main.qml
+        qml/theme/AppTheme.qml
+        qml/components/BusySpinner.qml
+        qml/components/LetterBadge.qml
+        qml/components/Typography.qml
+        qml/controls/AppButton.qml
+        qml/controls/AppToggle.qml
+        qml/controls/NumericField.qml
+        qml/controls/PageHeader.qml
+        qml/controls/StatusMessage.qml
     RESOURCES
+        assets/app-icon.svg
         "assets/fonts/Vazirmatn[wght].ttf"
         assets/fonts/OFL.txt
         vendor/js-bidi.js
@@ -68,6 +92,16 @@ qt_add_qml_module(parsinegar_desktop
         qml/core/ResourceLimits.js
 )
 
+target_link_libraries(parsinegar_ui PUBLIC
+    Qt6::Qml
+    Qt6::Quick
+    Qt6::QuickControls2
+)
+
+qt_add_executable(parsinegar_desktop
+    src/main.cpp
+)
+
 target_link_libraries(parsinegar_desktop PRIVATE
     Qt6::Core
     Qt6::Gui
@@ -75,6 +109,7 @@ target_link_libraries(parsinegar_desktop PRIVATE
     Qt6::Quick
     Qt6::QuickControls2
     parsinegar_native_services
+    parsinegar_uiplugin
 )
 
 set_target_properties(parsinegar_desktop PROPERTIES
@@ -158,5 +193,35 @@ if(BUILD_TESTING)
     set_tests_properties(native_services PROPERTIES
         ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QPA_PLATFORMTHEME="
         TIMEOUT 20
+    )
+
+    qt_add_executable(parsinegar_ui_tests
+        tests/ui_test_main.cpp
+    )
+
+    target_compile_definitions(parsinegar_ui_tests PRIVATE
+        QUICK_TEST_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/qml"
+    )
+
+    target_link_libraries(parsinegar_ui_tests PRIVATE
+        Qt6::QuickTest
+        parsinegar_uiplugin
+    )
+
+    add_test(
+        NAME desktop_shell
+        COMMAND parsinegar_ui_tests
+    )
+
+    set_tests_properties(desktop_shell PROPERTIES
+        ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QPA_PLATFORMTHEME=;QT_QUICK_BACKEND=software;QT_QUICK_CONTROLS_STYLE=Basic"
+        TIMEOUT 20
+    )
+
+    add_test(
+        NAME qml_import_boundaries
+        COMMAND "${CMAKE_COMMAND}"
+            "-DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/CheckQmlImports.cmake"
     )
 endif()

@@ -6,6 +6,7 @@
 #include <QElapsedTimer>
 #include <QFile>
 #include <QGuiApplication>
+#include <QIcon>
 #include <QQmlApplicationEngine>
 #include <QQuickStyle>
 #include <QTimer>
@@ -22,6 +23,7 @@ bool verifyEmbeddedResources()
 {
     constexpr std::array resources {
         ":/qt/qml/LeoMoon/ParsiNegar/assets/fonts/Vazirmatn[wght].ttf",
+        ":/qt/qml/LeoMoon/ParsiNegar/assets/app-icon.svg",
         ":/qt/qml/LeoMoon/ParsiNegar/vendor/js-bidi.js",
         ":/qt/qml/LeoMoon/ParsiNegar/vendor/js-parsi-reshaper.js",
         ":/qt/qml/LeoMoon/ParsiNegar/vendor/typr.js",
@@ -52,6 +54,7 @@ int main(int argc, char *argv[])
     QCoreApplication::setApplicationName(QStringLiteral("ParsiNegar Desktop"));
     QCoreApplication::setApplicationVersion(QStringLiteral("0.1.0"));
     application.setDesktopFileName(QString::fromUtf8(applicationId));
+    application.setWindowIcon(QIcon(QStringLiteral(":/qt/qml/LeoMoon/ParsiNegar/assets/app-icon.svg")));
 
     QQuickStyle::setStyle(QStringLiteral("Basic"));
 
