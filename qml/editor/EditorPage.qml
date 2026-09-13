@@ -51,14 +51,6 @@ FocusScope {
         anchors.fill: parent
         spacing: AppTheme.spacingMedium
 
-        StatusMessage {
-            objectName: "editorSettingsStatus"
-            Layout.fillWidth: true
-            visible: root.controller.settingsStatusLevel !== "info"
-            message: root.controller.settingsStatusText
-            level: root.controller.settingsStatusLevel
-        }
-
         Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
@@ -144,15 +136,6 @@ FocusScope {
                     }
                 }
 
-                StatusMessage {
-                    id: conversionStatus
-                    objectName: "conversionStatus"
-                    Layout.fillWidth: true
-                    message: root.controller.statusText
-                    level: root.controller.statusLevel
-                    busy: root.controller.busy
-                }
-
                 RowLayout {
                     id: conversionActions
                     objectName: "conversionActions"
@@ -212,14 +195,26 @@ FocusScope {
             }
         }
 
-        Label {
+        Item {
+            id: statusSlot
+            objectName: "statusSlot"
             Layout.fillWidth: true
-            horizontalAlignment: Text.AlignHCenter
-            text: root.uiText("editor.footer")
-            wrapMode: Text.Wrap
-            font.family: AppTheme.fontFamily
-            font.pixelSize: AppTheme.fontCaption
-            color: AppTheme.muted
+            Layout.minimumHeight: 44
+            Layout.preferredHeight: 44
+            Layout.maximumHeight: 44
+
+            StatusMessage {
+                id: conversionStatus
+                objectName: "conversionStatus"
+                anchors.fill: parent
+                message: root.controller.statusText !== "" || root.controller.busy
+                    ? root.controller.statusText
+                    : root.controller.settingsStatusText
+                level: root.controller.statusText !== "" || root.controller.busy
+                    ? root.controller.statusLevel
+                    : root.controller.settingsStatusLevel
+                busy: root.controller.busy
+            }
         }
     }
 }

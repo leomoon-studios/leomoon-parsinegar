@@ -120,11 +120,17 @@ TestCase {
     function test_exactClipboardConversionsAcrossScriptsAndModes() {
         var applicationWindow = createMainWindow()
         var controller = applicationWindow.editorController
+        var statusSlot = findChild(applicationWindow, "statusSlot")
+        var editorScroll = findChild(applicationWindow, "editorScroll")
+        var initialStatusHeight = statusSlot.height
+        var initialEditorHeight = editorScroll.height
         controller.reverseWords = false
 
         controller.setShapingProfile("standardPersianArabic")
         controller.setConversionMode("unicode")
         convertAndCompare(controller, "سلام", "\ufeb3\ufefc\ufee1")
+        compare(statusSlot.height, initialStatusHeight)
+        compare(editorScroll.height, initialEditorHeight)
         convertAndCompare(controller, "تت", "\ufe97\ufe96")
 
         controller.setShapingProfile("kurdishUrdu")
