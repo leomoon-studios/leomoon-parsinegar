@@ -8,11 +8,13 @@ ApplicationWindow {
 
     readonly property bool bundledFontReady: typography.ready
     readonly property bool bundledFontError: typography.failed
+    readonly property alias editorController: controller
+    required property var clipboardService
 
     width: 900
-    height: 640
+    height: 720
     minimumWidth: 480
-    minimumHeight: 360
+    minimumHeight: 420
     visible: true
     title: qsTr("ParsiNegar Desktop")
     color: AppTheme.background
@@ -22,7 +24,16 @@ ApplicationWindow {
         onFamilyChanged: AppTheme.fontFamily = family
     }
 
-    Component.onCompleted: AppTheme.fontFamily = typography.family
+    EditorController {
+        id: controller
+        objectName: "editorController"
+        clipboardBridge: root.clipboardService
+    }
+
+    Component.onCompleted: {
+        AppTheme.fontFamily = typography.family
+        editorPage.focusEditor()
+    }
 
     ColumnLayout {
         id: shell
@@ -80,96 +91,13 @@ ApplicationWindow {
             }
         }
 
-        ScrollView {
-            id: foundationScroll
-            objectName: "foundationScroll"
+        EditorPage {
+            id: editorPage
+            objectName: "editorPage"
             Layout.fillWidth: true
             Layout.fillHeight: true
-            contentWidth: availableWidth
-            clip: true
-            ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
-            ScrollBar.vertical.policy: ScrollBar.AsNeeded
-
-            Column {
-                width: foundationScroll.availableWidth
-                spacing: AppTheme.spacingMedium
-
-                Rectangle {
-                    width: parent.width
-                    height: foundationContent.implicitHeight + AppTheme.spacingXLarge * 2
-                    radius: AppTheme.cornerRadiusLarge
-                    color: AppTheme.surface
-                    border.color: AppTheme.border
-                    border.width: AppTheme.borderWidth
-
-                    ColumnLayout {
-                        id: foundationContent
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.verticalCenter: parent.verticalCenter
-                        anchors.margins: AppTheme.spacingXLarge
-                        spacing: AppTheme.spacingLarge
-
-                        PageHeader {
-                            Layout.fillWidth: true
-                            title: qsTr("Desktop foundation ready")
-                            subtitle: qsTr("The application now owns its window, typography, colors, focus treatment, and reusable controls. The editor arrives in the next implementation step.")
-                        }
-
-                        Rectangle {
-                            Layout.fillWidth: true
-                            implicitHeight: AppTheme.borderWidth
-                            color: AppTheme.border
-                        }
-
-                        GridLayout {
-                            Layout.fillWidth: true
-                            columns: width >= 660 ? 3 : 1
-                            columnSpacing: AppTheme.spacingLarge
-                            rowSpacing: AppTheme.spacingMedium
-
-                            AppButton {
-                                objectName: "primaryButton"
-                                Layout.fillWidth: true
-                                text: qsTr("Primary action")
-                                accent: true
-                            }
-
-                            AppToggle {
-                                objectName: "sampleToggle"
-                                Layout.fillWidth: true
-                                text: qsTr("Apply bidi ordering")
-                                checked: true
-                            }
-
-                            NumericField {
-                                objectName: "sampleNumberField"
-                                Layout.fillWidth: true
-                                text: "48"
-                                placeholderText: qsTr("Font size")
-                                minimumValue: 1
-                                maximumValue: 4096
-                            }
-                        }
-
-                        StatusMessage {
-                            objectName: "foundationStatus"
-                            Layout.fillWidth: true
-                            level: typography.failed ? "warning" : "success"
-                            message: typography.failed ? typography.errorMessage : qsTr("Bundled Vazirmatn and the desktop control theme loaded successfully.")
-                        }
-                    }
-                }
-
-                Label {
-                    width: parent.width
-                    horizontalAlignment: Text.AlignHCenter
-                    text: qsTr("Standalone Qt 6 preview")
-                    font.family: AppTheme.fontFamily
-                    font.pixelSize: AppTheme.fontCaption
-                    color: AppTheme.muted
-                }
-            }
+            controller: controller
+            typography: typography
         }
     }
 }

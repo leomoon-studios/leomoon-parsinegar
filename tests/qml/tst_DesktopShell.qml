@@ -10,7 +10,18 @@ TestCase {
 
     Component {
         id: mainWindowComponent
-        Main { visible: true }
+        Main {
+            visible: true
+            property QtObject clipboardMock: QtObject {
+                property string text: ""
+                property string lastError: ""
+                function copyText(value) {
+                    text = value
+                    return true
+                }
+            }
+            clipboardService: clipboardMock
+        }
     }
 
     Component {
@@ -31,9 +42,9 @@ TestCase {
     function test_windowResizesWithoutClipping() {
         var applicationWindow = createMainWindow()
         var contentLayout = findChild(applicationWindow, "contentLayout")
-        var foundationScroll = findChild(applicationWindow, "foundationScroll")
+        var editorPageScroll = findChild(applicationWindow, "editorPageScroll")
         verify(contentLayout !== null)
-        verify(foundationScroll !== null)
+        verify(editorPageScroll !== null)
 
         applicationWindow.width = applicationWindow.minimumWidth
         applicationWindow.height = applicationWindow.minimumHeight
@@ -42,8 +53,8 @@ TestCase {
         verify(contentLayout.y >= 0)
         verify(contentLayout.x + contentLayout.width <= applicationWindow.contentItem.width + 0.5)
         verify(contentLayout.y + contentLayout.height <= applicationWindow.contentItem.height + 0.5)
-        verify(foundationScroll.width > 0)
-        verify(foundationScroll.height > 0)
+        verify(editorPageScroll.width > 0)
+        verify(editorPageScroll.height > 0)
 
         applicationWindow.width = 1100
         applicationWindow.height = 760
@@ -81,19 +92,18 @@ TestCase {
 
     function test_reusableControlsAndThemeSwitch() {
         var applicationWindow = createMainWindow()
-        var primaryButton = findChild(applicationWindow, "primaryButton")
-        var sampleToggle = findChild(applicationWindow, "sampleToggle")
-        var sampleNumberField = findChild(applicationWindow, "sampleNumberField")
-        var foundationStatus = findChild(applicationWindow, "foundationStatus")
+        var convertButton = findChild(applicationWindow, "convertButton")
+        var bidiToggle = findChild(applicationWindow, "bidiToggle")
+        var sourceEditor = findChild(applicationWindow, "sourceEditor")
+        var conversionStatus = findChild(applicationWindow, "conversionStatus")
         var themeButton = findChild(applicationWindow, "themeButton")
-        verify(primaryButton !== null)
-        verify(sampleToggle !== null)
-        verify(sampleNumberField !== null)
-        verify(foundationStatus !== null)
-        verify(primaryButton.accent)
-        verify(sampleToggle.checked)
-        verify(sampleNumberField.acceptableNumber)
-        verify(foundationStatus.visible)
+        verify(convertButton !== null)
+        verify(bidiToggle !== null)
+        verify(sourceEditor !== null)
+        verify(conversionStatus !== null)
+        verify(convertButton.accent)
+        verify(bidiToggle.checked)
+        compare(sourceEditor.horizontalAlignment, TextEdit.AlignRight)
 
         var originalMode = AppTheme.darkMode
         themeButton.click()

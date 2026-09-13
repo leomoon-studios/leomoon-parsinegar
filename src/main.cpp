@@ -28,6 +28,7 @@ bool verifyEmbeddedResources()
         ":/qt/qml/LeoMoon/ParsiNegar/vendor/js-parsi-reshaper.js",
         ":/qt/qml/LeoMoon/ParsiNegar/vendor/typr.js",
         ":/qt/qml/LeoMoon/ParsiNegar/qml/core/InterfaceStrings.js",
+        ":/qt/qml/LeoMoon/ParsiNegar/ConversionWorker.js",
         ":/qt/qml/LeoMoon/ParsiNegar/qml/core/ParsiNegar.js",
         ":/qt/qml/LeoMoon/ParsiNegar/qml/core/ReshaperSettings.js",
         ":/qt/qml/LeoMoon/ParsiNegar/qml/core/ResourceLimits.js",
@@ -70,6 +71,9 @@ int main(int argc, char *argv[])
     qmlRegisterSingletonInstance("LeoMoon.ParsiNegar.Native", 1, 0, "FileBridge", &fileBridge);
 
     QQmlApplicationEngine engine;
+    engine.setInitialProperties({
+        {QStringLiteral("clipboardService"), QVariant::fromValue(&clipboardBridge)},
+    });
     QObject::connect(
         &engine,
         &QQmlApplicationEngine::objectCreationFailed,

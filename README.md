@@ -2,7 +2,7 @@
 
 ParsiNegar Desktop is a standalone Qt 6 application for preparing Persian and other supported right-to-left text for software with incomplete shaping or bidirectional-text support. It is a separate product from the Omarchy ParsiNegar Express plugin and will not require Python, Node.js, npm, Omarchy, or Quickshell on an end user's computer.
 
-The current desktop foundation opens a branded, resizable window with application-owned light and dark palettes, Vazirmatn-aware typography, visible keyboard focus, and reusable controls. It embeds the pinned JavaScript dependencies and conversion core, while narrow C++ services provide clipboard, platform settings, exact font-byte reads, and atomic SVG writes. The interactive conversion editor is added in the next implementation step.
+The application now opens a branded, resizable conversion editor with independent LTR and RTL alignment, Persian/Arabic, Kurdish/Urdu, and Hebrew shaping profiles, Unicode and Compatibility modes, bidi ordering, and VideoStudio output. Conversion runs in a bounded background worker, successful output is copied through the native clipboard bridge, and the source remains visible in the editor. The desktop also includes application-owned light and dark palettes, Vazirmatn-aware typography, visible keyboard focus, reusable controls, pinned JavaScript dependencies, and narrow C++ services for clipboard, platform settings, exact font-byte reads, and atomic SVG writes.
 
 ## Development requirements
 
@@ -57,7 +57,7 @@ Replace the example prefix with the installed Qt version and compiler kit. For a
 
 ## Smoke check
 
-The `resource_smoke` CTest starts the real application with an offscreen Qt platform, verifies the embedded resources, waits for the bundled Vazirmatn font to load, and exits. The `license_inventory` CTest requires every vendored artifact and its associated notices. The `conversion_core` CTest loads the embedded production scripts in `QJSEngine` and verifies conversions, profiles, settings, mappings, and resource limits without Node.js. The `native_services` CTest exercises platform paths, atomic persistence, exact font reads, local-URL boundaries, failure signals, clipboard round trips, and size limits. The `desktop_shell` Qt Quick Test checks responsive window geometry, visible keyboard focus, control behavior, font fallback, and light/dark palette contrast; `qml_import_boundaries` prevents desktop QML from acquiring Omarchy or Quickshell imports.
+The `resource_smoke` CTest starts the real application with an offscreen Qt platform, verifies the embedded resources, waits for the bundled Vazirmatn font to load, and exits. The `license_inventory` CTest requires every vendored artifact and its associated notices. The `conversion_core` CTest loads the embedded production scripts in `QJSEngine` and verifies conversions, profiles, settings, mappings, and resource limits without Node.js. The `native_services` CTest exercises platform paths, atomic persistence, exact font reads, local-URL boundaries, failure signals, clipboard round trips, and size limits. The `desktop_shell` Qt Quick Test checks responsive window geometry, visible keyboard focus, control behavior, font fallback, palette contrast, editor interactions, exact clipboard conversion output, profile invariants, request races, error handling, and responsiveness at the conversion limit. The `qml_import_boundaries` test prevents desktop QML from acquiring Omarchy or Quickshell imports.
 
 ## Repository boundaries
 

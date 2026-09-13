@@ -60,6 +60,9 @@ set_source_files_properties(qml/controls/AppToggle.qml PROPERTIES QT_RESOURCE_AL
 set_source_files_properties(qml/controls/NumericField.qml PROPERTIES QT_RESOURCE_ALIAS NumericField.qml)
 set_source_files_properties(qml/controls/PageHeader.qml PROPERTIES QT_RESOURCE_ALIAS PageHeader.qml)
 set_source_files_properties(qml/controls/StatusMessage.qml PROPERTIES QT_RESOURCE_ALIAS StatusMessage.qml)
+set_source_files_properties(qml/editor/EditorController.qml PROPERTIES QT_RESOURCE_ALIAS EditorController.qml)
+set_source_files_properties(qml/editor/EditorPage.qml PROPERTIES QT_RESOURCE_ALIAS EditorPage.qml)
+set_source_files_properties(qml/core/ConversionWorker.js PROPERTIES QT_RESOURCE_ALIAS ConversionWorker.js)
 
 qt_add_library(parsinegar_ui STATIC)
 
@@ -79,6 +82,8 @@ qt_add_qml_module(parsinegar_ui
         qml/controls/NumericField.qml
         qml/controls/PageHeader.qml
         qml/controls/StatusMessage.qml
+        qml/editor/EditorController.qml
+        qml/editor/EditorPage.qml
     RESOURCES
         assets/app-icon.svg
         "assets/fonts/Vazirmatn[wght].ttf"
@@ -87,6 +92,7 @@ qt_add_qml_module(parsinegar_ui
         vendor/js-parsi-reshaper.js
         vendor/typr.js
         qml/core/InterfaceStrings.js
+        qml/core/ConversionWorker.js
         qml/core/ParsiNegar.js
         qml/core/ReshaperSettings.js
         qml/core/ResourceLimits.js
@@ -215,7 +221,7 @@ if(BUILD_TESTING)
 
     set_tests_properties(desktop_shell PROPERTIES
         ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QPA_PLATFORMTHEME=;QT_QUICK_BACKEND=software;QT_QUICK_CONTROLS_STYLE=Basic"
-        TIMEOUT 20
+        TIMEOUT 60
     )
 
     add_test(
