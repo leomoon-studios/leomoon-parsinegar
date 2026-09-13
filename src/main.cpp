@@ -31,6 +31,8 @@ bool verifyEmbeddedResources()
         ":/qt/qml/LeoMoon/ParsiNegar/vendor/typr.js",
         ":/qt/qml/LeoMoon/ParsiNegar/qml/core/InterfaceStrings.js",
         ":/qt/qml/LeoMoon/ParsiNegar/ConversionWorker.js",
+        ":/qt/qml/LeoMoon/ParsiNegar/SvgCurveWorker.js",
+        ":/qt/qml/LeoMoon/ParsiNegar/qml/core/SvgCurveExporter.js",
         ":/qt/qml/LeoMoon/ParsiNegar/qml/core/ParsiNegar.js",
         ":/qt/qml/LeoMoon/ParsiNegar/qml/core/ReshaperSettings.js",
         ":/qt/qml/LeoMoon/ParsiNegar/qml/core/ResourceLimits.js",

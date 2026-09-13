@@ -13,6 +13,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 find_package(Qt6 6.5 REQUIRED COMPONENTS
     Core
+    Concurrent
     Gui
     Qml
     Quick
@@ -44,6 +45,7 @@ target_include_directories(parsinegar_native_services PUBLIC
 
 target_link_libraries(parsinegar_native_services PUBLIC
     Qt6::Core
+    Qt6::Concurrent
     Qt6::Gui
     Qt6::Quick
 )
@@ -72,6 +74,8 @@ set_source_files_properties(qml/editor/EditorController.qml PROPERTIES QT_RESOUR
 set_source_files_properties(qml/editor/EditorPage.qml PROPERTIES QT_RESOURCE_ALIAS EditorPage.qml)
 set_source_files_properties(qml/settings/SettingsPage.qml PROPERTIES QT_RESOURCE_ALIAS SettingsPage.qml)
 set_source_files_properties(qml/core/ConversionWorker.js PROPERTIES QT_RESOURCE_ALIAS ConversionWorker.js)
+set_source_files_properties(qml/core/SvgCurveWorker.js PROPERTIES QT_RESOURCE_ALIAS SvgCurveWorker.js)
+set_source_files_properties(qml/export/SvgCurveExportController.qml PROPERTIES QT_RESOURCE_ALIAS SvgCurveExportController.qml)
 
 qt_add_library(parsinegar_ui STATIC)
 
@@ -97,6 +101,7 @@ qt_add_qml_module(parsinegar_ui
         qml/editor/EditorController.qml
         qml/editor/EditorPage.qml
         qml/settings/SettingsPage.qml
+        qml/export/SvgCurveExportController.qml
     RESOURCES
         assets/app-icon.svg
         "assets/fonts/Vazirmatn[wght].ttf"
@@ -108,6 +113,8 @@ qt_add_qml_module(parsinegar_ui
         vendor/typr.js
         qml/core/InterfaceStrings.js
         qml/core/ConversionWorker.js
+        qml/core/SvgCurveExporter.js
+        qml/core/SvgCurveWorker.js
         qml/core/ParsiNegar.js
         qml/core/ReshaperSettings.js
         qml/core/ResourceLimits.js
@@ -178,12 +185,16 @@ if(BUILD_TESTING)
         FILES
             vendor/js-bidi.js
             vendor/js-parsi-reshaper.js
+            vendor/typr.js
+            "assets/fonts/Vazirmatn[wght].ttf"
             qml/core/InterfaceStrings.js
             qml/core/ParsiNegar.js
             qml/core/ReshaperSettings.js
             qml/core/ResourceLimits.js
+            qml/core/SvgCurveExporter.js
             tests/fixtures/ParsiNegarFixtures.js
             tests/CoreTests.js
+            tests/SvgCurveTests.js
     )
 
     add_test(
@@ -207,6 +218,12 @@ if(BUILD_TESTING)
         Qt6::Gui
         Qt6::Test
         parsinegar_native_services
+    )
+
+    qt_add_resources(parsinegar_service_tests service_test_resources
+        PREFIX /qt/qml/LeoMoon/ParsiNegar
+        FILES
+            "assets/fonts/Vazirmatn[wght].ttf"
     )
 
     add_test(

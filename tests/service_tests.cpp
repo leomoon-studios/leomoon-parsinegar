@@ -41,6 +41,7 @@ private slots:
     void fileBridgeRejectsInvalidAndOversizedFonts();
     void fileBridgeWritesSvgAtomically();
     void fileBridgeReportsWriteFailuresAndLimits();
+    void fileBridgeCompletesFontAndSvgWorkAsynchronously();
     void textDirectionBridgeAlignsRenderedParagraphs();
 };
 
@@ -276,6 +277,47 @@ void ServiceTests::fileBridgeReportsWriteFailuresAndLimits()
     QCOMPARE(errorCode(bridge.writeSvg(QUrl::fromLocalFile(blockedPath), QStringLiteral("<svg/>"))), QStringLiteral("SVG_WRITE_FAILED"));
     QVERIFY(QFileInfo(blockedPath).isDir());
     QCOMPARE(failureSpy.count(), 3);
+}
+
+void ServiceTests::fileBridgeCompletesFontAndSvgWorkAsynchronously()
+{
+    QTemporaryDir temporaryDirectory;
+    QVERIFY(temporaryDirectory.isValid());
+    FileBridge bridge;
+    QSignalSpy fontSpy(&bridge, &FileBridge::fontReadCompleted);
+    QSignalSpy writeSpy(&bridge, &FileBridge::svgWriteCompleted);
+
+    const QString sourceDirectory = QString::fromUtf8(PARSINEGAR_TEST_SOURCE_DIR);
+    const QUrl fontUrl = QUrl::fromLocalFile(
+        QDir(sourceDirectory).filePath(QStringLiteral("assets/fonts/Vazirmatn[wght].ttf")));
+    QVERIFY(!bridge.readFontAsync(0, fontUrl));
+    QVERIFY(bridge.readFontAsync(41, fontUrl));
+    QTRY_COMPARE_WITH_TIMEOUT(fontSpy.count(), 1, 10000);
+    QCOMPARE(fontSpy.at(0).at(0).toInt(), 41);
+    const QVariantMap fontResult = fontSpy.at(0).at(1).toMap();
+    QVERIFY(succeeded(fontResult));
+    QVERIFY(fontResult.value(QStringLiteral("byteCount")).toLongLong() > 0);
+
+    QVERIFY(bridge.readBundledFontAsync(42));
+    QTRY_COMPARE_WITH_TIMEOUT(fontSpy.count(), 2, 10000);
+    QCOMPARE(fontSpy.at(1).at(0).toInt(), 42);
+    const QVariantMap bundledResult = fontSpy.at(1).at(1).toMap();
+    QVERIFY(succeeded(bundledResult));
+    QCOMPARE(bundledResult.value(QStringLiteral("data")).toByteArray(),
+             fontResult.value(QStringLiteral("data")).toByteArray());
+
+    const QString svg = QStringLiteral("<svg xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M0 0Z\"/></svg>\n");
+    const QUrl destination = QUrl::fromLocalFile(
+        temporaryDirectory.filePath(QStringLiteral("async-curves")));
+    QVERIFY(!bridge.writeSvgAsync(0, destination, svg));
+    QVERIFY(bridge.writeSvgAsync(43, destination, svg));
+    QTRY_COMPARE_WITH_TIMEOUT(writeSpy.count(), 1, 10000);
+    QCOMPARE(writeSpy.at(0).at(0).toInt(), 43);
+    const QVariantMap writeResult = writeSpy.at(0).at(1).toMap();
+    QVERIFY(succeeded(writeResult));
+    QFile output(writeResult.value(QStringLiteral("path")).toString());
+    QVERIFY(output.open(QIODevice::ReadOnly));
+    QCOMPARE(output.readAll(), svg.toUtf8());
 }
 
 void ServiceTests::textDirectionBridgeAlignsRenderedParagraphs()

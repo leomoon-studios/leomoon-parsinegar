@@ -3,7 +3,41 @@
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
+#include <QFutureWatcher>
 #include <QSaveFile>
+#include <QtConcurrentRun>
+
+namespace {
+
+constexpr auto bundledFontPath = ":/qt/qml/LeoMoon/ParsiNegar/assets/fonts/Vazirmatn[wght].ttf";
+
+QVariantMap readBundledFont()
+{
+    QFile file(QString::fromUtf8(bundledFontPath));
+    if (!file.open(QIODevice::ReadOnly)) {
+        return {
+            { QStringLiteral("ok"), false },
+            { QStringLiteral("code"), QStringLiteral("FONT_READ_FAILED") },
+            { QStringLiteral("message"), file.errorString() },
+        };
+    }
+    const QByteArray bytes = file.read(FileBridge::maximumFontBytes + 1);
+    if (bytes.size() > FileBridge::maximumFontBytes) {
+        return {
+            { QStringLiteral("ok"), false },
+            { QStringLiteral("code"), QStringLiteral("FONT_TOO_LARGE") },
+            { QStringLiteral("message"), QStringLiteral("The bundled font exceeds the supported size.") },
+        };
+    }
+    return {
+        { QStringLiteral("ok"), true },
+        { QStringLiteral("path"), QStringLiteral("bundled:Vazirmatn") },
+        { QStringLiteral("data"), bytes },
+        { QStringLiteral("byteCount"), bytes.size() },
+    };
+}
+
+} // namespace
 
 FileBridge::FileBridge(QObject *parent)
     : QObject(parent)
@@ -50,6 +84,57 @@ QVariantMap FileBridge::readFont(const QUrl &url)
         { QStringLiteral("data"), bytes },
         { QStringLiteral("byteCount"), bytes.size() },
     });
+}
+
+bool FileBridge::readFontAsync(int requestId, const QUrl &url)
+{
+    if (requestId <= 0) {
+        return false;
+    }
+    auto *watcher = new QFutureWatcher<QVariantMap>(this);
+    connect(watcher, &QFutureWatcher<QVariantMap>::finished, this, [this, watcher, requestId]() {
+        const QVariantMap raw = watcher->result();
+        watcher->deleteLater();
+        QVariantMap result;
+        if (raw.value(QStringLiteral("ok")).toBool()) {
+            result = success(raw);
+            emit fontRead(result.value(QStringLiteral("path")).toString(),
+                          result.value(QStringLiteral("byteCount")).toLongLong());
+        } else {
+            result = failure(raw.value(QStringLiteral("code")).toString(),
+                             raw.value(QStringLiteral("message")).toString());
+        }
+        emit fontReadCompleted(requestId, result);
+    });
+    watcher->setFuture(QtConcurrent::run([url]() {
+        FileBridge bridge;
+        return bridge.readFont(url);
+    }));
+    return true;
+}
+
+bool FileBridge::readBundledFontAsync(int requestId)
+{
+    if (requestId <= 0) {
+        return false;
+    }
+    auto *watcher = new QFutureWatcher<QVariantMap>(this);
+    connect(watcher, &QFutureWatcher<QVariantMap>::finished, this, [this, watcher, requestId]() {
+        const QVariantMap raw = watcher->result();
+        watcher->deleteLater();
+        QVariantMap result;
+        if (raw.value(QStringLiteral("ok")).toBool()) {
+            result = success(raw);
+            emit fontRead(result.value(QStringLiteral("path")).toString(),
+                          result.value(QStringLiteral("byteCount")).toLongLong());
+        } else {
+            result = failure(raw.value(QStringLiteral("code")).toString(),
+                             raw.value(QStringLiteral("message")).toString());
+        }
+        emit fontReadCompleted(requestId, result);
+    });
+    watcher->setFuture(QtConcurrent::run(readBundledFont));
+    return true;
 }
 
 bool FileBridge::fontPathExists(const QString &path) const
@@ -102,6 +187,33 @@ QVariantMap FileBridge::writeSvg(const QUrl &url, const QString &svg)
         { QStringLiteral("path"), path },
         { QStringLiteral("byteCount"), bytes.size() },
     });
+}
+
+bool FileBridge::writeSvgAsync(int requestId, const QUrl &url, const QString &svg)
+{
+    if (requestId <= 0) {
+        return false;
+    }
+    auto *watcher = new QFutureWatcher<QVariantMap>(this);
+    connect(watcher, &QFutureWatcher<QVariantMap>::finished, this, [this, watcher, requestId]() {
+        const QVariantMap raw = watcher->result();
+        watcher->deleteLater();
+        QVariantMap result;
+        if (raw.value(QStringLiteral("ok")).toBool()) {
+            result = success(raw);
+            emit svgWritten(result.value(QStringLiteral("path")).toString(),
+                            result.value(QStringLiteral("byteCount")).toLongLong());
+        } else {
+            result = failure(raw.value(QStringLiteral("code")).toString(),
+                             raw.value(QStringLiteral("message")).toString());
+        }
+        emit svgWriteCompleted(requestId, result);
+    });
+    watcher->setFuture(QtConcurrent::run([url, svg]() {
+        FileBridge bridge;
+        return bridge.writeSvg(url, svg);
+    }));
+    return true;
 }
 
 bool FileBridge::localPath(const QUrl &url, QString *path, QVariantMap *error)

@@ -19,12 +19,17 @@ public:
     [[nodiscard]] QString lastError() const;
 
     Q_INVOKABLE QVariantMap readFont(const QUrl &url);
+    Q_INVOKABLE bool readFontAsync(int requestId, const QUrl &url);
+    Q_INVOKABLE bool readBundledFontAsync(int requestId);
     Q_INVOKABLE bool fontPathExists(const QString &path) const;
     Q_INVOKABLE QVariantMap writeSvg(const QUrl &url, const QString &svg);
+    Q_INVOKABLE bool writeSvgAsync(int requestId, const QUrl &url, const QString &svg);
 
 signals:
     void fontRead(const QString &path, qint64 byteCount);
     void svgWritten(const QString &path, qint64 byteCount);
+    void fontReadCompleted(int requestId, const QVariantMap &result);
+    void svgWriteCompleted(int requestId, const QVariantMap &result);
     void operationFailed(const QString &code, const QString &message);
     void lastErrorChanged();
 

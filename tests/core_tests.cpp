@@ -10,6 +10,7 @@ class CoreTests final : public QObject
 
 private slots:
     void productionCoreSuite();
+    void exactFontSvgSuite();
 };
 
 void CoreTests::productionCoreSuite()
@@ -45,6 +46,48 @@ void CoreTests::productionCoreSuite()
     QVERIFY(total.isNumber());
     QCOMPARE(passed.toInt(), total.toInt());
     QCOMPARE(total.toInt(), 593);
+}
+
+void CoreTests::exactFontSvgSuite()
+{
+    QJSEngine engine;
+    QFile font(QStringLiteral(":/assets/fonts/Vazirmatn[wght].ttf"));
+    QVERIFY2(font.open(QIODevice::ReadOnly), "Could not load embedded Vazirmatn");
+    engine.globalObject().setProperty(
+        QStringLiteral("TestFontBytes"), engine.toScriptValue(font.readAll()));
+
+    const QString maryamPath = qEnvironmentVariable("PARSINEGAR_MARYAM_TEST_FONT");
+    if (!maryamPath.isEmpty()) {
+        QFile maryam(maryamPath);
+        QVERIFY2(maryam.open(QIODevice::ReadOnly), qPrintable(maryam.errorString()));
+        engine.globalObject().setProperty(
+            QStringLiteral("MaryamFontBytes"), engine.toScriptValue(maryam.readAll()));
+    } else {
+        engine.globalObject().setProperty(QStringLiteral("MaryamFontBytes"), QJSValue(QJSValue::NullValue));
+    }
+
+    const QStringList scripts {
+        QStringLiteral(":/vendor/js-bidi.js"),
+        QStringLiteral(":/vendor/js-parsi-reshaper.js"),
+        QStringLiteral(":/vendor/typr.js"),
+        QStringLiteral(":/qml/core/ParsiNegar.js"),
+        QStringLiteral(":/qml/core/ResourceLimits.js"),
+        QStringLiteral(":/qml/core/SvgCurveExporter.js"),
+        QStringLiteral(":/tests/SvgCurveTests.js"),
+    };
+    for (const QString &path : scripts) {
+        QFile script(path);
+        QVERIFY2(script.open(QIODevice::ReadOnly | QIODevice::Text), qPrintable(path));
+        const QJSValue result = engine.evaluate(QString::fromUtf8(script.readAll()), path);
+        QVERIFY2(!result.isError(), qPrintable(result.toString() + QLatin1Char('\n')
+                                               + result.property(QStringLiteral("stack")).toString()));
+    }
+
+    const QJSValue results = engine.globalObject().property(QStringLiteral("SvgCurveTestResults"));
+    const QJSValue failures = results.property(QStringLiteral("failures"));
+    QVERIFY(results.property(QStringLiteral("passed")).toInt() > 30);
+    QVERIFY2(failures.property(QStringLiteral("length")).toInt() == 0,
+             qPrintable(failures.property(0).toString()));
 }
 
 QTEST_GUILESS_MAIN(CoreTests)
