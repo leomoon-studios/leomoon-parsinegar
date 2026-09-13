@@ -302,6 +302,22 @@ var CoreTestResults;
         equal(Object.keys(defaults.ligatures).length, 286);
     });
 
+    test("every named ligature row maps exactly once to persisted settings", function () {
+        var seen = {};
+        var rowCount = 0;
+        metadata.ligatureGroups.forEach(function (group) {
+            group.ligatures.forEach(function (ligature) {
+                assert(!seen[ligature.name], "duplicate ligature row " + ligature.name);
+                seen[ligature.name] = true;
+                rowCount++;
+                assert(Object.prototype.hasOwnProperty.call(metadata.defaults.ligatures, ligature.name), ligature.name);
+                equal(metadata.defaults.ligatures[ligature.name], ligature.enabled, ligature.name);
+            });
+        });
+        equal(rowCount, 286);
+        equal(Object.keys(seen).length, Object.keys(metadata.defaults.ligatures).length);
+    });
+
     test("settings sanitize, serialize, and restore without draft text", function () {
         var custom = settings.sanitize(metadata, {
             language: "Kurdish",
@@ -313,13 +329,30 @@ var CoreTestResults;
         equal(custom.deleteHarakat, true);
         equal(custom.ligatures.UNKNOWN, undefined);
         equal(Object.keys(custom.ligatures).length, 286);
-        var serialized = settings.serialize(metadata, custom, "fa", "kurdishUrdu");
+        var desktop = {
+            conversionMode: "compatibility",
+            editorRtl: false,
+            reverseWords: false,
+            videoStudioPro: true,
+            fontPaths: { unicode: "/fonts/unicode.ttf", compatibility: "/fonts/maryam.otf" },
+            draftText: "must not persist",
+            unknown: true
+        };
+        var serialized = settings.serialize(metadata, custom, "fa", "kurdishUrdu", desktop);
         assert(serialized.indexOf("draftText") === -1);
+        assert(serialized.indexOf("must not persist") === -1);
         var restored = settings.parse(metadata, serialized);
         equal(restored.recovered, false);
         equal(restored.uiLanguage, "fa");
         equal(restored.shapingProfile, "kurdishUrdu");
         jsonEqual(copy(restored.settings), copy(custom));
+        jsonEqual(copy(restored.desktop), {
+            conversionMode: "compatibility",
+            editorRtl: false,
+            reverseWords: false,
+            videoStudioPro: true,
+            fontPaths: { unicode: "/fonts/unicode.ttf", compatibility: "/fonts/maryam.otf" }
+        });
     });
 
     test("invalid and legacy settings recover predictably", function () {
@@ -334,6 +367,8 @@ var CoreTestResults;
         var hebrew = settings.parse(metadata, "{\"schemaVersion\":1,\"shapingProfile\":\"hebrew\",\"settings\":{\"language\":\"Kurdish\"}}");
         equal(hebrew.shapingProfile, "hebrew");
         equal(hebrew.settings.language, "Kurdish");
+        jsonEqual(copy(legacy.desktop), settings.desktopDefaults());
+        jsonEqual(settings.sanitizeDesktop({ conversionMode: "invalid", editorRtl: "yes", fontPaths: { unicode: 1 } }), settings.desktopDefaults());
     });
 
     test("resource limits accept boundaries and reject oversized values", function () {

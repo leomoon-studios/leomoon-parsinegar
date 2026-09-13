@@ -61,24 +61,31 @@ TestCase {
         var applicationWindow = createMainWindow()
         var controller = applicationWindow.editorController
         var sourceEditor = findChild(applicationWindow, "sourceEditor")
+        var settingsButton = findChild(applicationWindow, "settingsButton")
+        verify(settingsButton !== null)
         var ltrButton = findChild(applicationWindow, "ltrButton")
         var rtlButton = findChild(applicationWindow, "rtlButton")
+        var unicodeButton = findChild(applicationWindow, "unicodeButton")
         var compatibilityButton = findChild(applicationWindow, "compatibilityButton")
-        var standardProfile = findChild(applicationWindow, "profile_standardPersianArabic")
-        var hebrewProfile = findChild(applicationWindow, "profile_hebrew")
-        var videoStudioToggle = findChild(applicationWindow, "videoStudioToggle")
-        var bidiToggle = findChild(applicationWindow, "bidiToggle")
+        var standardProfile = findChild(applicationWindow, "settingsProfileStandard")
+        var hebrewProfile = findChild(applicationWindow, "settingsProfileHebrew")
+        var videoStudioToggle = findChild(applicationWindow, "settingsVideoToggle")
+        var bidiToggle = findChild(applicationWindow, "settingsBidiToggle")
+        var settingsBackButton = findChild(applicationWindow, "settingsBackButton")
 
         verify(sourceEditor !== null)
         verify(ltrButton !== null)
         verify(rtlButton !== null)
+        verify(unicodeButton !== null)
         verify(compatibilityButton !== null)
         verify(standardProfile !== null)
         verify(hebrewProfile !== null)
         verify(videoStudioToggle !== null)
         verify(bidiToggle !== null)
+        verify(settingsBackButton !== null)
 
         compare(sourceEditor.horizontalAlignment, TextEdit.AlignRight)
+        compare(unicodeButton.width, compatibilityButton.width)
         ltrButton.click()
         compare(controller.editorRtl, false)
         compare(sourceEditor.horizontalAlignment, TextEdit.AlignLeft)
@@ -87,6 +94,8 @@ TestCase {
 
         compatibilityButton.click()
         compare(controller.conversionMode, "compatibility")
+        settingsButton.click()
+        compare(controller.page, "settings")
         verify(videoStudioToggle.enabled)
         hebrewProfile.click()
         compare(controller.shapingProfile, "hebrew")
@@ -96,11 +105,14 @@ TestCase {
         standardProfile.click()
         compare(controller.shapingProfile, "standardPersianArabic")
         compare(controller.conversionMode, "compatibility")
-        verify(compatibilityButton.enabled)
 
         verify(controller.reverseWords)
-        bidiToggle.click()
+        bidiToggle.toggleItem.click()
         compare(controller.reverseWords, false)
+
+        settingsBackButton.click()
+        compare(controller.page, "editor")
+        verify(compatibilityButton.enabled)
     }
 
     function test_exactClipboardConversionsAcrossScriptsAndModes() {

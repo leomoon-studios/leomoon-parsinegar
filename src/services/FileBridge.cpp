@@ -52,6 +52,18 @@ QVariantMap FileBridge::readFont(const QUrl &url)
     });
 }
 
+bool FileBridge::fontPathExists(const QString &path) const
+{
+    if (path.isEmpty()) {
+        return false;
+    }
+    const QFileInfo info(path);
+    const QString suffix = info.suffix().toLower();
+    return info.isAbsolute() && info.isFile() && info.isReadable()
+        && (suffix == QStringLiteral("ttf") || suffix == QStringLiteral("otf")
+            || suffix == QStringLiteral("ttc"));
+}
+
 QVariantMap FileBridge::writeSvg(const QUrl &url, const QString &svg)
 {
     QString path;

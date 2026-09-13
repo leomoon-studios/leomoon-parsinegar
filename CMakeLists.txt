@@ -59,11 +59,15 @@ set_source_files_properties(qml/components/LetterBadge.qml PROPERTIES QT_RESOURC
 set_source_files_properties(qml/components/Typography.qml PROPERTIES QT_RESOURCE_ALIAS Typography.qml)
 set_source_files_properties(qml/controls/AppButton.qml PROPERTIES QT_RESOURCE_ALIAS AppButton.qml)
 set_source_files_properties(qml/controls/AppToggle.qml PROPERTIES QT_RESOURCE_ALIAS AppToggle.qml)
+set_source_files_properties(qml/controls/IconButton.qml PROPERTIES QT_RESOURCE_ALIAS IconButton.qml)
+set_source_files_properties(qml/controls/IconButton.qml PROPERTIES QT_RESOURCE_ALIAS IconButton.qml)
 set_source_files_properties(qml/controls/NumericField.qml PROPERTIES QT_RESOURCE_ALIAS NumericField.qml)
 set_source_files_properties(qml/controls/PageHeader.qml PROPERTIES QT_RESOURCE_ALIAS PageHeader.qml)
 set_source_files_properties(qml/controls/StatusMessage.qml PROPERTIES QT_RESOURCE_ALIAS StatusMessage.qml)
+set_source_files_properties(qml/controls/SettingsToggle.qml PROPERTIES QT_RESOURCE_ALIAS SettingsToggle.qml)
 set_source_files_properties(qml/editor/EditorController.qml PROPERTIES QT_RESOURCE_ALIAS EditorController.qml)
 set_source_files_properties(qml/editor/EditorPage.qml PROPERTIES QT_RESOURCE_ALIAS EditorPage.qml)
+set_source_files_properties(qml/settings/SettingsPage.qml PROPERTIES QT_RESOURCE_ALIAS SettingsPage.qml)
 set_source_files_properties(qml/core/ConversionWorker.js PROPERTIES QT_RESOURCE_ALIAS ConversionWorker.js)
 
 qt_add_library(parsinegar_ui STATIC)
@@ -81,15 +85,21 @@ qt_add_qml_module(parsinegar_ui
         qml/components/Typography.qml
         qml/controls/AppButton.qml
         qml/controls/AppToggle.qml
+        qml/controls/IconButton.qml
+        qml/controls/IconButton.qml
         qml/controls/NumericField.qml
         qml/controls/PageHeader.qml
+        qml/controls/SettingsToggle.qml
         qml/controls/StatusMessage.qml
         qml/editor/EditorController.qml
         qml/editor/EditorPage.qml
+        qml/settings/SettingsPage.qml
     RESOURCES
         assets/app-icon.svg
         "assets/fonts/Vazirmatn[wght].ttf"
         assets/fonts/OFL.txt
+        assets/fonts/MaterialSymbolsRounded.ttf
+        assets/fonts/MaterialSymbols-LICENSE.txt
         vendor/js-bidi.js
         vendor/js-parsi-reshaper.js
         vendor/typr.js

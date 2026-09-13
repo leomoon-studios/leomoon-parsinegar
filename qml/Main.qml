@@ -8,8 +8,12 @@ ApplicationWindow {
 
     readonly property bool bundledFontReady: typography.ready
     readonly property bool bundledFontError: typography.failed
+    readonly property bool bundledIconFontReady: AppTheme.iconFontReady
+    readonly property bool bundledIconFontError: AppTheme.iconFontFailed
     readonly property alias editorController: controller
     required property var clipboardService
+    property var settingsService: null
+    property var fileService: null
 
     width: 900
     height: 720
@@ -28,11 +32,14 @@ ApplicationWindow {
         id: controller
         objectName: "editorController"
         clipboardBridge: root.clipboardService
+        settingsStore: root.settingsService
+        fileBridge: root.fileService
     }
 
     Component.onCompleted: {
         AppTheme.fontFamily = typography.family
-        editorPage.focusEditor()
+        if (controller.page === "editor")
+            editorPage.focusEditor()
     }
 
     ColumnLayout {
@@ -45,6 +52,8 @@ ApplicationWindow {
         RowLayout {
             Layout.fillWidth: true
             spacing: AppTheme.spacingMedium
+            LayoutMirroring.enabled: controller.uiLanguage === "fa"
+            LayoutMirroring.childrenInherit: true
 
             Rectangle {
                 implicitWidth: 44
@@ -64,7 +73,7 @@ ApplicationWindow {
 
                 Label {
                     Layout.fillWidth: true
-                    text: qsTr("ParsiNegar Desktop")
+                    text: controller.uiText("app.title")
                     font.family: AppTheme.fontFamily
                     font.pixelSize: AppTheme.fontHeading
                     font.weight: Font.DemiBold
@@ -74,7 +83,7 @@ ApplicationWindow {
 
                 Label {
                     Layout.fillWidth: true
-                    text: qsTr("Persian text tools for every desktop")
+                    text: controller.uiText("app.subtitle")
                     font.family: AppTheme.fontFamily
                     font.pixelSize: AppTheme.fontCaption
                     color: AppTheme.muted
@@ -82,12 +91,49 @@ ApplicationWindow {
                 }
             }
 
-            AppButton {
-                id: themeButton
-                objectName: "themeButton"
-                text: AppTheme.darkMode ? qsTr("Light theme") : qsTr("Dark theme")
-                Accessible.name: text
-                onClicked: AppTheme.darkMode = !AppTheme.darkMode
+            RowLayout {
+                id: headerActions
+                objectName: "headerActions"
+                visible: controller.page === "editor"
+                enabled: visible
+                spacing: AppTheme.spacingSmall
+                LayoutMirroring.enabled: false
+                LayoutMirroring.childrenInherit: true
+
+                IconButton {
+                    id: ltrButton
+                    objectName: "ltrButton"
+                    glyph: AppTheme.iconTextDirectionLtr
+                    toolTip: controller.uiText("button.ltr")
+                    selected: !controller.editorRtl
+                    onClicked: controller.setEditorDirection(false)
+                }
+
+                IconButton {
+                    id: rtlButton
+                    objectName: "rtlButton"
+                    glyph: AppTheme.iconTextDirectionRtl
+                    toolTip: controller.uiText("button.rtl")
+                    selected: controller.editorRtl
+                    onClicked: controller.setEditorDirection(true)
+                }
+
+                IconButton {
+                    id: settingsButton
+                    objectName: "settingsButton"
+                    glyph: AppTheme.iconSettings
+                    toolTip: controller.uiText("button.settings")
+                    enabled: controller.settingsReady && !controller.busy
+                    onClicked: controller.openSettings()
+                }
+
+                IconButton {
+                    id: themeButton
+                    objectName: "themeButton"
+                    glyph: AppTheme.darkMode ? AppTheme.iconLightMode : AppTheme.iconDarkMode
+                    toolTip: AppTheme.darkMode ? controller.uiText("theme.light") : controller.uiText("theme.dark")
+                    onClicked: AppTheme.darkMode = !AppTheme.darkMode
+                }
             }
         }
 
@@ -96,6 +142,19 @@ ApplicationWindow {
             objectName: "editorPage"
             Layout.fillWidth: true
             Layout.fillHeight: true
+            visible: controller.page === "editor"
+            enabled: visible
+            controller: controller
+            typography: typography
+        }
+
+        SettingsPage {
+            id: settingsPage
+            objectName: "settingsPage"
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            visible: controller.page === "settings"
+            enabled: visible
             controller: controller
             typography: typography
         }

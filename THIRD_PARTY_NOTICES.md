@@ -1,6 +1,6 @@
 # Third-party notices
 
-ParsiNegar Desktop embeds independently replaceable JavaScript libraries and a UI font. It performs no runtime downloads. The root [MIT license](LICENSE) covers original LeoMoon Studios desktop code, while the components below retain their own terms.
+ParsiNegar Desktop embeds independently replaceable JavaScript libraries, a UI font, and an icon font. It performs no runtime downloads. The root [MIT license](LICENSE) covers original LeoMoon Studios desktop code, while the components below retain their own terms.
 
 ## JsBidi
 
@@ -21,6 +21,12 @@ The vendored Typr.js file is copied from Omarchy ParsiNegar Express and retains 
 The application bundles the unchanged variable font from [Vazirmatn v33.003](https://github.com/rastikerdar/vazirmatn/releases/tag/v33.003), source commit `83629f877e8f084cc07b47030b5d3a0ff06c76ec`. Copyright 2015 The Vazirmatn Project Authors. The complete SIL Open Font License 1.1 is retained at `assets/fonts/OFL.txt`.
 
 Bundled file: `assets/fonts/Vazirmatn[wght].ttf`. The font supports regular, medium, and semibold UI weights from one resource and does not need to be installed on the user's system.
+
+## Material Symbols
+
+The application bundles a subset of [Material Symbols Rounded](https://github.com/google/material-design-icons) from commit `40a7a292a79d9394157e1ea24f83d52d5e17c556`. Copyright Google LLC. Material Symbols is distributed under the Apache License 2.0 retained at `assets/fonts/MaterialSymbols-LICENSE.txt`.
+
+Bundled file: `assets/fonts/MaterialSymbolsRounded.ttf`. It was generated from the unchanged upstream variable font with fonttools `pyftsubset` and contains only settings, light mode, dark mode, left-to-right text direction, and right-to-left text direction glyphs. No outlines were modified.
 
 ## Replacement and redistribution
 

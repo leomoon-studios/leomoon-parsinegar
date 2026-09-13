@@ -198,6 +198,7 @@ void ServiceTests::fileBridgeReadsExactFontBytes()
     QCOMPARE(result.value(QStringLiteral("path")).toString(), QDir::cleanPath(path));
     QCOMPARE(result.value(QStringLiteral("data")).toByteArray(), expected);
     QCOMPARE(result.value(QStringLiteral("byteCount")).toLongLong(), expected.size());
+    QVERIFY(bridge.fontPathExists(path));
     QCOMPARE(readSpy.count(), 1);
     QCOMPARE(failureSpy.count(), 0);
 }
@@ -214,6 +215,8 @@ void ServiceTests::fileBridgeRejectsInvalidAndOversizedFonts()
     const QString unsupportedPath = temporaryDirectory.filePath(QStringLiteral("font.txt"));
     writeBytes(unsupportedPath, QByteArrayLiteral("font"));
     QCOMPARE(errorCode(bridge.readFont(QUrl::fromLocalFile(unsupportedPath))), QStringLiteral("UNSUPPORTED_FONT_TYPE"));
+    QVERIFY(!bridge.fontPathExists(unsupportedPath));
+    QVERIFY(!bridge.fontPathExists(temporaryDirectory.filePath(QStringLiteral("missing.ttf"))));
 
     const QString oversizedPath = temporaryDirectory.filePath(QStringLiteral("oversized.ttf"));
     QFile oversized(oversizedPath);

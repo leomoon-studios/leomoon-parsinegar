@@ -1492,6 +1492,30 @@ var ReshaperSettings = (function () {
   }
   function copy(value) { return JSON.parse(JSON.stringify(value)); }
   function sanitizeUiLanguage(value) { return value === "fa" ? "fa" : "en"; }
+  function desktopDefaults() {
+    return {
+      conversionMode: "unicode",
+      editorRtl: true,
+      reverseWords: true,
+      videoStudioPro: false,
+      fontPaths: { unicode: "", compatibility: "" }
+    };
+  }
+  function sanitizeDesktop(value) {
+    var result = desktopDefaults();
+    if (!object(value)) return result;
+    if (value.conversionMode === "compatibility") result.conversionMode = "compatibility";
+    ["editorRtl", "reverseWords", "videoStudioPro"].forEach(function (name) {
+      if (typeof value[name] === "boolean") result[name] = value[name];
+    });
+    if (object(value.fontPaths)) {
+      ["unicode", "compatibility"].forEach(function (mode) {
+        if (typeof value.fontPaths[mode] === "string" && value.fontPaths[mode].length <= 4096)
+          result.fontPaths[mode] = value.fontPaths[mode];
+      });
+    }
+    return result;
+  }
   function profileForLanguage(language) { return language === "Kurdish" ? "kurdishUrdu" : "standardPersianArabic"; }
   function profileLanguage(metadata, profile) {
     for (var index = 0; index < metadata.shapingProfiles.length; index++) {
@@ -1540,13 +1564,14 @@ var ReshaperSettings = (function () {
         settings: settings,
         shapingProfile: shapingProfile,
         uiLanguage: sanitizeUiLanguage(document.uiLanguage),
+        desktop: sanitizeDesktop(document.desktop),
         recovered: false
       };
     } catch (error) {
-      return { settings: defaults(metadata), shapingProfile: "standardPersianArabic", uiLanguage: "en", recovered: true };
+      return { settings: defaults(metadata), shapingProfile: "standardPersianArabic", uiLanguage: "en", desktop: desktopDefaults(), recovered: true };
     }
   }
-  function serialize(metadata, value, uiLanguage, shapingProfile) {
+  function serialize(metadata, value, uiLanguage, shapingProfile, desktop) {
     var settings = sanitize(metadata, value);
     var profile = sanitizeShapingProfile(metadata, shapingProfile, settings.language);
     var language = profileLanguage(metadata, profile);
@@ -1555,10 +1580,12 @@ var ReshaperSettings = (function () {
       schemaVersion: 1,
       uiLanguage: sanitizeUiLanguage(uiLanguage),
       shapingProfile: profile,
+      desktop: sanitizeDesktop(desktop),
       settings: settings
     }, null, 2) + "\n";
   }
   return Object.freeze({ metadata: metadata, flags: flags, copy: copy, defaults: defaults, sanitize: sanitize,
+    desktopDefaults: desktopDefaults, sanitizeDesktop: sanitizeDesktop,
     sanitizeUiLanguage: sanitizeUiLanguage, sanitizeShapingProfile: sanitizeShapingProfile,
     profileForLanguage: profileForLanguage, profileLanguage: profileLanguage, parse: parse, serialize: serialize });
 }());

@@ -4,6 +4,9 @@ import QtQuick.Controls
 TextField {
     id: control
 
+    LayoutMirroring.enabled: false
+    LayoutMirroring.childrenInherit: true
+
     property real minimumValue: 0
     property real maximumValue: 1000000
     readonly property bool acceptableNumber: acceptableInput && text.trim() !== ""

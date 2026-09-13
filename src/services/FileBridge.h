@@ -19,6 +19,7 @@ public:
     [[nodiscard]] QString lastError() const;
 
     Q_INVOKABLE QVariantMap readFont(const QUrl &url);
+    Q_INVOKABLE bool fontPathExists(const QString &path) const;
     Q_INVOKABLE QVariantMap writeSvg(const QUrl &url, const QString &svg);
 
 signals:

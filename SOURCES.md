@@ -10,8 +10,9 @@ ParsiNegar Desktop begins from the tested host-independent components bundled wi
 | `vendor/js-parsi-reshaper.js` | JsParsiReshaper v0.1.0, commit `9f7a6b36f639ccd569598ba386f2576e5e33dbe3` | `1834aeb06c640950836a63581e36f4233a6c858acab9fc40f41ae6ec448cf1e0` |
 | `vendor/typr.js` | Typr.js commit `02c121057750d8ab607873c1b369e717e858a643` with the documented QML compatibility changes | `35ce7c53430510efdd18475fae79719985bc98e99c96fafe852e89dbd2a2dee1` |
 | `assets/fonts/Vazirmatn[wght].ttf` | Vazirmatn v33.003, commit `83629f877e8f084cc07b47030b5d3a0ff06c76ec` | `696249a2c74b39ffdef55de4df2809c5b639d3ff80d618d8160a095d2fd49dca` |
+| `assets/fonts/MaterialSymbolsRounded.ttf` | Material Symbols Rounded commit `40a7a292a79d9394157e1ea24f83d52d5e17c556`, subset to five documented glyphs | `989e7150e04d2aa1b3b54d05e6e8d9aa0f3ce0e7a10193c2c77ef48365f041a8` |
 
-The complete supplied notices and library documentation are retained below `vendor/js-bidi/`, `vendor/js-parsi-reshaper/`, `vendor/typr/`, and `assets/fonts/`. The `tests/CheckLicenses.cmake` inventory prevents a known artifact or required notice from being omitted accidentally.
+The complete supplied notices and library documentation are retained below `vendor/js-bidi/`, `vendor/js-parsi-reshaper/`, `vendor/typr/`, and `assets/fonts/`. The Material Symbols subset contains U+E247, U+E248, U+E518, U+E51C, and U+E8B8; its unchanged full-font input had SHA-256 `f1472f172c0fc4a922be22972e4752ccc54fe795ed82564ab6f6b097782f2dbc`. The `tests/CheckLicenses.cmake` inventory prevents a known artifact or required notice from being omitted accidentally.
 
 ## Application behavior reference
 

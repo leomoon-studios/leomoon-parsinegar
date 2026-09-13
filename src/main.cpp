@@ -88,6 +88,8 @@ int main(int argc, char *argv[])
     QQmlApplicationEngine engine;
     engine.setInitialProperties({
         {QStringLiteral("clipboardService"), QVariant::fromValue(&clipboardBridge)},
+        {QStringLiteral("settingsService"), QVariant::fromValue(&settingsStore)},
+        {QStringLiteral("fileService"), QVariant::fromValue(&fileBridge)},
     });
     QObject::connect(
         &engine,
@@ -116,11 +118,14 @@ int main(int argc, char *argv[])
             }
 
             const QObject *root = roots.constFirst();
-            if (root->property("bundledFontReady").toBool()) {
+            if (root->property("bundledFontReady").toBool()
+                && root->property("bundledIconFontReady").toBool()) {
                 timer->stop();
                 delete elapsed;
                 QCoreApplication::exit(EXIT_SUCCESS);
-            } else if (root->property("bundledFontError").toBool() || elapsed->elapsed() >= 5000) {
+            } else if (root->property("bundledFontError").toBool()
+                       || root->property("bundledIconFontError").toBool()
+                       || elapsed->elapsed() >= 5000) {
                 timer->stop();
                 delete elapsed;
                 QCoreApplication::exit(EXIT_FAILURE);

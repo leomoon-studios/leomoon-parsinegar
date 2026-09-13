@@ -36,15 +36,19 @@ TestCase {
         var applicationWindow = createTemporaryObject(mainWindowComponent, null)
         verify(applicationWindow !== null)
         tryCompare(applicationWindow, "bundledFontReady", true, 5000)
+        tryCompare(applicationWindow, "bundledIconFontReady", true, 5000)
         return applicationWindow
     }
 
     function test_windowResizesWithoutClipping() {
         var applicationWindow = createMainWindow()
         var contentLayout = findChild(applicationWindow, "contentLayout")
-        var editorPageScroll = findChild(applicationWindow, "editorPageScroll")
+        var editorPage = findChild(applicationWindow, "editorPage")
+        var editorScroll = findChild(applicationWindow, "editorScroll")
         verify(contentLayout !== null)
-        verify(editorPageScroll !== null)
+        verify(editorPage !== null)
+        verify(editorScroll !== null)
+        verify(findChild(applicationWindow, "editorPageScroll") === null)
 
         applicationWindow.width = applicationWindow.minimumWidth
         applicationWindow.height = applicationWindow.minimumHeight
@@ -53,14 +57,17 @@ TestCase {
         verify(contentLayout.y >= 0)
         verify(contentLayout.x + contentLayout.width <= applicationWindow.contentItem.width + 0.5)
         verify(contentLayout.y + contentLayout.height <= applicationWindow.contentItem.height + 0.5)
-        verify(editorPageScroll.width > 0)
-        verify(editorPageScroll.height > 0)
+        verify(editorPage.width > 0)
+        verify(editorPage.height > 0)
+        verify(editorScroll.height > 0)
+        var compactEditorHeight = editorScroll.height
 
         applicationWindow.width = 1100
         applicationWindow.height = 760
         wait(0)
         verify(contentLayout.x + contentLayout.width <= applicationWindow.contentItem.width + 0.5)
         verify(contentLayout.y + contentLayout.height <= applicationWindow.contentItem.height + 0.5)
+        verify(editorScroll.height > compactEditorHeight)
     }
 
     function test_keyboardFocusHasVisibleTreatment() {
@@ -93,21 +100,35 @@ TestCase {
     function test_reusableControlsAndThemeSwitch() {
         var applicationWindow = createMainWindow()
         var convertButton = findChild(applicationWindow, "convertButton")
-        var bidiToggle = findChild(applicationWindow, "bidiToggle")
+        var settingsButton = findChild(applicationWindow, "settingsButton")
         var sourceEditor = findChild(applicationWindow, "sourceEditor")
         var conversionStatus = findChild(applicationWindow, "conversionStatus")
         var themeButton = findChild(applicationWindow, "themeButton")
+        var ltrButton = findChild(applicationWindow, "ltrButton")
+        var rtlButton = findChild(applicationWindow, "rtlButton")
         verify(convertButton !== null)
-        verify(bidiToggle !== null)
+        verify(settingsButton !== null)
+        verify(ltrButton !== null)
+        verify(rtlButton !== null)
         verify(sourceEditor !== null)
         verify(conversionStatus !== null)
         verify(convertButton.accent)
-        verify(bidiToggle.checked)
+        verify(findChild(applicationWindow, "profile_standardPersianArabic") === null)
+        verify(findChild(applicationWindow, "bidiToggle") === null)
+        compare(ltrButton.glyph, AppTheme.iconTextDirectionLtr)
+        compare(rtlButton.glyph, AppTheme.iconTextDirectionRtl)
+        compare(settingsButton.glyph, AppTheme.iconSettings)
+        compare(themeButton.contentItem.font.family, AppTheme.iconFontFamily)
+        compare(ltrButton.width, rtlButton.width)
+        compare(rtlButton.width, settingsButton.width)
+        compare(settingsButton.width, themeButton.width)
         compare(sourceEditor.horizontalAlignment, TextEdit.AlignRight)
 
         var originalMode = AppTheme.darkMode
+        var originalThemeGlyph = themeButton.glyph
         themeButton.click()
         compare(AppTheme.darkMode, !originalMode)
+        verify(themeButton.glyph !== originalThemeGlyph)
         themeButton.click()
         compare(AppTheme.darkMode, originalMode)
     }
