@@ -2,15 +2,25 @@
 #include "services/ClipboardKeeper.h"
 #include "services/FileBridge.h"
 #include "services/SettingsStore.h"
+#include "services/TextDirectionBridge.h"
 
 #include <QCoreApplication>
 #include <QDir>
 #include <QFile>
 #include <QGuiApplication>
+#include <QQmlComponent>
+#include <QQmlEngine>
+#include <QQuickItem>
+#include <QQuickTextDocument>
+#include <QQuickWindow>
 #include <QSignalSpy>
 #include <QStandardPaths>
 #include <QTemporaryDir>
 #include <QTest>
+#include <QTextBlock>
+#include <QTextDocument>
+#include <QTextLayout>
+#include <QTextOption>
 #include <QUrl>
 #include <QVariantMap>
 
@@ -31,6 +41,7 @@ private slots:
     void fileBridgeRejectsInvalidAndOversizedFonts();
     void fileBridgeWritesSvgAtomically();
     void fileBridgeReportsWriteFailuresAndLimits();
+    void textDirectionBridgeAlignsRenderedParagraphs();
 };
 
 namespace {
@@ -265,6 +276,105 @@ void ServiceTests::fileBridgeReportsWriteFailuresAndLimits()
     QCOMPARE(errorCode(bridge.writeSvg(QUrl::fromLocalFile(blockedPath), QStringLiteral("<svg/>"))), QStringLiteral("SVG_WRITE_FAILED"));
     QVERIFY(QFileInfo(blockedPath).isDir());
     QCOMPARE(failureSpy.count(), 3);
+}
+
+void ServiceTests::textDirectionBridgeAlignsRenderedParagraphs()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData(R"(
+        import QtQuick
+        TextEdit {
+            width: 560
+            height: 180
+            wrapMode: TextEdit.Wrap
+            textFormat: TextEdit.RichText
+            font.pixelSize: 28
+        }
+    )", QUrl());
+    QScopedPointer<QObject> editor(component.create());
+    QVERIFY2(editor, qPrintable(component.errorString()));
+    auto *editorItem = qobject_cast<QQuickItem *>(editor.data());
+    QVERIFY(editorItem);
+
+    QQuickWindow window;
+    window.setGeometry(0, 0, 600, 220);
+    editorItem->setParentItem(window.contentItem());
+    editorItem->setPosition(QPointF(20, 20));
+    window.show();
+
+    const QString source = QStringLiteral(
+        "English.\nسلام.\n123 سلام.\n123 English.\n...");
+    auto *wrapper = qobject_cast<QQuickTextDocument *>(
+        editor->property("textDocument").value<QObject *>());
+    QVERIFY(wrapper);
+    QTextDocument *document = wrapper->textDocument();
+    QVERIFY(document);
+
+    TextDirectionBridge bridge;
+    QVERIFY(!bridge.applyAutomaticDirection(nullptr));
+    QVERIFY(!bridge.setPlainText(nullptr, source));
+    QVERIFY(bridge.plainText(nullptr).isEmpty());
+
+    QVERIFY(bridge.setPlainText(wrapper, QStringLiteral(".")));
+    QVERIFY(bridge.applyAutomaticDirection(wrapper));
+    QTRY_COMPARE(document->begin().blockFormat().alignment(), Qt::AlignLeft | Qt::AlignAbsolute);
+    QVERIFY(bridge.setPlainText(wrapper, QStringLiteral("س")));
+    QVERIFY(bridge.applyAutomaticDirection(wrapper));
+    QTRY_COMPARE(document->begin().blockFormat().alignment(), Qt::AlignRight | Qt::AlignAbsolute);
+    QTest::qWait(50);
+    QCOMPARE(document->begin().blockFormat().alignment(), Qt::AlignRight | Qt::AlignAbsolute);
+
+    QVERIFY(bridge.setPlainText(wrapper, source));
+    QVERIFY(bridge.applyAutomaticDirection(wrapper));
+    QTRY_COMPARE(
+        document->findBlockByNumber(1).blockFormat().alignment(),
+        Qt::AlignRight | Qt::AlignAbsolute);
+    QTest::qWait(50);
+    QCOMPARE(
+        document->findBlockByNumber(1).blockFormat().alignment(),
+        Qt::AlignRight | Qt::AlignAbsolute);
+    QCOMPARE(bridge.plainText(wrapper), source);
+
+    const QList<Qt::LayoutDirection> expectedDirections {
+        Qt::LeftToRight,
+        Qt::RightToLeft,
+        Qt::RightToLeft,
+        Qt::LeftToRight,
+        Qt::LeftToRight,
+    };
+    int blockIndex = 0;
+    for (QTextBlock block = document->begin(); block.isValid(); block = block.next()) {
+        QVERIFY(blockIndex < expectedDirections.size());
+        const Qt::LayoutDirection expectedDirection = expectedDirections.at(blockIndex);
+        const Qt::Alignment expectedAlignment = (expectedDirection == Qt::RightToLeft
+                ? Qt::AlignRight
+                : Qt::AlignLeft)
+            | Qt::AlignAbsolute;
+        QCOMPARE(block.blockFormat().layoutDirection(), expectedDirection);
+        QCOMPARE(block.blockFormat().alignment(), expectedAlignment);
+        QCOMPARE(block.layout()->textOption().textDirection(), expectedDirection);
+        QCOMPARE(block.layout()->textOption().alignment(), expectedAlignment);
+        blockIndex++;
+    }
+    QCOMPARE(blockIndex, expectedDirections.size());
+
+    const auto cursorX = [&editor](int position) {
+        QRectF rectangle;
+        const bool invoked = QMetaObject::invokeMethod(
+            editor.data(),
+            "positionToRectangle",
+            Q_RETURN_ARG(QRectF, rectangle),
+            Q_ARG(int, position));
+        return invoked ? rectangle.x() : -1.0;
+    };
+    QVERIFY(cursorX(0) < 50.0);
+    QVERIFY(cursorX(9) > 500.0);
+    const qreal rtlPeriodCenter = (cursorX(13) + cursorX(14)) / 2.0;
+    const qreal rtlWordLeftEdge = qMin(
+        qMin(cursorX(9), cursorX(10)),
+        qMin(cursorX(11), qMin(cursorX(12), cursorX(13))));
+    QVERIFY(rtlPeriodCenter < rtlWordLeftEdge);
 }
 
 QTEST_MAIN(ServiceTests)

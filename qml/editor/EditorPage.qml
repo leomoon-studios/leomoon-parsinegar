@@ -9,6 +9,7 @@ FocusScope {
 
     required property var controller
     required property Typography typography
+    property var textDirectionService: null
     readonly property alias editorItem: editor
     readonly property alias editorScroll: editorScroll
 
@@ -21,6 +22,29 @@ FocusScope {
 
     function focusEditor() {
         editor.forceActiveFocus()
+    }
+
+    function updateParagraphDirections() {
+        if (textDirectionService !== null)
+            textDirectionService.applyAutomaticDirection(editor.textDocument)
+    }
+
+    function syncEditorFromController() {
+        if (textDirectionService !== null) {
+            if (textDirectionService.plainText(editor.textDocument) !== controller.sourceText)
+                textDirectionService.setPlainText(editor.textDocument, controller.sourceText)
+        } else if (editor.text !== controller.sourceText) {
+            editor.text = controller.sourceText
+        }
+    }
+
+    Component.onCompleted: syncEditorFromController()
+
+    Connections {
+        target: root.controller
+        function onSourceTextChanged() {
+            root.syncEditorFromController()
+        }
     }
 
     ColumnLayout {
@@ -86,10 +110,14 @@ FocusScope {
                     TextArea {
                         id: editor
                         objectName: "sourceEditor"
-                        text: root.controller.sourceText
+                        text: ""
                         onTextChanged: {
-                            if (root.controller.sourceText !== text)
-                                root.controller.sourceText = text
+                            var source = root.textDirectionService !== null
+                                ? root.textDirectionService.plainText(textDocument)
+                                : text
+                            if (root.controller.sourceText !== source)
+                                root.controller.sourceText = source
+                            root.updateParagraphDirections()
                         }
                         font.family: AppTheme.fontFamily
                         font.pixelSize: AppTheme.fontBody
@@ -99,10 +127,11 @@ FocusScope {
                         selectionColor: AppTheme.accent
                         selectedTextColor: AppTheme.accentText
                         wrapMode: TextEdit.Wrap
-                        textFormat: TextEdit.PlainText
+                        textFormat: root.textDirectionService !== null
+                            ? TextEdit.RichText
+                            : TextEdit.PlainText
                         selectByMouse: true
                         persistentSelection: true
-                        horizontalAlignment: root.controller.editorRtl ? TextEdit.AlignRight : TextEdit.AlignLeft
                         padding: AppTheme.spacingMedium
                         Accessible.name: qsTr("Source text editor")
 

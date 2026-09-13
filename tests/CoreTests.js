@@ -108,6 +108,35 @@ var CoreTestResults;
         equal(calls, 1);
     });
 
+    test("desktop paragraph direction preserves LTR lines during visual ordering", function () {
+        var options = { reverseWords: true, autoParagraphDirection: true };
+        var source = "سلام.\nsalam.\nچطوری؟";
+        var output = core.convert(source, "unicode", options, bidi, reshaper);
+        var lines = output.split("\n");
+        equal(lines.length, 3);
+        equal(lines[0], core.convert("سلام.", "unicode", undefined, bidi, reshaper));
+        equal(lines[1], "salam.");
+        equal(lines[2], core.convert("چطوری؟", "unicode", undefined, bidi, reshaper));
+    });
+
+    test("automatic paragraph ordering preserves hard separators", function () {
+        var calls = [];
+        var ordering = {
+            getDisplay: function (text) {
+                calls.push(text);
+                return "[" + text + "]";
+            }
+        };
+        var shaper = { reshape: function (text) { return text; } };
+        equal(
+            core.convert("one\r\ntwo\rthree\u2029four", "unicode", {
+                reverseWords: true,
+                autoParagraphDirection: true
+            }, ordering, shaper),
+            "[one]\r\n[two]\r[three]\u2029[four]");
+        jsonEqual(calls, ["one", "two", "three", "four"]);
+    });
+
     test("frozen conversion options remain unchanged", function () {
         var ligatures = Object.freeze({ "RIAL SIGN": true, "ARABIC LIGATURE ALLAH": false });
         var reshaperOptions = Object.freeze({
@@ -331,7 +360,6 @@ var CoreTestResults;
         equal(Object.keys(custom.ligatures).length, 286);
         var desktop = {
             conversionMode: "compatibility",
-            editorRtl: false,
             reverseWords: false,
             videoStudioPro: true,
             fontPaths: { unicode: "/fonts/unicode.ttf", compatibility: "/fonts/maryam.otf" },
@@ -348,7 +376,6 @@ var CoreTestResults;
         jsonEqual(copy(restored.settings), copy(custom));
         jsonEqual(copy(restored.desktop), {
             conversionMode: "compatibility",
-            editorRtl: false,
             reverseWords: false,
             videoStudioPro: true,
             fontPaths: { unicode: "/fonts/unicode.ttf", compatibility: "/fonts/maryam.otf" }
@@ -368,7 +395,7 @@ var CoreTestResults;
         equal(hebrew.shapingProfile, "hebrew");
         equal(hebrew.settings.language, "Kurdish");
         jsonEqual(copy(legacy.desktop), settings.desktopDefaults());
-        jsonEqual(settings.sanitizeDesktop({ conversionMode: "invalid", editorRtl: "yes", fontPaths: { unicode: 1 } }), settings.desktopDefaults());
+        jsonEqual(settings.sanitizeDesktop({ conversionMode: "invalid", fontPaths: { unicode: 1 } }), settings.desktopDefaults());
     });
 
     test("resource limits accept boundaries and reject oversized values", function () {

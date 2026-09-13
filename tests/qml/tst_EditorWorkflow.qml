@@ -63,8 +63,6 @@ TestCase {
         var sourceEditor = findChild(applicationWindow, "sourceEditor")
         var settingsButton = findChild(applicationWindow, "settingsButton")
         verify(settingsButton !== null)
-        var ltrButton = findChild(applicationWindow, "ltrButton")
-        var rtlButton = findChild(applicationWindow, "rtlButton")
         var unicodeButton = findChild(applicationWindow, "unicodeButton")
         var compatibilityButton = findChild(applicationWindow, "compatibilityButton")
         var convertButton = findChild(applicationWindow, "convertButton")
@@ -75,8 +73,6 @@ TestCase {
         var settingsBackButton = findChild(applicationWindow, "settingsBackButton")
 
         verify(sourceEditor !== null)
-        verify(ltrButton !== null)
-        verify(rtlButton !== null)
         verify(unicodeButton !== null)
         verify(compatibilityButton !== null)
         verify(convertButton !== null)
@@ -86,7 +82,6 @@ TestCase {
         verify(bidiToggle !== null)
         verify(settingsBackButton !== null)
 
-        compare(sourceEditor.horizontalAlignment, TextEdit.AlignRight)
         compare(unicodeButton.width, compatibilityButton.width)
         compare(unicodeButton.height, compatibilityButton.height)
         verify(unicodeButton.y < compatibilityButton.y)
@@ -97,12 +92,6 @@ TestCase {
         compare(compatibilityButton.description, controller.uiText("mode.compatibilityDescription"))
         verify(unicodeButton.selected)
         verify(!compatibilityButton.selected)
-        ltrButton.click()
-        compare(controller.editorRtl, false)
-        compare(sourceEditor.horizontalAlignment, TextEdit.AlignLeft)
-        rtlButton.click()
-        compare(controller.editorRtl, true)
-
         compatibilityButton.click()
         compare(controller.conversionMode, "compatibility")
         verify(!unicodeButton.selected)
@@ -148,6 +137,7 @@ TestCase {
         controller.setShapingProfile("standardPersianArabic")
         controller.reverseWords = true
         convertAndCompare(controller, "پ abc 12", "abc 12 \ufb56")
+        convertAndCompare(controller, "سلام.\nsalam.\nچطوری؟", ".ﻡﻼﺳ\nsalam.\n؟ﯼﺭﻮﻄﭼ")
 
         controller.reverseWords = false
         convertAndCompare(controller, "\nپ\n\nت\n", "\n\ufb56\n\n\ufe95\n")
@@ -158,7 +148,7 @@ TestCase {
 
         controller.setConversionMode("unicode")
         convertAndCompare(controller, "", "")
-        compare(controller.clipboardBridge.writeCount, 8)
+        compare(controller.clipboardBridge.writeCount, 9)
     }
 
     function test_oversizedWorkerAndClipboardFailuresAreVisible() {

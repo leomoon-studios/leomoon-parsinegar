@@ -2,6 +2,7 @@
 #include "services/ClipboardKeeper.h"
 #include "services/FileBridge.h"
 #include "services/SettingsStore.h"
+#include "services/TextDirectionBridge.h"
 
 #include <QCoreApplication>
 #include <QElapsedTimer>
@@ -72,6 +73,7 @@ int main(int argc, char *argv[])
     ClipboardBridge clipboardBridge;
     SettingsStore settingsStore;
     FileBridge fileBridge;
+    TextDirectionBridge textDirectionBridge;
     qmlRegisterSingletonInstance("LeoMoon.ParsiNegar.Native", 1, 0, "ClipboardBridge", &clipboardBridge);
     qmlRegisterSingletonInstance("LeoMoon.ParsiNegar.Native", 1, 0, "SettingsStore", &settingsStore);
     qmlRegisterSingletonInstance("LeoMoon.ParsiNegar.Native", 1, 0, "FileBridge", &fileBridge);
@@ -90,6 +92,7 @@ int main(int argc, char *argv[])
         {QStringLiteral("clipboardService"), QVariant::fromValue(&clipboardBridge)},
         {QStringLiteral("settingsService"), QVariant::fromValue(&settingsStore)},
         {QStringLiteral("fileService"), QVariant::fromValue(&fileBridge)},
+        {QStringLiteral("textDirectionService"), QVariant::fromValue(&textDirectionBridge)},
     });
     QObject::connect(
         &engine,

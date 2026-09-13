@@ -14,6 +14,7 @@ ApplicationWindow {
     required property var clipboardService
     property var settingsService: null
     property var fileService: null
+    property var textDirectionService: null
 
     width: 900
     height: 720
@@ -101,24 +102,6 @@ ApplicationWindow {
                 LayoutMirroring.childrenInherit: true
 
                 IconButton {
-                    id: ltrButton
-                    objectName: "ltrButton"
-                    glyph: AppTheme.iconTextDirectionLtr
-                    toolTip: controller.uiText("button.ltr")
-                    selected: !controller.editorRtl
-                    onClicked: controller.setEditorDirection(false)
-                }
-
-                IconButton {
-                    id: rtlButton
-                    objectName: "rtlButton"
-                    glyph: AppTheme.iconTextDirectionRtl
-                    toolTip: controller.uiText("button.rtl")
-                    selected: controller.editorRtl
-                    onClicked: controller.setEditorDirection(true)
-                }
-
-                IconButton {
                     id: settingsButton
                     objectName: "settingsButton"
                     glyph: AppTheme.iconSettings
@@ -146,6 +129,7 @@ ApplicationWindow {
             enabled: visible
             controller: controller
             typography: typography
+            textDirectionService: root.textDirectionService
         }
 
         SettingsPage {

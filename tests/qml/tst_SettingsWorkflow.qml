@@ -126,7 +126,6 @@ TestCase {
         controller.setUiLanguage(data.language)
         controller.setShapingProfile("kurdishUrdu")
         controller.setConversionMode("compatibility")
-        controller.setEditorDirection(false)
         controller.setReverseWords(false)
         controller.setVideoStudioPro(true)
         controller.setBaseOption("deleteTatweel", true)
@@ -140,7 +139,6 @@ TestCase {
         compare(saved.uiLanguage, data.language)
         compare(saved.shapingProfile, "kurdishUrdu")
         compare(saved.desktop.conversionMode, "compatibility")
-        compare(saved.desktop.editorRtl, false)
         compare(saved.desktop.reverseWords, false)
         compare(saved.desktop.videoStudioPro, true)
         compare(saved.desktop.fontPaths.unicode, "/fonts/unicode.ttf")
@@ -158,7 +156,6 @@ TestCase {
         compare(restored.uiLanguage, data.language)
         compare(restored.shapingProfile, "kurdishUrdu")
         compare(restored.conversionMode, "compatibility")
-        compare(restored.editorRtl, false)
         compare(restored.reverseWords, false)
         compare(restored.videoStudioPro, true)
         compare(restored.baseOption("deleteTatweel"), true)
@@ -250,8 +247,6 @@ TestCase {
         var lettersButton = findChild(applicationWindow, "ligatureGroup_letters")
         var groupBackButton = findChild(applicationWindow, "ligatureGroupBackButton")
         var ligatureList = findChild(applicationWindow, "ligatureList")
-        var ltrButton = findChild(applicationWindow, "ltrButton")
-        var rtlButton = findChild(applicationWindow, "rtlButton")
         var unicodeButton = findChild(applicationWindow, "unicodeButton")
         var convertButton = findChild(applicationWindow, "convertButton")
 
@@ -301,7 +296,6 @@ TestCase {
         compare(controller.page, "editor")
         wait(0)
         verify(headerActions.visible)
-        verify(ltrButton.x < rtlButton.x)
         verify(convertButton.mapToItem(applicationWindow.contentItem, 0, 0).x
             < unicodeButton.mapToItem(applicationWindow.contentItem, 0, 0).x)
 

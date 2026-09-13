@@ -34,6 +34,8 @@ target_sources(parsinegar_native_services PRIVATE
     src/services/FileBridge.h
     src/services/SettingsStore.cpp
     src/services/SettingsStore.h
+    src/services/TextDirectionBridge.cpp
+    src/services/TextDirectionBridge.h
 )
 
 target_include_directories(parsinegar_native_services PUBLIC
@@ -43,6 +45,7 @@ target_include_directories(parsinegar_native_services PUBLIC
 target_link_libraries(parsinegar_native_services PUBLIC
     Qt6::Core
     Qt6::Gui
+    Qt6::Quick
 )
 
 set_source_files_properties(qml/Main.qml PROPERTIES

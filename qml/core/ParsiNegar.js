@@ -318,12 +318,13 @@ var ParsiNegar = (function () {
     }
     if (Object.getOwnPropertySymbols(options).length) throw new TypeError("Unknown option");
     Object.getOwnPropertyNames(options).forEach(function (key) {
-      if (key !== "reverseWords" && key !== "videoStudioPro" && key !== "shapingProfile" && key !== "reshaperOptions") {
+      if (key !== "reverseWords" && key !== "videoStudioPro" && key !== "autoParagraphDirection" &&
+          key !== "shapingProfile" && key !== "reshaperOptions") {
         throw new TypeError("Unknown option: " + key);
       }
     });
     var result = {};
-    ["reverseWords", "videoStudioPro"].forEach(function (key) {
+    ["reverseWords", "videoStudioPro", "autoParagraphDirection"].forEach(function (key) {
       var value = Object.prototype.hasOwnProperty.call(options, key) ? options[key] : undefined;
       if (value === undefined) value = key === "reverseWords";
       if (typeof value !== "boolean") throw new TypeError(key + " must be a boolean");
@@ -350,6 +351,14 @@ var ParsiNegar = (function () {
     return result;
   }
 
+  function reorderParagraphs(text, bidiApi) {
+    var parts = text.split(/(\r\n|[\r\n\u2029])/);
+    for (var index = 0; index < parts.length; index += 2) {
+      parts[index] = requireText(bidiApi.getDisplay(parts[index]));
+    }
+    return parts.join("");
+  }
+
   function convert(text, mode, options, bidiApi, reshaperApi) {
     requireText(text);
     if (mode !== "unicode" && mode !== "compatibility") throw new RangeError("Mode must be unicode or compatibility");
@@ -369,8 +378,11 @@ var ParsiNegar = (function () {
       var shaped = requireText(reshaperApi.reshape(normalize(text), settings.reshaperOptions));
       result = applyCustomLigatures(shaped);
     }
-    // Preserve whole-input auto detection. Do not split paragraphs or force RTL.
-    if (settings.reverseWords) result = requireText(bidiApi.getDisplay(result));
+    if (settings.reverseWords) {
+      result = settings.autoParagraphDirection
+        ? reorderParagraphs(result, bidiApi)
+        : requireText(bidiApi.getDisplay(result));
+    }
     return mode === "compatibility" ? mapMaryam(result, settings.videoStudioPro) : result;
   }
 

@@ -1495,7 +1495,6 @@ var ReshaperSettings = (function () {
   function desktopDefaults() {
     return {
       conversionMode: "unicode",
-      editorRtl: true,
       reverseWords: true,
       videoStudioPro: false,
       fontPaths: { unicode: "", compatibility: "" }
@@ -1505,7 +1504,7 @@ var ReshaperSettings = (function () {
     var result = desktopDefaults();
     if (!object(value)) return result;
     if (value.conversionMode === "compatibility") result.conversionMode = "compatibility";
-    ["editorRtl", "reverseWords", "videoStudioPro"].forEach(function (name) {
+    ["reverseWords", "videoStudioPro"].forEach(function (name) {
       if (typeof value[name] === "boolean") result[name] = value[name];
     });
     if (object(value.fontPaths)) {

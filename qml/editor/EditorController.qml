@@ -14,7 +14,6 @@ Item {
     property var settingsStore: null
     property var fileBridge: null
     property string sourceText: ""
-    property bool editorRtl: true
     property bool reverseWords: true
     property bool videoStudioPro: false
     property string uiLanguage: "en"
@@ -53,11 +52,6 @@ Item {
 
     function closeSettings() {
         page = "editor"
-    }
-
-    function setEditorDirection(rtl) {
-        editorRtl = rtl === true
-        saveSettings()
     }
 
     function setReverseWords(enabled) {
@@ -182,7 +176,6 @@ Item {
     function desktopSettings() {
         return {
             conversionMode: conversionMode,
-            editorRtl: editorRtl,
             reverseWords: reverseWords,
             videoStudioPro: videoStudioPro,
             fontPaths: {
@@ -220,7 +213,6 @@ Item {
         settingsRevision++
 
         var desktop = Settings.ReshaperSettings.sanitizeDesktop(parsed.desktop)
-        editorRtl = desktop.editorRtl
         reverseWords = desktop.reverseWords
         state.lastNonHebrewMode = desktop.conversionMode
         state.conversionMode = hebrewProfile ? "unicode" : desktop.conversionMode
@@ -295,6 +287,7 @@ Item {
     function conversionOptions() {
         return {
             reverseWords: reverseWords,
+            autoParagraphDirection: true,
             videoStudioPro: videoStudioPro,
             shapingProfile: shapingProfile,
             reshaperOptions: reshaperSettings
