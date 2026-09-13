@@ -252,6 +252,8 @@ TestCase {
         var ligatureList = findChild(applicationWindow, "ligatureList")
         var ltrButton = findChild(applicationWindow, "ltrButton")
         var rtlButton = findChild(applicationWindow, "rtlButton")
+        var unicodeButton = findChild(applicationWindow, "unicodeButton")
+        var convertButton = findChild(applicationWindow, "convertButton")
 
         verify(settingsButton !== null)
         verify(headerActions.visible)
@@ -297,8 +299,11 @@ TestCase {
         var settingsBackButton = findChild(applicationWindow, "settingsBackButton")
         settingsBackButton.click()
         compare(controller.page, "editor")
+        wait(0)
         verify(headerActions.visible)
         verify(ltrButton.x < rtlButton.x)
+        verify(convertButton.mapToItem(applicationWindow.contentItem, 0, 0).x
+            < unicodeButton.mapToItem(applicationWindow.contentItem, 0, 0).x)
 
         var mirroredContainer = createTemporaryObject(mirroredNumberComponent, null)
         verify(mirroredContainer !== null)

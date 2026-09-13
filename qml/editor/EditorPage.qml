@@ -124,43 +124,60 @@ FocusScope {
                     busy: root.controller.busy
                 }
 
-                GridLayout {
+                RowLayout {
+                    id: conversionActions
+                    objectName: "conversionActions"
                     Layout.fillWidth: true
-                    columns: 2
-                    columnSpacing: AppTheme.spacingSmall
-                    rowSpacing: AppTheme.spacingSmall
+                    Layout.maximumHeight: implicitHeight
+                    spacing: AppTheme.spacingMedium
+                    layoutDirection: root.controller.uiLanguage === "fa" ? Qt.RightToLeft : Qt.LeftToRight
+                    LayoutMirroring.enabled: false
+                    LayoutMirroring.childrenInherit: false
 
-                    AppButton {
-                        objectName: "unicodeButton"
+                    ColumnLayout {
                         Layout.fillWidth: true
                         Layout.preferredWidth: 0
-                        text: root.uiText("mode.unicode")
-                        selected: root.controller.conversionMode === "unicode"
-                        onClicked: root.controller.setConversionMode("unicode")
+                        spacing: AppTheme.spacingSmall
+
+                        ModeCard {
+                            objectName: "unicodeButton"
+                            Layout.fillWidth: true
+                            LayoutMirroring.enabled: root.controller.uiLanguage === "fa"
+                            LayoutMirroring.childrenInherit: true
+                            title: root.uiText("mode.unicode")
+                            description: root.uiText("mode.unicodeDescription")
+                            selected: root.controller.conversionMode === "unicode"
+                            onClicked: root.controller.setConversionMode("unicode")
+                        }
+
+                        ModeCard {
+                            objectName: "compatibilityButton"
+                            Layout.fillWidth: true
+                            LayoutMirroring.enabled: root.controller.uiLanguage === "fa"
+                            LayoutMirroring.childrenInherit: true
+                            title: root.uiText("mode.compatibility")
+                            description: root.uiText("mode.compatibilityDescription")
+                            selected: root.controller.conversionMode === "compatibility"
+                            enabled: !root.controller.hebrewProfile
+                            onClicked: root.controller.setConversionMode("compatibility")
+                        }
                     }
 
                     AppButton {
-                        objectName: "compatibilityButton"
-                        Layout.fillWidth: true
-                        Layout.preferredWidth: 0
-                        text: root.uiText("mode.compatibility")
-                        selected: root.controller.conversionMode === "compatibility"
-                        enabled: !root.controller.hebrewProfile
-                        onClicked: root.controller.setConversionMode("compatibility")
-                    }
-                }
-
-                AppButton {
-                    id: convertButton
-                    objectName: "convertButton"
-                    Layout.fillWidth: true
-                    text: root.controller.busy ? root.uiText("status.converting") : root.uiText("button.convert")
-                    accent: true
-                    enabled: !root.controller.busy && root.typography.ready
-                    Accessible.name: root.uiText("button.convert")
-                    onClicked: {
-                        root.controller.convertAndCopy()
-                        root.focusEditor()
+                        id: convertButton
+                        objectName: "convertButton"
+                        Layout.fillHeight: true
+                        Layout.minimumWidth: 140
+                        Layout.preferredWidth: 220
+                        Layout.maximumWidth: 280
+                        text: root.controller.busy ? root.uiText("status.converting") : root.uiText("button.convert")
+                        accent: true
+                        enabled: !root.controller.busy && root.typography.ready
+                        Accessible.name: root.uiText("button.convert")
+                        onClicked: {
+                            root.controller.convertAndCopy()
+                            root.focusEditor()
+                        }
                     }
                 }
             }

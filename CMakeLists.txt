@@ -60,7 +60,7 @@ set_source_files_properties(qml/components/Typography.qml PROPERTIES QT_RESOURCE
 set_source_files_properties(qml/controls/AppButton.qml PROPERTIES QT_RESOURCE_ALIAS AppButton.qml)
 set_source_files_properties(qml/controls/AppToggle.qml PROPERTIES QT_RESOURCE_ALIAS AppToggle.qml)
 set_source_files_properties(qml/controls/IconButton.qml PROPERTIES QT_RESOURCE_ALIAS IconButton.qml)
-set_source_files_properties(qml/controls/IconButton.qml PROPERTIES QT_RESOURCE_ALIAS IconButton.qml)
+set_source_files_properties(qml/controls/ModeCard.qml PROPERTIES QT_RESOURCE_ALIAS ModeCard.qml)
 set_source_files_properties(qml/controls/NumericField.qml PROPERTIES QT_RESOURCE_ALIAS NumericField.qml)
 set_source_files_properties(qml/controls/PageHeader.qml PROPERTIES QT_RESOURCE_ALIAS PageHeader.qml)
 set_source_files_properties(qml/controls/StatusMessage.qml PROPERTIES QT_RESOURCE_ALIAS StatusMessage.qml)
@@ -86,7 +86,7 @@ qt_add_qml_module(parsinegar_ui
         qml/controls/AppButton.qml
         qml/controls/AppToggle.qml
         qml/controls/IconButton.qml
-        qml/controls/IconButton.qml
+        qml/controls/ModeCard.qml
         qml/controls/NumericField.qml
         qml/controls/PageHeader.qml
         qml/controls/SettingsToggle.qml

@@ -45,9 +45,11 @@ TestCase {
         var contentLayout = findChild(applicationWindow, "contentLayout")
         var editorPage = findChild(applicationWindow, "editorPage")
         var editorScroll = findChild(applicationWindow, "editorScroll")
+        var conversionActions = findChild(applicationWindow, "conversionActions")
         verify(contentLayout !== null)
         verify(editorPage !== null)
         verify(editorScroll !== null)
+        verify(conversionActions !== null)
         verify(findChild(applicationWindow, "editorPageScroll") === null)
 
         applicationWindow.width = applicationWindow.minimumWidth
@@ -61,6 +63,7 @@ TestCase {
         verify(editorPage.height > 0)
         verify(editorScroll.height > 0)
         var compactEditorHeight = editorScroll.height
+        var compactActionsHeight = conversionActions.height
 
         applicationWindow.width = 1100
         applicationWindow.height = 760
@@ -68,6 +71,8 @@ TestCase {
         verify(contentLayout.x + contentLayout.width <= applicationWindow.contentItem.width + 0.5)
         verify(contentLayout.y + contentLayout.height <= applicationWindow.contentItem.height + 0.5)
         verify(editorScroll.height > compactEditorHeight)
+        verify(conversionActions.height <= compactActionsHeight)
+        verify(editorScroll.height > conversionActions.height)
     }
 
     function test_keyboardFocusHasVisibleTreatment() {
