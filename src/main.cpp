@@ -20,7 +20,23 @@
 
 namespace {
 
-constexpr auto applicationId = "com.leomoon-studios.parsinegar-desktop";
+constexpr auto workerScriptConnectionWarning =
+    "QObject::connect(QJSEngine, QtObject): invalid nullptr parameter";
+
+void applicationMessageHandler(
+    QtMsgType type,
+    const QMessageLogContext &context,
+    const QString &message)
+{
+    // Qt 6.11 emits this from its private WorkerScript engine while creating
+    // the isolated JavaScript global object. The workers remain functional.
+    if (type == QtWarningMsg
+        && message == QLatin1StringView(workerScriptConnectionWarning)) {
+        return;
+    }
+
+    qt_message_output(type, context, message);
+}
 
 bool verifyEmbeddedResources()
 {
@@ -74,12 +90,13 @@ bool verifyEmbeddedResources()
 
 int main(int argc, char *argv[])
 {
-    QGuiApplication application(argc, argv);
     QCoreApplication::setOrganizationName(QStringLiteral("LeoMoon Studios"));
     QCoreApplication::setOrganizationDomain(QStringLiteral("leomoon-studios.com"));
     QCoreApplication::setApplicationName(QStringLiteral("ParsiNegar Desktop"));
     QCoreApplication::setApplicationVersion(QStringLiteral("0.1.0"));
-    application.setDesktopFileName(QString::fromUtf8(applicationId));
+    qInstallMessageHandler(applicationMessageHandler);
+
+    QGuiApplication application(argc, argv);
     application.setWindowIcon(QIcon(QStringLiteral(":/qt/qml/LeoMoon/ParsiNegar/assets/app-icon.svg")));
 
     QString clipboardTransferPath;
