@@ -2,6 +2,7 @@ import QtQuick
 import "qml/core/InterfaceStrings.js" as Strings
 import "qml/core/ReshaperSettings.js" as Settings
 import "qml/core/ResourceLimits.js" as Limits
+import "qml/core/TextTools.js" as TextTools
 
 Item {
     id: root
@@ -20,6 +21,9 @@ Item {
     property string unicodeFontPath: ""
     property string compatibilityFontPath: ""
     property var reshaperSettings: Settings.ReshaperSettings.defaults(Settings.ReshaperSettings.metadata)
+    property var textTools: TextTools.TextTools.defaults()
+    property string textToolsUndoText: ""
+    property var lastAppliedTextTools: []
     property string page: "editor"
     property int settingsRevision: 0
 
@@ -54,12 +58,51 @@ Item {
         page = "export"
     }
 
+    function openTextTools() {
+        page = "tools"
+    }
+
+    function closeTextTools() {
+        page = "editor"
+    }
+
     function closeExport() {
         page = "editor"
     }
 
     function closeSettings() {
         page = "editor"
+    }
+
+    function textToolEnabled(id) {
+        return textTools && textTools[id] === true
+    }
+
+    function toggleTextTool(id) {
+        textTools = TextTools.TextTools.withToggled(textTools, id)
+        saveSettings()
+    }
+
+    function applyTextToolsToSource() {
+        var input = sourceText
+        var result = TextTools.TextTools.applyEnabled(input, textTools)
+        lastAppliedTextTools = result.applied
+        if (result.text !== input) {
+            textToolsUndoText = input
+            sourceText = result.text
+        }
+        return result
+    }
+
+    function undoTextTools() {
+        if (textToolsUndoText === "")
+            return false
+        var previous = textToolsUndoText
+        textToolsUndoText = ""
+        sourceText = previous
+        state.statusText = uiText("tools.undoStatus")
+        state.statusLevel = "info"
+        return true
     }
 
     function setReverseWords(enabled) {
@@ -197,7 +240,7 @@ Item {
         if (!state.settingsReady || !settingsStore || typeof settingsStore.save !== "function")
             return false
         var json = Settings.ReshaperSettings.serialize(
-            reshaperMetadata, reshaperSettings, uiLanguage, shapingProfile, desktopSettings())
+            reshaperMetadata, reshaperSettings, uiLanguage, shapingProfile, desktopSettings(), textTools)
         var result = settingsStore.save(json)
         if (!result || result.ok !== true) {
             state.settingsMessageKey = "settings.status.saveFailure"
@@ -218,6 +261,7 @@ Item {
         uiLanguage = parsed.uiLanguage
         state.shapingProfile = parsed.shapingProfile
         reshaperSettings = Settings.ReshaperSettings.sanitize(reshaperMetadata, parsed.settings)
+        textTools = TextTools.TextTools.copyState(parsed.textTools)
         settingsRevision++
 
         var desktop = Settings.ReshaperSettings.sanitizeDesktop(parsed.desktop)
@@ -306,8 +350,9 @@ Item {
         if (state.busy)
             return false
 
+        var prepared = applyTextToolsToSource()
         try {
-            Limits.ResourceLimits.assertTextLength(sourceText, maximumTextLength, "CONVERSION_TEXT_TOO_LARGE")
+            Limits.ResourceLimits.assertTextLength(prepared.text, maximumTextLength, "CONVERSION_TEXT_TOO_LARGE")
         } catch (error) {
             state.statusText = error && error.code === "CONVERSION_TEXT_TOO_LARGE"
                 ? uiText("status.textTooLarge")
@@ -324,7 +369,7 @@ Item {
         state.statusLevel = "info"
         conversionWorker.sendMessage({
             id: state.activeRequestId,
-            text: sourceText,
+            text: prepared.text,
             mode: conversionMode,
             options: conversionOptions(),
             maxOutputLength: maximumTextLength,
@@ -359,7 +404,9 @@ Item {
         }
 
         state.lastOutput = message.output
-        state.statusText = uiText("status.converted")
+        state.statusText = lastAppliedTextTools.length > 0
+            ? uiText("status.converted") + " " + uiText("tools.appliedStatus")
+            : uiText("status.converted")
         state.statusLevel = "success"
         conversionFinished(true, message.output)
         return true

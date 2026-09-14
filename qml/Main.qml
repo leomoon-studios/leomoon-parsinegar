@@ -116,12 +116,24 @@ ApplicationWindow {
                     onClicked: {
                         if (controller.page === "export") {
                             controller.closeExport()
+                        } else if (controller.page === "tools") {
+                            controller.closeTextTools()
                         } else if (settingsPage.ligatureGroupId !== "") {
                             settingsPage.closeGroup()
                         } else {
                             controller.closeSettings()
                         }
                     }
+                }
+
+                IconButton {
+                    id: textToolsButton
+                    objectName: "textToolsButton"
+                    visible: controller.page === "editor"
+                    glyph: AppTheme.iconTools
+                    toolTip: controller.uiText("tools.title")
+                    enabled: controller.settingsReady && !controller.busy && !exportController.busy
+                    onClicked: controller.openTextTools()
                 }
 
                 IconButton {
@@ -177,6 +189,17 @@ ApplicationWindow {
             controller: controller
             typography: typography
             navigationBackButton: headerBackButton
+        }
+
+        TextToolsPage {
+            id: textToolsPage
+            objectName: "textToolsPage"
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            visible: controller.page === "tools"
+            enabled: visible
+            controller: controller
+            typography: typography
         }
 
         ExportPage {

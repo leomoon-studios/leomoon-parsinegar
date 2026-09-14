@@ -73,6 +73,7 @@ set_source_files_properties(qml/controls/SettingsToggle.qml PROPERTIES QT_RESOUR
 set_source_files_properties(qml/editor/EditorController.qml PROPERTIES QT_RESOURCE_ALIAS EditorController.qml)
 set_source_files_properties(qml/editor/EditorPage.qml PROPERTIES QT_RESOURCE_ALIAS EditorPage.qml)
 set_source_files_properties(qml/settings/SettingsPage.qml PROPERTIES QT_RESOURCE_ALIAS SettingsPage.qml)
+set_source_files_properties(qml/texttools/TextToolsPage.qml PROPERTIES QT_RESOURCE_ALIAS TextToolsPage.qml)
 set_source_files_properties(qml/core/ConversionWorker.js PROPERTIES QT_RESOURCE_ALIAS ConversionWorker.js)
 set_source_files_properties(qml/core/SvgCurveWorker.js PROPERTIES QT_RESOURCE_ALIAS SvgCurveWorker.js)
 set_source_files_properties(qml/export/SvgCurveExportController.qml PROPERTIES QT_RESOURCE_ALIAS SvgCurveExportController.qml)
@@ -102,6 +103,7 @@ qt_add_qml_module(parsinegar_ui
         qml/editor/EditorController.qml
         qml/editor/EditorPage.qml
         qml/settings/SettingsPage.qml
+        qml/texttools/TextToolsPage.qml
         qml/export/SvgCurveExportController.qml
         qml/export/ExportPage.qml
     RESOURCES
@@ -120,6 +122,7 @@ qt_add_qml_module(parsinegar_ui
         qml/core/ParsiNegar.js
         qml/core/ReshaperSettings.js
         qml/core/ResourceLimits.js
+        qml/core/TextTools.js
 )
 
 target_link_libraries(parsinegar_ui PUBLIC
@@ -193,6 +196,7 @@ if(BUILD_TESTING)
             qml/core/ParsiNegar.js
             qml/core/ReshaperSettings.js
             qml/core/ResourceLimits.js
+            qml/core/TextTools.js
             qml/core/SvgCurveExporter.js
             tests/fixtures/ParsiNegarFixtures.js
             tests/CoreTests.js

@@ -189,6 +189,24 @@ TestCase {
         compare(controller.sourceText, "پ")
     }
 
+    function test_enabledTextToolsUpdateSourceBeforeConversionAndCanBeUndone() {
+        var applicationWindow = createMainWindow()
+        var controller = applicationWindow.editorController
+        controller.reverseWords = false
+        controller.toggleTextTool("repairZwnj")
+        controller.toggleTextTool("persianDigits")
+        controller.sourceText = "می روم\n\nمیدان 12%"
+
+        verify(controller.convertAndCopy())
+        compare(controller.sourceText, "می‌روم\n\nمیدان ۱۲٪")
+        tryCompare(controller, "busy", false, 20000)
+        verify(controller.statusText.indexOf(controller.uiText("tools.appliedStatus")) !== -1)
+        verify(controller.textToolsUndoText !== "")
+        verify(controller.undoTextTools())
+        compare(controller.sourceText, "می روم\n\nمیدان 12%")
+        compare(controller.statusText, controller.uiText("tools.undoStatus"))
+    }
+
     function test_maximumRequestKeepsSceneResponsiveAndRejectsRaces() {
         var applicationWindow = createMainWindow()
         var controller = applicationWindow.editorController

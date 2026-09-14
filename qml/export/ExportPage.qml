@@ -392,12 +392,24 @@ FocusScope {
                                 rowSpacing: AppTheme.spacingSmall
 
                                 Label { text: root.uiText("export.width"); font.family: AppTheme.fontFamily; color: AppTheme.muted }
-                                NumericField { id: widthField; objectName: "exportWidth"; Layout.fillWidth: true; minimumValue: 0.01; maximumValue: 1000000; text: "800"; enabled: !root.automaticWidth }
-                                AppButton { objectName: "exportAutoWidth"; text: root.uiText("export.auto"); selected: root.automaticWidth; onClicked: root.automaticWidth = !root.automaticWidth }
+                                NumericField { id: widthField; objectName: "exportWidth"; Layout.fillWidth: true; minimumValue: 0.01; maximumValue: 1000000; text: "800"; enabled: !root.automaticWidth; opacity: enabled ? 1.0 : 0.5 }
+                                AppToggle {
+                                    objectName: "exportAutoWidth"
+                                    text: root.uiText("export.auto")
+                                    checked: root.automaticWidth
+                                    onToggled: root.automaticWidth = checked
+                                    Accessible.name: root.uiText("export.auto") + " " + root.uiText("export.width")
+                                }
 
                                 Label { text: root.uiText("export.height"); font.family: AppTheme.fontFamily; color: AppTheme.muted }
-                                NumericField { id: heightField; objectName: "exportHeight"; Layout.fillWidth: true; minimumValue: 0.01; maximumValue: 1000000; text: "300"; enabled: !root.automaticHeight }
-                                AppButton { objectName: "exportAutoHeight"; text: root.uiText("export.auto"); selected: root.automaticHeight; onClicked: root.automaticHeight = !root.automaticHeight }
+                                NumericField { id: heightField; objectName: "exportHeight"; Layout.fillWidth: true; minimumValue: 0.01; maximumValue: 1000000; text: "300"; enabled: !root.automaticHeight; opacity: enabled ? 1.0 : 0.5 }
+                                AppToggle {
+                                    objectName: "exportAutoHeight"
+                                    text: root.uiText("export.auto")
+                                    checked: root.automaticHeight
+                                    onToggled: root.automaticHeight = checked
+                                    Accessible.name: root.uiText("export.auto") + " " + root.uiText("export.height")
+                                }
                             }
 
                             GridLayout {

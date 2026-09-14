@@ -1491,6 +1491,14 @@ var ReshaperSettings = (function () {
       Object.prototype.toString.call(value) === "[object Object]";
   }
   function copy(value) { return JSON.parse(JSON.stringify(value)); }
+  function sanitizeTextTools(value) {
+    var result = {};
+    if (!object(value)) return result;
+    Object.keys(value).forEach(function (name) {
+      if (typeof value[name] === "boolean") result[name] = value[name];
+    });
+    return result;
+  }
   function sanitizeUiLanguage(value) { return value === "fa" ? "fa" : "en"; }
   function desktopDefaults() {
     return {
@@ -1564,13 +1572,14 @@ var ReshaperSettings = (function () {
         shapingProfile: shapingProfile,
         uiLanguage: sanitizeUiLanguage(document.uiLanguage),
         desktop: sanitizeDesktop(document.desktop),
+        textTools: sanitizeTextTools(document.textTools),
         recovered: false
       };
     } catch (error) {
-      return { settings: defaults(metadata), shapingProfile: "standardPersianArabic", uiLanguage: "en", desktop: desktopDefaults(), recovered: true };
+      return { settings: defaults(metadata), shapingProfile: "standardPersianArabic", uiLanguage: "en", desktop: desktopDefaults(), textTools: {}, recovered: true };
     }
   }
-  function serialize(metadata, value, uiLanguage, shapingProfile, desktop) {
+  function serialize(metadata, value, uiLanguage, shapingProfile, desktop, textTools) {
     var settings = sanitize(metadata, value);
     var profile = sanitizeShapingProfile(metadata, shapingProfile, settings.language);
     var language = profileLanguage(metadata, profile);
@@ -1580,11 +1589,12 @@ var ReshaperSettings = (function () {
       uiLanguage: sanitizeUiLanguage(uiLanguage),
       shapingProfile: profile,
       desktop: sanitizeDesktop(desktop),
+      textTools: sanitizeTextTools(textTools),
       settings: settings
     }, null, 2) + "\n";
   }
   return Object.freeze({ metadata: metadata, flags: flags, copy: copy, defaults: defaults, sanitize: sanitize,
-    desktopDefaults: desktopDefaults, sanitizeDesktop: sanitizeDesktop,
+    desktopDefaults: desktopDefaults, sanitizeDesktop: sanitizeDesktop, sanitizeTextTools: sanitizeTextTools,
     sanitizeUiLanguage: sanitizeUiLanguage, sanitizeShapingProfile: sanitizeShapingProfile,
     profileForLanguage: profileForLanguage, profileLanguage: profileLanguage, parse: parse, serialize: serialize });
 }());

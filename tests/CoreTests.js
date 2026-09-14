@@ -58,9 +58,36 @@ var CoreTestResults;
     var fixtures = fixtureData.conversion;
     var maryam = fixtureData.maryam;
     var settings = ReshaperSettings;
+    var textTools = TextTools;
     var metadata = settings.metadata;
     var strings = InterfaceStrings;
     var limits = ResourceLimits;
+
+    test("text tools expose the complete shared operation set", function () {
+        equal(textTools.operations.length, 15);
+        assert(Object.isFrozen(textTools));
+        equal(textTools.applyOne("يى ك", "arabicYehToPersian"), "یی ك");
+        equal(textTools.applyOne("ك", "arabicKafToPersian"), "ک");
+    });
+
+    test("text-tool reverse pairs are mutually exclusive", function () {
+        var state = textTools.withToggled({}, "persianDigits");
+        state = textTools.withToggled(state, "englishDigits");
+        equal(state.persianDigits, false);
+        equal(state.englishDigits, true);
+        state = textTools.copyState({ persianQuotes: true, englishQuotes: true });
+        equal(state.persianQuotes, true);
+        equal(state.englishQuotes, false);
+    });
+
+    test("text tools preserve newlines and use verb-aware ZWNJ repair", function () {
+        var result = textTools.applyEnabled("می روم\n\nنمیخواستند میدان 12%", {
+            repairZwnj: true,
+            persianDigits: true
+        });
+        equal(result.text, "می‌روم\n\nنمی‌خواستند میدان ۱۲٪");
+        jsonEqual(copy(result.applied), ["persianDigits", "repairZwnj"]);
+    });
 
     test("core namespaces and APIs are immutable", function () {
         assert(Object.isFrozen(core), "ParsiNegar must be frozen");
@@ -384,13 +411,15 @@ var CoreTestResults;
             draftText: "must not persist",
             unknown: true
         };
-        var serialized = settings.serialize(metadata, custom, "fa", "kurdishUrdu", desktop);
+        var toolState = { repairZwnj: true, persianDigits: true, invalid: "true" };
+        var serialized = settings.serialize(metadata, custom, "fa", "kurdishUrdu", desktop, toolState);
         assert(serialized.indexOf("draftText") === -1);
         assert(serialized.indexOf("must not persist") === -1);
         var restored = settings.parse(metadata, serialized);
         equal(restored.recovered, false);
         equal(restored.uiLanguage, "fa");
         equal(restored.shapingProfile, "kurdishUrdu");
+        jsonEqual(copy(restored.textTools), { repairZwnj: true, persianDigits: true });
         jsonEqual(copy(restored.settings), copy(custom));
         jsonEqual(copy(restored.desktop), {
             conversionMode: "compatibility",

@@ -106,6 +106,7 @@ TestCase {
         var applicationWindow = createMainWindow()
         var convertButton = findChild(applicationWindow, "convertButton")
         var exportButton = findChild(applicationWindow, "exportButton")
+        var textToolsButton = findChild(applicationWindow, "textToolsButton")
         var settingsButton = findChild(applicationWindow, "settingsButton")
         var sourceEditor = findChild(applicationWindow, "sourceEditor")
         var editorCursor = findChild(applicationWindow, "editorCursor")
@@ -114,6 +115,7 @@ TestCase {
         var themeButton = findChild(applicationWindow, "themeButton")
         verify(convertButton !== null)
         verify(exportButton !== null)
+        verify(textToolsButton !== null)
         verify(settingsButton !== null)
         verify(sourceEditor !== null)
         verify(editorCursor !== null)
@@ -135,10 +137,13 @@ TestCase {
         verify(findChild(applicationWindow, "bidiToggle") === null)
         compare(settingsButton.glyph, AppTheme.iconSettings)
         compare(exportButton.glyph, AppTheme.iconExport)
+        compare(textToolsButton.glyph, AppTheme.iconTools)
+        verify(textToolsButton.glyph !== "")
         verify(exportButton.glyph !== "")
         compare(exportButton.contentItem.font.family, AppTheme.iconFontFamily)
         compare(themeButton.contentItem.font.family, AppTheme.iconFontFamily)
         compare(settingsButton.width, themeButton.width)
+        compare(textToolsButton.width, themeButton.width)
 
         var originalMode = AppTheme.darkMode
         var originalThemeGlyph = themeButton.glyph
@@ -147,6 +152,38 @@ TestCase {
         verify(themeButton.glyph !== originalThemeGlyph)
         themeButton.click()
         compare(AppTheme.darkMode, originalMode)
+    }
+
+    function test_textToolsPageNavigationAndMirroring() {
+        var applicationWindow = createMainWindow()
+        var controller = applicationWindow.editorController
+        var toolsButton = findChild(applicationWindow, "textToolsButton")
+        var toolsPage = findChild(applicationWindow, "textToolsPage")
+        var toolsScroll = findChild(applicationWindow, "textToolsScroll")
+        var backButton = findChild(applicationWindow, "headerBackButton")
+        verify(toolsButton !== null)
+        verify(toolsPage !== null)
+        verify(toolsScroll !== null)
+
+        toolsButton.click()
+        compare(controller.page, "tools")
+        verify(toolsPage.visible)
+        tryVerify(function() { return toolsPage.height > 0 && toolsPage.contentImplicitHeight > toolsPage.height })
+        verify(backButton.visible)
+        compare(backButton.glyph, AppTheme.iconBack)
+        compare(toolsScroll.leftPadding, AppTheme.spacingLarge)
+        compare(toolsScroll.rightPadding, AppTheme.spacingLarge)
+
+        controller.toggleTextTool("persianDigits")
+        compare(controller.textToolEnabled("persianDigits"), true)
+        controller.toggleTextTool("englishDigits")
+        compare(controller.textToolEnabled("englishDigits"), true)
+        compare(controller.textToolEnabled("persianDigits"), false)
+
+        controller.setUiLanguage("fa")
+        compare(backButton.glyph, AppTheme.iconForward)
+        backButton.click()
+        compare(controller.page, "editor")
     }
 
     function test_typographyFallsBackWhenBundledFontFails() {
