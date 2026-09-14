@@ -14,6 +14,7 @@
 namespace {
 
 constexpr auto settingsFileName = "settings.json";
+constexpr auto configDirectoryName = "leomoon-studios.parsinegar-desktop";
 
 bool isProhibitedKey(const QString &key)
 {
@@ -24,7 +25,10 @@ bool isProhibitedKey(const QString &key)
 } // namespace
 
 SettingsStore::SettingsStore(QObject *parent)
-    : SettingsStore(QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation), parent)
+    : SettingsStore(
+        QDir(QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation))
+            .filePath(QString::fromUtf8(configDirectoryName)),
+        parent)
 {
 }
 

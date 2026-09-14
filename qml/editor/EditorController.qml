@@ -22,6 +22,7 @@ Item {
     property string compatibilityFontPath: ""
     property var reshaperSettings: Settings.ReshaperSettings.defaults(Settings.ReshaperSettings.metadata)
     property var textTools: TextTools.TextTools.defaults()
+    property var exportSettings: Settings.ReshaperSettings.desktopDefaults().exportSettings
     property string textToolsUndoText: ""
     property var lastAppliedTextTools: []
     property string page: "editor"
@@ -80,6 +81,14 @@ Item {
 
     function toggleTextTool(id) {
         textTools = TextTools.TextTools.withToggled(textTools, id)
+        saveSettings()
+    }
+
+    function setExportSettings(value) {
+        var next = Settings.ReshaperSettings.sanitizeExportSettings(value)
+        if (JSON.stringify(exportSettings) === JSON.stringify(next))
+            return
+        exportSettings = next
         saveSettings()
     }
 
@@ -232,7 +241,8 @@ Item {
             fontPaths: {
                 unicode: unicodeFontPath,
                 compatibility: compatibilityFontPath
-            }
+            },
+            exportSettings: exportSettings
         }
     }
 
@@ -271,6 +281,7 @@ Item {
         videoStudioPro = !hebrewProfile && state.conversionMode === "compatibility"
             ? desktop.videoStudioPro
             : false
+        exportSettings = Settings.ReshaperSettings.sanitizeExportSettings(desktop.exportSettings)
         unicodeFontPath = validFontPath(desktop.fontPaths.unicode) ? desktop.fontPaths.unicode : ""
         compatibilityFontPath = validFontPath(desktop.fontPaths.compatibility) ? desktop.fontPaths.compatibility : ""
         return unicodeFontPath !== desktop.fontPaths.unicode

@@ -134,6 +134,21 @@ TestCase {
         controller.toggleTextTool("persianDigits")
         controller.toggleTextTool("englishDigits")
         controller.toggleTextTool("repairZwnj")
+        controller.setExportSettings({
+            advancedVisible: true,
+            automaticWidth: false,
+            automaticHeight: false,
+            alignment: "center",
+            fontSize: "72",
+            lineSpacing: "1.5",
+            width: "900",
+            height: "400",
+            padding: "24",
+            precision: "4",
+            fontIndex: "2",
+            fill: "#12345678",
+            axes: "400, 75"
+        })
         verify(controller.setFontPath("unicode", "/fonts/unicode.ttf"))
         verify(controller.setFontPath("compatibility", "/fonts/compatibility.otf"))
 
@@ -149,6 +164,20 @@ TestCase {
         compare(saved.settings.deleteTatweel, true)
         compare(saved.settings.ligatures["ARABIC LIGATURE AKBAR"], true)
         compare(saved.settings.ligatures["RIAL SIGN"], false)
+        verify(saved.settings.language === undefined)
+        compare(saved.desktop.exportSettings.advancedVisible, true)
+        compare(saved.desktop.exportSettings.automaticWidth, false)
+        compare(saved.desktop.exportSettings.automaticHeight, false)
+        compare(saved.desktop.exportSettings.alignment, "center")
+        compare(saved.desktop.exportSettings.fontSize, "72")
+        compare(saved.desktop.exportSettings.lineSpacing, "1.5")
+        compare(saved.desktop.exportSettings.width, "900")
+        compare(saved.desktop.exportSettings.height, "400")
+        compare(saved.desktop.exportSettings.padding, "24")
+        compare(saved.desktop.exportSettings.precision, "4")
+        compare(saved.desktop.exportSettings.fontIndex, "2")
+        compare(saved.desktop.exportSettings.fill, "#12345678")
+        compare(saved.desktop.exportSettings.axes, "400, 75")
         compare(saved.textTools.persianDigits, false)
         compare(saved.textTools.englishDigits, true)
         compare(saved.textTools.repairZwnj, true)
@@ -170,6 +199,19 @@ TestCase {
         compare(restored.textToolEnabled("persianDigits"), false)
         compare(restored.textToolEnabled("englishDigits"), true)
         compare(restored.textToolEnabled("repairZwnj"), true)
+        compare(restored.exportSettings.advancedVisible, true)
+        compare(restored.exportSettings.automaticWidth, false)
+        compare(restored.exportSettings.automaticHeight, false)
+        compare(restored.exportSettings.alignment, "center")
+        compare(restored.exportSettings.fontSize, "72")
+        compare(restored.exportSettings.lineSpacing, "1.5")
+        compare(restored.exportSettings.width, "900")
+        compare(restored.exportSettings.height, "400")
+        compare(restored.exportSettings.padding, "24")
+        compare(restored.exportSettings.precision, "4")
+        compare(restored.exportSettings.fontIndex, "2")
+        compare(restored.exportSettings.fill, "#12345678")
+        compare(restored.exportSettings.axes, "400, 75")
         compare(restored.unicodeFontPath, "/fonts/unicode.ttf")
         compare(restored.compatibilityFontPath, "/fonts/compatibility.otf")
         compare(restored.sourceText, "")

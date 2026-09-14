@@ -1505,8 +1505,38 @@ var ReshaperSettings = (function () {
       conversionMode: "unicode",
       reverseWords: true,
       videoStudioPro: false,
-      fontPaths: { unicode: "", compatibility: "" }
+      fontPaths: { unicode: "", compatibility: "" },
+      exportSettings: {
+        advancedVisible: false,
+        automaticWidth: true,
+        automaticHeight: true,
+        alignment: "right",
+        fontSize: "48",
+        lineSpacing: "1.2",
+        width: "800",
+        height: "300",
+        padding: "20",
+        precision: "3",
+        fontIndex: "",
+        fill: "#000000",
+        axes: ""
+      }
     };
+  }
+  function savedText(value, fallback) {
+    return typeof value === "string" && value.length <= 4096 ? value : fallback;
+  }
+  function sanitizeExportSettings(value) {
+    var result = copy(desktopDefaults().exportSettings);
+    if (!object(value)) return result;
+    ["advancedVisible", "automaticWidth", "automaticHeight"].forEach(function (name) {
+      if (typeof value[name] === "boolean") result[name] = value[name];
+    });
+    if (["left", "center", "right"].indexOf(value.alignment) !== -1) result.alignment = value.alignment;
+    ["fontSize", "lineSpacing", "width", "height", "padding", "precision", "fontIndex", "fill", "axes"].forEach(function (name) {
+      result[name] = savedText(value[name], result[name]);
+    });
+    return result;
   }
   function sanitizeDesktop(value) {
     var result = desktopDefaults();
@@ -1521,6 +1551,7 @@ var ReshaperSettings = (function () {
           result.fontPaths[mode] = value.fontPaths[mode];
       });
     }
+    result.exportSettings = sanitizeExportSettings(value.exportSettings);
     return result;
   }
   function profileForLanguage(language) { return language === "Kurdish" ? "kurdishUrdu" : "standardPersianArabic"; }
@@ -1584,6 +1615,7 @@ var ReshaperSettings = (function () {
     var profile = sanitizeShapingProfile(metadata, shapingProfile, settings.language);
     var language = profileLanguage(metadata, profile);
     if (language !== null) settings.language = language;
+    delete settings.language;
     return JSON.stringify({
       schemaVersion: 1,
       uiLanguage: sanitizeUiLanguage(uiLanguage),
@@ -1594,7 +1626,7 @@ var ReshaperSettings = (function () {
     }, null, 2) + "\n";
   }
   return Object.freeze({ metadata: metadata, flags: flags, copy: copy, defaults: defaults, sanitize: sanitize,
-    desktopDefaults: desktopDefaults, sanitizeDesktop: sanitizeDesktop, sanitizeTextTools: sanitizeTextTools,
+    desktopDefaults: desktopDefaults, sanitizeDesktop: sanitizeDesktop, sanitizeExportSettings: sanitizeExportSettings, sanitizeTextTools: sanitizeTextTools,
     sanitizeUiLanguage: sanitizeUiLanguage, sanitizeShapingProfile: sanitizeShapingProfile,
     profileForLanguage: profileForLanguage, profileLanguage: profileLanguage, parse: parse, serialize: serialize });
 }());

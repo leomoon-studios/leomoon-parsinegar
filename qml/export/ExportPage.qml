@@ -12,10 +12,10 @@ FocusScope {
     required property var exportController
     required property Typography typography
     property var fileBridge: null
-    property bool advancedVisible: false
-    property string alignment: "right"
-    property bool automaticWidth: true
-    property bool automaticHeight: true
+    property bool advancedVisible: controller.exportSettings.advancedVisible
+    property string alignment: controller.exportSettings.alignment
+    property bool automaticWidth: controller.exportSettings.automaticWidth
+    property bool automaticHeight: controller.exportSettings.automaticHeight
     property url chosenDestination
     property string statusText: ""
     property string statusLevel: "info"
@@ -44,6 +44,24 @@ FocusScope {
 
     function numberValue(field) {
         return Number(field.text.trim())
+    }
+
+    function persistExportSettings() {
+        controller.setExportSettings({
+            advancedVisible: advancedVisible,
+            automaticWidth: automaticWidth,
+            automaticHeight: automaticHeight,
+            alignment: alignment,
+            fontSize: fontSizeField.text,
+            lineSpacing: lineSpacingField.text,
+            width: widthField.text,
+            height: heightField.text,
+            padding: paddingField.text,
+            precision: precisionField.text,
+            fontIndex: fontIndexField.text,
+            fill: fillField.text,
+            axes: axesField.text
+        })
     }
 
     function exportOptions() {
@@ -350,14 +368,14 @@ FocusScope {
                                 Layout.fillWidth: true
                                 spacing: AppTheme.spacingTiny
                                 Label { text: root.uiText("export.fontSize"); font.family: AppTheme.fontFamily; color: AppTheme.muted }
-                                NumericField { id: fontSizeField; objectName: "exportFontSize"; Layout.fillWidth: true; minimumValue: 0.01; maximumValue: 4096; text: "48" }
+                                NumericField { id: fontSizeField; objectName: "exportFontSize"; Layout.fillWidth: true; minimumValue: 0.01; maximumValue: 4096; text: root.controller.exportSettings.fontSize; onEditingFinished: root.persistExportSettings() }
                             }
 
                             ColumnLayout {
                                 Layout.fillWidth: true
                                 spacing: AppTheme.spacingTiny
                                 Label { text: root.uiText("export.lineSpacing"); font.family: AppTheme.fontFamily; color: AppTheme.muted }
-                                NumericField { id: lineSpacingField; objectName: "exportLineSpacing"; Layout.fillWidth: true; minimumValue: 0.01; maximumValue: 10; text: "1.2" }
+                                NumericField { id: lineSpacingField; objectName: "exportLineSpacing"; Layout.fillWidth: true; minimumValue: 0.01; maximumValue: 10; text: root.controller.exportSettings.lineSpacing; onEditingFinished: root.persistExportSettings() }
                             }
                         }
 
@@ -367,9 +385,9 @@ FocusScope {
                             Layout.fillWidth: true
                             columns: 3
                             columnSpacing: AppTheme.spacingSmall
-                            AppButton { objectName: "exportAlignLeft"; Layout.fillWidth: true; Layout.preferredWidth: 0; text: root.uiText("export.alignLeft"); selected: root.alignment === "left"; onClicked: root.alignment = "left" }
-                            AppButton { objectName: "exportAlignCenter"; Layout.fillWidth: true; Layout.preferredWidth: 0; text: root.uiText("export.alignCenter"); selected: root.alignment === "center"; onClicked: root.alignment = "center" }
-                            AppButton { objectName: "exportAlignRight"; Layout.fillWidth: true; Layout.preferredWidth: 0; text: root.uiText("export.alignRight"); selected: root.alignment === "right"; onClicked: root.alignment = "right" }
+                            AppButton { objectName: "exportAlignLeft"; Layout.fillWidth: true; Layout.preferredWidth: 0; text: root.uiText("export.alignLeft"); selected: root.alignment === "left"; onClicked: { root.alignment = "left"; root.persistExportSettings() } }
+                            AppButton { objectName: "exportAlignCenter"; Layout.fillWidth: true; Layout.preferredWidth: 0; text: root.uiText("export.alignCenter"); selected: root.alignment === "center"; onClicked: { root.alignment = "center"; root.persistExportSettings() } }
+                            AppButton { objectName: "exportAlignRight"; Layout.fillWidth: true; Layout.preferredWidth: 0; text: root.uiText("export.alignRight"); selected: root.alignment === "right"; onClicked: { root.alignment = "right"; root.persistExportSettings() } }
                         }
 
                         AppButton {
@@ -377,7 +395,10 @@ FocusScope {
                             Layout.fillWidth: true
                             text: root.advancedVisible ? root.uiText("export.fewerOptions") : root.uiText("export.moreOptions")
                             selected: root.advancedVisible
-                            onClicked: root.advancedVisible = !root.advancedVisible
+                            onClicked: {
+                                root.advancedVisible = !root.advancedVisible
+                                root.persistExportSettings()
+                            }
                         }
 
                         ColumnLayout {
@@ -392,22 +413,28 @@ FocusScope {
                                 rowSpacing: AppTheme.spacingSmall
 
                                 Label { text: root.uiText("export.width"); font.family: AppTheme.fontFamily; color: AppTheme.muted }
-                                NumericField { id: widthField; objectName: "exportWidth"; Layout.fillWidth: true; minimumValue: 0.01; maximumValue: 1000000; text: "800"; enabled: !root.automaticWidth; opacity: enabled ? 1.0 : 0.5 }
+                                NumericField { id: widthField; objectName: "exportWidth"; Layout.fillWidth: true; minimumValue: 0.01; maximumValue: 1000000; text: root.controller.exportSettings.width; enabled: !root.automaticWidth; opacity: enabled ? 1.0 : 0.5; onEditingFinished: root.persistExportSettings() }
                                 AppToggle {
                                     objectName: "exportAutoWidth"
                                     text: root.uiText("export.auto")
                                     checked: root.automaticWidth
-                                    onToggled: root.automaticWidth = checked
+                                    onToggled: {
+                                        root.automaticWidth = checked
+                                        root.persistExportSettings()
+                                    }
                                     Accessible.name: root.uiText("export.auto") + " " + root.uiText("export.width")
                                 }
 
                                 Label { text: root.uiText("export.height"); font.family: AppTheme.fontFamily; color: AppTheme.muted }
-                                NumericField { id: heightField; objectName: "exportHeight"; Layout.fillWidth: true; minimumValue: 0.01; maximumValue: 1000000; text: "300"; enabled: !root.automaticHeight; opacity: enabled ? 1.0 : 0.5 }
+                                NumericField { id: heightField; objectName: "exportHeight"; Layout.fillWidth: true; minimumValue: 0.01; maximumValue: 1000000; text: root.controller.exportSettings.height; enabled: !root.automaticHeight; opacity: enabled ? 1.0 : 0.5; onEditingFinished: root.persistExportSettings() }
                                 AppToggle {
                                     objectName: "exportAutoHeight"
                                     text: root.uiText("export.auto")
                                     checked: root.automaticHeight
-                                    onToggled: root.automaticHeight = checked
+                                    onToggled: {
+                                        root.automaticHeight = checked
+                                        root.persistExportSettings()
+                                    }
                                     Accessible.name: root.uiText("export.auto") + " " + root.uiText("export.height")
                                 }
                             }
@@ -421,27 +448,27 @@ FocusScope {
                                 ColumnLayout {
                                     Layout.fillWidth: true
                                     Label { text: root.uiText("export.padding"); font.family: AppTheme.fontFamily; color: AppTheme.muted }
-                                    NumericField { id: paddingField; objectName: "exportPadding"; Layout.fillWidth: true; minimumValue: 0; maximumValue: 100000; text: "20" }
+                                    NumericField { id: paddingField; objectName: "exportPadding"; Layout.fillWidth: true; minimumValue: 0; maximumValue: 100000; text: root.controller.exportSettings.padding; onEditingFinished: root.persistExportSettings() }
                                 }
                                 ColumnLayout {
                                     Layout.fillWidth: true
                                     Label { text: root.uiText("export.precision"); font.family: AppTheme.fontFamily; color: AppTheme.muted }
-                                    NumericField { id: precisionField; objectName: "exportPrecision"; Layout.fillWidth: true; minimumValue: 0; maximumValue: 8; text: "3" }
+                                    NumericField { id: precisionField; objectName: "exportPrecision"; Layout.fillWidth: true; minimumValue: 0; maximumValue: 8; text: root.controller.exportSettings.precision; onEditingFinished: root.persistExportSettings() }
                                 }
                                 ColumnLayout {
                                     Layout.fillWidth: true
                                     Label { text: root.uiText("export.fontIndex"); font.family: AppTheme.fontFamily; color: AppTheme.muted }
-                                    NumericField { id: fontIndexField; objectName: "exportFontIndex"; Layout.fillWidth: true; minimumValue: 0; maximumValue: 1000000; placeholderText: root.uiText("export.default") }
+                                    NumericField { id: fontIndexField; objectName: "exportFontIndex"; Layout.fillWidth: true; minimumValue: 0; maximumValue: 1000000; text: root.controller.exportSettings.fontIndex; placeholderText: root.uiText("export.default"); onEditingFinished: root.persistExportSettings() }
                                 }
                                 ColumnLayout {
                                     Layout.fillWidth: true
                                     Label { text: root.uiText("export.fill"); font.family: AppTheme.fontFamily; color: AppTheme.muted }
-                                    TextField { id: fillField; objectName: "exportFill"; Layout.fillWidth: true; text: "#000000"; font.family: AppTheme.fontFamily }
+                                    TextField { id: fillField; objectName: "exportFill"; Layout.fillWidth: true; text: root.controller.exportSettings.fill; font.family: AppTheme.fontFamily; onEditingFinished: root.persistExportSettings() }
                                 }
                             }
 
                             Label { text: root.uiText("export.axes"); font.family: AppTheme.fontFamily; color: AppTheme.muted }
-                            TextField { id: axesField; objectName: "exportAxes"; Layout.fillWidth: true; placeholderText: root.uiText("export.axesHint"); font.family: AppTheme.fontFamily; LayoutMirroring.enabled: false }
+                            TextField { id: axesField; objectName: "exportAxes"; Layout.fillWidth: true; text: root.controller.exportSettings.axes; placeholderText: root.uiText("export.axesHint"); font.family: AppTheme.fontFamily; LayoutMirroring.enabled: false; onEditingFinished: root.persistExportSettings() }
                         }
                     }
                 }

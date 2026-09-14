@@ -117,7 +117,8 @@ void ServiceTests::clipboardKeeperHandoff()
 void ServiceTests::settingsUsePlatformLocation()
 {
     SettingsStore store;
-    const QString expectedDirectory = QDir::cleanPath(QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation));
+    const QString expectedDirectory = QDir(QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation))
+                                          .filePath(QStringLiteral("leomoon-studios.parsinegar-desktop"));
 
     QCOMPARE(store.configDirectory(), expectedDirectory);
     QCOMPARE(store.settingsFilePath(), QDir(expectedDirectory).filePath(QStringLiteral("settings.json")));

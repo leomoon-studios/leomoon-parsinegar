@@ -415,6 +415,7 @@ var CoreTestResults;
         var serialized = settings.serialize(metadata, custom, "fa", "kurdishUrdu", desktop, toolState);
         assert(serialized.indexOf("draftText") === -1);
         assert(serialized.indexOf("must not persist") === -1);
+        equal(JSON.parse(serialized).settings.language, undefined);
         var restored = settings.parse(metadata, serialized);
         equal(restored.recovered, false);
         equal(restored.uiLanguage, "fa");
@@ -425,7 +426,8 @@ var CoreTestResults;
             conversionMode: "compatibility",
             reverseWords: false,
             videoStudioPro: true,
-            fontPaths: { unicode: "/fonts/unicode.ttf", compatibility: "/fonts/maryam.otf" }
+            fontPaths: { unicode: "/fonts/unicode.ttf", compatibility: "/fonts/maryam.otf" },
+            exportSettings: settings.desktopDefaults().exportSettings
         });
     });
 

@@ -54,6 +54,7 @@ bool verifyEmbeddedResources()
         ":/qt/qml/LeoMoon/ParsiNegar/qml/core/ParsiNegar.js",
         ":/qt/qml/LeoMoon/ParsiNegar/qml/core/ReshaperSettings.js",
         ":/qt/qml/LeoMoon/ParsiNegar/qml/core/ResourceLimits.js",
+        ":/qt/qml/LeoMoon/ParsiNegar/qml/core/TextTools.js",
     };
 
     for (const auto *resource : resources) {
@@ -71,8 +72,8 @@ bool verifyEmbeddedResources()
     }
 
     const QRawFont iconFont(iconFontFile.readAll(), 24.0, QFont::PreferNoHinting);
-    constexpr std::array<quint32, 6> requiredIconGlyphs {
-        0xE2C4, 0xE518, 0xE51C, 0xE5C4, 0xE5C8, 0xE8B8
+    constexpr std::array<quint32, 7> requiredIconGlyphs {
+        0xE2C4, 0xE518, 0xE51C, 0xE5C4, 0xE5C8, 0xE8B8, 0xF10B
     };
     if (!iconFont.isValid()) {
         qCritical("Bundled icon font is invalid");
