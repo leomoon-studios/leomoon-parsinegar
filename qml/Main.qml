@@ -102,15 +102,32 @@ ApplicationWindow {
             RowLayout {
                 id: headerActions
                 objectName: "headerActions"
-                visible: controller.page === "editor"
-                enabled: visible
                 spacing: AppTheme.spacingSmall
-                LayoutMirroring.enabled: false
+                LayoutMirroring.enabled: controller.uiLanguage === "fa"
                 LayoutMirroring.childrenInherit: true
+
+                IconButton {
+                    id: headerBackButton
+                    objectName: "headerBackButton"
+                    visible: controller.page !== "editor"
+                    enabled: visible && (controller.page !== "export" || !exportController.busy)
+                    glyph: controller.uiLanguage === "fa" ? AppTheme.iconForward : AppTheme.iconBack
+                    toolTip: controller.uiText("button.back")
+                    onClicked: {
+                        if (controller.page === "export") {
+                            controller.closeExport()
+                        } else if (settingsPage.ligatureGroupId !== "") {
+                            settingsPage.closeGroup()
+                        } else {
+                            controller.closeSettings()
+                        }
+                    }
+                }
 
                 IconButton {
                     id: exportButton
                     objectName: "exportButton"
+                    visible: controller.page === "editor"
                     glyph: AppTheme.iconExport
                     toolTip: controller.uiText("export.title")
                     enabled: controller.settingsReady && !controller.busy && !exportController.busy
@@ -120,6 +137,7 @@ ApplicationWindow {
                 IconButton {
                     id: settingsButton
                     objectName: "settingsButton"
+                    visible: controller.page === "editor"
                     glyph: AppTheme.iconSettings
                     toolTip: controller.uiText("button.settings")
                     enabled: controller.settingsReady && !controller.busy
@@ -129,6 +147,7 @@ ApplicationWindow {
                 IconButton {
                     id: themeButton
                     objectName: "themeButton"
+                    visible: controller.page === "editor"
                     glyph: AppTheme.darkMode ? AppTheme.iconLightMode : AppTheme.iconDarkMode
                     toolTip: AppTheme.darkMode ? controller.uiText("theme.light") : controller.uiText("theme.dark")
                     onClicked: AppTheme.darkMode = !AppTheme.darkMode
@@ -157,6 +176,7 @@ ApplicationWindow {
             enabled: visible
             controller: controller
             typography: typography
+            navigationBackButton: headerBackButton
         }
 
         ExportPage {

@@ -17,6 +17,8 @@ QtObject {
     readonly property string iconDarkMode: "\ue51c"
     readonly property string iconSettings: "\ue8b8"
     readonly property string iconExport: "\ue2c4"
+    readonly property string iconBack: "\ue5c4"
+    readonly property string iconForward: "\ue5c8"
 
     readonly property int spacingUnit: 4
     readonly property int spacingTiny: spacingUnit

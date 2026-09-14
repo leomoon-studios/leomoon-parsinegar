@@ -70,7 +70,7 @@ TestCase {
         var hebrewProfile = findChild(applicationWindow, "settingsProfileHebrew")
         var videoStudioToggle = findChild(applicationWindow, "settingsVideoToggle")
         var bidiToggle = findChild(applicationWindow, "settingsBidiToggle")
-        var settingsBackButton = findChild(applicationWindow, "settingsBackButton")
+        var headerBackButton = findChild(applicationWindow, "headerBackButton")
 
         verify(sourceEditor !== null)
         verify(unicodeButton !== null)
@@ -80,7 +80,7 @@ TestCase {
         verify(hebrewProfile !== null)
         verify(videoStudioToggle !== null)
         verify(bidiToggle !== null)
-        verify(settingsBackButton !== null)
+        verify(headerBackButton !== null)
 
         compare(unicodeButton.width, compatibilityButton.width)
         compare(unicodeButton.height, compatibilityButton.height)
@@ -98,6 +98,7 @@ TestCase {
         verify(compatibilityButton.selected)
         settingsButton.click()
         compare(controller.page, "settings")
+        verify(headerBackButton.visible)
         verify(videoStudioToggle.enabled)
         hebrewProfile.click()
         compare(controller.shapingProfile, "hebrew")
@@ -112,7 +113,7 @@ TestCase {
         bidiToggle.toggleItem.click()
         compare(controller.reverseWords, false)
 
-        settingsBackButton.click()
+        headerBackButton.click()
         compare(controller.page, "editor")
         verify(compatibilityButton.enabled)
     }

@@ -9,6 +9,7 @@ FocusScope {
 
     required property var controller
     required property Typography typography
+    property var navigationBackButton: null
     property string ligatureGroupId: ""
     readonly property alias settingsScroll: settingsScroll
     readonly property alias ligatureList: ligatureList
@@ -38,12 +39,14 @@ FocusScope {
         if (controller.hebrewProfile)
             return
         ligatureGroupId = id
-        Qt.callLater(function() { groupBackButton.forceActiveFocus() })
+        if (navigationBackButton !== null)
+            Qt.callLater(function() { navigationBackButton.forceActiveFocus() })
     }
 
     function closeGroup() {
         ligatureGroupId = ""
-        Qt.callLater(function() { backButton.forceActiveFocus() })
+        if (navigationBackButton !== null)
+            Qt.callLater(function() { navigationBackButton.forceActiveFocus() })
     }
 
     Keys.onEscapePressed: function(event) {
@@ -68,22 +71,10 @@ FocusScope {
         enabled: visible
         spacing: AppTheme.spacingMedium
 
-        RowLayout {
+        PageHeader {
             Layout.fillWidth: true
-            spacing: AppTheme.spacingMedium
-
-            AppButton {
-                id: backButton
-                objectName: "settingsBackButton"
-                text: root.uiText("button.back")
-                onClicked: root.controller.closeSettings()
-            }
-
-            PageHeader {
-                Layout.fillWidth: true
-                title: root.uiText("settings.title")
-                subtitle: root.uiText("settings.interfaceLanguageDescription")
-            }
+            title: root.uiText("settings.title")
+            subtitle: root.uiText("settings.interfaceLanguageDescription")
         }
 
         StatusMessage {
@@ -384,26 +375,14 @@ FocusScope {
         enabled: visible
         spacing: AppTheme.spacingMedium
 
-        RowLayout {
+        PageHeader {
             Layout.fillWidth: true
-            spacing: AppTheme.spacingMedium
-
-            AppButton {
-                id: groupBackButton
-                objectName: "ligatureGroupBackButton"
-                text: root.uiText("button.back")
-                onClicked: root.closeGroup()
+            title: {
+                var group = root.groupById(root.ligatureGroupId)
+                return root.uiText("settings.breadcrumb")
+                    + (group ? root.uiText("settings.group." + group.id) : root.uiText("settings.namedLigatures"))
             }
-
-            PageHeader {
-                Layout.fillWidth: true
-                title: {
-                    var group = root.groupById(root.ligatureGroupId)
-                    return root.uiText("settings.breadcrumb")
-                        + (group ? root.uiText("settings.group." + group.id) : root.uiText("settings.namedLigatures"))
-                }
-                subtitle: root.uiText("settings.fontNotice")
-            }
+            subtitle: root.uiText("settings.fontNotice")
         }
 
         ListView {

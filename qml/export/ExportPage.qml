@@ -217,23 +217,10 @@ FocusScope {
         anchors.fill: parent
         spacing: AppTheme.spacingMedium
 
-        RowLayout {
+        PageHeader {
             Layout.fillWidth: true
-            spacing: AppTheme.spacingMedium
-
-            AppButton {
-                id: backButton
-                objectName: "exportBackButton"
-                text: root.uiText("button.back")
-                enabled: !root.exportController.busy
-                onClicked: root.controller.closeExport()
-            }
-
-            PageHeader {
-                Layout.fillWidth: true
-                title: root.uiText("export.title")
-                subtitle: root.uiText("export.subtitle")
-            }
+            title: root.uiText("export.title")
+            subtitle: root.uiText("export.subtitle")
         }
 
         ScrollView {

@@ -162,7 +162,7 @@ TestCase {
         var controller = applicationWindow.editorController
         var exportButton = findChild(applicationWindow, "exportButton")
         var exportPage = findChild(applicationWindow, "exportPage")
-        var exportBackButton = findChild(applicationWindow, "exportBackButton")
+        var headerBackButton = findChild(applicationWindow, "headerBackButton")
         var exportScroll = findChild(applicationWindow, "exportScroll")
         var alignLeft = findChild(applicationWindow, "exportAlignLeft")
         var alignCenter = findChild(applicationWindow, "exportAlignCenter")
@@ -171,7 +171,7 @@ TestCase {
         var saveButton = findChild(applicationWindow, "saveSvgButton")
         verify(exportButton !== null)
         verify(exportPage !== null)
-        verify(exportBackButton !== null)
+        verify(headerBackButton !== null)
         verify(exportScroll !== null)
         verify(alignLeft !== null)
         verify(alignCenter !== null)
@@ -183,7 +183,9 @@ TestCase {
         exportButton.click()
         compare(controller.page, "export")
         verify(exportPage.visible)
-        verify(!findChild(applicationWindow, "headerActions").visible)
+        verify(findChild(applicationWindow, "headerActions").visible)
+        verify(headerBackButton.visible)
+        compare(headerBackButton.glyph, AppTheme.iconBack)
         compare(exportScroll.leftPadding, AppTheme.spacingLarge)
         compare(exportScroll.rightPadding, AppTheme.spacingLarge)
         verify(Math.abs(alignLeft.width - alignCenter.width) <= 1)
@@ -197,7 +199,7 @@ TestCase {
         verify(!exportPage.validateBeforeSave())
         compare(exportPage.statusText, controller.uiText("export.error.fontRequired"))
 
-        exportBackButton.click()
+        headerBackButton.click()
         compare(controller.page, "editor")
         compare(controller.sourceText, "draft متن")
     }

@@ -71,7 +71,9 @@ bool verifyEmbeddedResources()
     }
 
     const QRawFont iconFont(iconFontFile.readAll(), 24.0, QFont::PreferNoHinting);
-    constexpr std::array<quint32, 4> requiredIconGlyphs {0xE2C4, 0xE518, 0xE51C, 0xE8B8};
+    constexpr std::array<quint32, 6> requiredIconGlyphs {
+        0xE2C4, 0xE518, 0xE51C, 0xE5C4, 0xE5C8, 0xE8B8
+    };
     if (!iconFont.isValid()) {
         qCritical("Bundled icon font is invalid");
         return false;
