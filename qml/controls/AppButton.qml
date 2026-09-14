@@ -6,6 +6,8 @@ Button {
 
     property bool accent: false
     property bool selected: false
+    property int textPixelSize: AppTheme.fontControl
+    property int textWeight: Font.Medium
     readonly property bool focusIndicatorVisible: visualFocus
 
     hoverEnabled: true
@@ -20,8 +22,8 @@ Button {
     contentItem: Text {
         text: control.text
         font.family: AppTheme.fontFamily
-        font.pixelSize: AppTheme.fontControl
-        font.weight: Font.Medium
+        font.pixelSize: control.textPixelSize
+        font.weight: control.textWeight
         color: control.accent ? AppTheme.accentText : AppTheme.foreground
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter

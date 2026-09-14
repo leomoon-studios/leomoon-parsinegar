@@ -209,10 +209,12 @@ FocusScope {
                         id: convertButton
                         objectName: "convertButton"
                         Layout.fillHeight: true
-                        Layout.minimumWidth: 140
-                        Layout.preferredWidth: 220
-                        Layout.maximumWidth: 280
+                        Layout.minimumWidth: 120
+                        Layout.preferredWidth: 170
+                        Layout.maximumWidth: 200
                         text: root.controller.busy ? root.uiText("status.converting") : root.uiText("button.convert")
+                        textPixelSize: AppTheme.fontHeading
+                        textWeight: Font.Bold
                         accent: true
                         enabled: !root.controller.busy && root.typography.ready
                         Accessible.name: root.uiText("button.convert")
