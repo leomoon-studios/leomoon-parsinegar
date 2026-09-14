@@ -59,6 +59,7 @@ var CoreTestResults;
     var maryam = fixtureData.maryam;
     var settings = ReshaperSettings;
     var textTools = TextTools;
+    var textToolFixtures = TextToolsFixtures;
     var metadata = settings.metadata;
     var strings = InterfaceStrings;
     var limits = ResourceLimits;
@@ -87,6 +88,40 @@ var CoreTestResults;
         });
         equal(result.text, "می‌روم\n\nنمی‌خواستند میدان ۱۲٪");
         jsonEqual(copy(result.applied), ["persianDigits", "repairZwnj"]);
+    });
+
+    test("text-tool fixtures are versioned and hand-reviewed", function () {
+        equal(textToolFixtures.schemaVersion, 1);
+        equal(textToolFixtures.source.kind, "hand-reviewed");
+        equal(textToolFixtures.cases.length, textTools.operations.length);
+        var seen = {};
+        textToolFixtures.cases.forEach(function (fixture) {
+            assert(fixture.rationale.length > 20, fixture.id + " rationale");
+            assert(!seen[fixture.operation], "duplicate fixture for " + fixture.operation);
+            seen[fixture.operation] = true;
+        });
+        textTools.operations.forEach(function (operation) {
+            assert(seen[operation.id], "missing fixture for " + operation.id);
+            ["en", "fa"].forEach(function (language) {
+                assert(strings.text(language, operation.labelKey) !== operation.labelKey, language + " label " + operation.id);
+                assert(strings.text(language, operation.descriptionKey) !== operation.descriptionKey, language + " description " + operation.id);
+            });
+        });
+    });
+
+    textToolFixtures.cases.forEach(function (fixture) {
+        test("text-tool fixture " + fixture.id, function () {
+            var actual = textTools.applyOne(fixture.input, fixture.operation);
+            equal(actual, fixture.expected);
+            equal(textTools.applyOne(actual, fixture.operation), actual, "operation must be idempotent");
+        });
+    });
+
+    test("enabled text tools use the documented operation order", function () {
+        var fixture = textToolFixtures.orderedEnabled;
+        var result = textTools.applyEnabled(fixture.input, fixture.enabled);
+        equal(result.text, fixture.expected);
+        jsonEqual(copy(result.applied), copy(fixture.applied));
     });
 
     test("core namespaces and APIs are immutable", function () {

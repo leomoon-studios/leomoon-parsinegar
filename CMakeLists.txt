@@ -199,6 +199,7 @@ if(BUILD_TESTING)
             qml/core/TextTools.js
             qml/core/SvgCurveExporter.js
             tests/fixtures/ParsiNegarFixtures.js
+            tests/fixtures/TextToolsFixtures.js
             tests/CoreTests.js
             tests/SvgCurveTests.js
     )

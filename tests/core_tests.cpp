@@ -26,6 +26,7 @@ void CoreTests::productionCoreSuite()
         QStringLiteral(":/qml/core/InterfaceStrings.js"),
         QStringLiteral(":/qml/core/ResourceLimits.js"),
         QStringLiteral(":/tests/fixtures/ParsiNegarFixtures.js"),
+        QStringLiteral(":/tests/fixtures/TextToolsFixtures.js"),
         QStringLiteral(":/tests/CoreTests.js"),
     };
 
@@ -47,7 +48,7 @@ void CoreTests::productionCoreSuite()
     QVERIFY(passed.isNumber());
     QVERIFY(total.isNumber());
     QCOMPARE(passed.toInt(), total.toInt());
-    QCOMPARE(total.toInt(), 596);
+    QCOMPARE(total.toInt(), 613);
 }
 
 void CoreTests::exactFontSvgSuite()

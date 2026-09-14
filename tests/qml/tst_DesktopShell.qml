@@ -21,6 +21,15 @@ TestCase {
                 }
             }
             clipboardService: clipboardMock
+            property QtObject fileMock: QtObject {
+                function readBundledFontAsync(requestId) { return true }
+                function readFontAsync(requestId, url) { return true }
+                function writeSvgAsync(requestId, destination, svg) { return true }
+                function localFileUrl(path) { return "file://" + path }
+                function localFilePath(url) { return String(url) }
+                function isReadableFontFile(path) { return true }
+            }
+            fileService: fileMock
         }
     }
 
@@ -255,5 +264,24 @@ TestCase {
         headerBackButton.click()
         compare(controller.page, "editor")
         compare(controller.sourceText, "draft متن")
+    }
+
+    function test_exportDoesNotApplyEnabledTextTools() {
+        var applicationWindow = createMainWindow()
+        var controller = applicationWindow.editorController
+        var exportPage = findChild(applicationWindow, "exportPage")
+        var exportController = applicationWindow.svgExportController
+        var source = "می روم 12%"
+
+        controller.sourceText = source
+        controller.toggleTextTool("repairZwnj")
+        controller.toggleTextTool("persianDigits")
+        controller.openExport()
+        exportPage.chosenDestination = "file:///tmp/text-tools-export-test.svg"
+
+        verify(exportPage.beginExport())
+        compare(exportController.pendingText, source)
+        compare(controller.sourceText, source)
+        verify(exportController.cancel())
     }
 }
