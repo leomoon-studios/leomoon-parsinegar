@@ -105,6 +105,7 @@ TestCase {
     function test_reusableControlsAndThemeSwitch() {
         var applicationWindow = createMainWindow()
         var convertButton = findChild(applicationWindow, "convertButton")
+        var exportButton = findChild(applicationWindow, "exportButton")
         var settingsButton = findChild(applicationWindow, "settingsButton")
         var sourceEditor = findChild(applicationWindow, "sourceEditor")
         var editorCursor = findChild(applicationWindow, "editorCursor")
@@ -112,6 +113,7 @@ TestCase {
         var statusSlot = findChild(applicationWindow, "statusSlot")
         var themeButton = findChild(applicationWindow, "themeButton")
         verify(convertButton !== null)
+        verify(exportButton !== null)
         verify(settingsButton !== null)
         verify(sourceEditor !== null)
         verify(editorCursor !== null)
@@ -132,6 +134,9 @@ TestCase {
         verify(findChild(applicationWindow, "profile_standardPersianArabic") === null)
         verify(findChild(applicationWindow, "bidiToggle") === null)
         compare(settingsButton.glyph, AppTheme.iconSettings)
+        compare(exportButton.glyph, AppTheme.iconExport)
+        verify(exportButton.glyph !== "")
+        compare(exportButton.contentItem.font.family, AppTheme.iconFontFamily)
         compare(themeButton.contentItem.font.family, AppTheme.iconFontFamily)
         compare(settingsButton.width, themeButton.width)
 

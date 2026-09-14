@@ -49,10 +49,10 @@ TestCase {
             precision: 3,
             fontIndex: 0,
             axes: [400]
-        }, true))
+        }))
         verify(controller.busy)
         compare(controller.bridgeMock.readCount, 1)
-        verify(!controller.exportTo("second", "file:///tmp/font.ttf", "file:///tmp/result.svg", {}, true))
+        verify(!controller.exportTo("second", "file:///tmp/font.ttf", "file:///tmp/result.svg", {}))
         verify(!controller.finishWorker({ id: controller.activeRequestId + 1, ok: true, svg: "<svg/>", missingGlyphs: [] }))
         compare(controller.bridgeMock.writeCount, 0)
 
@@ -74,9 +74,9 @@ TestCase {
         compare(controller.fontIdentity.family, "Vazirmatn")
     }
 
-    function test_missingGlyphsBlockBeforeWrite() {
+    function test_missingGlyphsAreWrittenAsWarning() {
         var controller = createController()
-        verify(controller.exportWithBundledFont("🧬", "file:///tmp/result.svg", {}, false))
+        verify(controller.exportWithBundledFont("🧬", "file:///tmp/result.svg", {}))
         compare(controller.bridgeMock.bundledReadCount, 1)
         var id = controller.activeRequestId
         verify(controller.finishWorker({
@@ -86,22 +86,30 @@ TestCase {
             missingGlyphs: [{ character: "🧬", codePoint: 129516, label: "U+1F9EC" }],
             font: { family: "Vazirmatn" }
         }))
+        verify(controller.busy)
+        compare(controller.errorCode, "")
+        compare(controller.missingGlyphs.length, 1)
+        compare(controller.bridgeMock.writeCount, 1)
+        verify(controller.finishWrite(id, {
+            ok: true,
+            path: "/tmp/result.svg",
+            byteCount: controller.bridgeMock.lastSvg.length
+        }))
         verify(!controller.busy)
-        compare(controller.errorCode, "MISSING_GLYPHS")
-        compare(controller.bridgeMock.writeCount, 0)
+        compare(controller.outputPath, "/tmp/result.svg")
     }
 
     function test_oversizedTextRejectedBeforeRead() {
         var controller = createController()
         var oversized = new Array(50002).join("پ")
-        verify(!controller.exportWithBundledFont(oversized, "file:///tmp/result.svg", {}, true))
+        verify(!controller.exportWithBundledFont(oversized, "file:///tmp/result.svg", {}))
         compare(controller.errorCode, "EXPORT_TEXT_TOO_LARGE")
         compare(controller.bridgeMock.bundledReadCount, 0)
     }
 
     function test_cancelDiscardsLateResults() {
         var controller = createController()
-        verify(controller.exportWithBundledFont("پارسی", "file:///tmp/result.svg", {}, true))
+        verify(controller.exportWithBundledFont("پارسی", "file:///tmp/result.svg", {}))
         var cancelledId = controller.activeRequestId
         verify(controller.cancel())
         verify(!controller.busy)

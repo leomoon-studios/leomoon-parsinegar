@@ -86,7 +86,6 @@ TestCase {
                 fill: "#171717",
                 precision: 3
             },
-            true,
             harness.editorController.conversionMode,
             harness.editorController.conversionOptions()))
 

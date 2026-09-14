@@ -9,6 +9,7 @@
 #include <QFile>
 #include <QGuiApplication>
 #include <QIcon>
+#include <QRawFont>
 #include <QQmlApplicationEngine>
 #include <QQuickStyle>
 #include <QTimer>
@@ -25,6 +26,7 @@ bool verifyEmbeddedResources()
 {
     constexpr std::array resources {
         ":/qt/qml/LeoMoon/ParsiNegar/assets/fonts/Vazirmatn[wght].ttf",
+        ":/qt/qml/LeoMoon/ParsiNegar/assets/fonts/MaterialSymbolsRounded.ttf",
         ":/qt/qml/LeoMoon/ParsiNegar/assets/app-icon.svg",
         ":/qt/qml/LeoMoon/ParsiNegar/vendor/js-bidi.js",
         ":/qt/qml/LeoMoon/ParsiNegar/vendor/js-parsi-reshaper.js",
@@ -42,6 +44,25 @@ bool verifyEmbeddedResources()
         QFile file(QString::fromUtf8(resource));
         if (!file.exists() || file.size() <= 0) {
             qCritical("Required embedded resource is missing or empty: %s", resource);
+            return false;
+        }
+    }
+
+    QFile iconFontFile(QStringLiteral(":/qt/qml/LeoMoon/ParsiNegar/assets/fonts/MaterialSymbolsRounded.ttf"));
+    if (!iconFontFile.open(QIODevice::ReadOnly)) {
+        qCritical("Bundled icon font could not be opened");
+        return false;
+    }
+
+    const QRawFont iconFont(iconFontFile.readAll(), 24.0, QFont::PreferNoHinting);
+    constexpr std::array<quint32, 4> requiredIconGlyphs {0xE2C4, 0xE518, 0xE51C, 0xE8B8};
+    if (!iconFont.isValid()) {
+        qCritical("Bundled icon font is invalid");
+        return false;
+    }
+    for (const auto codePoint : requiredIconGlyphs) {
+        if (!iconFont.supportsCharacter(codePoint)) {
+            qCritical("Bundled icon font is missing required glyph U+%04X", codePoint);
             return false;
         }
     }

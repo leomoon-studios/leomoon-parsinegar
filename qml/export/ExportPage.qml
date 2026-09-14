@@ -105,7 +105,6 @@ FocusScope {
             "INVALID_OPTION": "export.error.invalidOption",
             "INVALID_FONT": "export.error.invalidFont",
             "INVALID_FONT_INDEX": "export.error.invalidFont",
-            "MISSING_GLYPHS": "export.error.missingGlyphs",
             "BOUNDS_TOO_SMALL": "export.error.bounds",
             "UNSUPPORTED_GLYPH": "export.error.unsupportedGlyph",
             "INVALID_OUTLINE": "export.error.unsupportedGlyph",
@@ -163,7 +162,7 @@ FocusScope {
         return true
     }
 
-    function beginExport(allowMissingGlyphs) {
+    function beginExport() {
         if (!validateBeforeSave() || String(chosenDestination) === "")
             return false
         statusText = uiText("export.processing")
@@ -172,12 +171,12 @@ FocusScope {
         var conversionOptions = controller.conversionOptions()
         if (controller.conversionMode === "unicode" && controller.unicodeFontPath === "") {
             return exportController.exportWithBundledFont(
-                controller.sourceText, chosenDestination, options, allowMissingGlyphs,
+                controller.sourceText, chosenDestination, options,
                 controller.conversionMode, conversionOptions)
         }
         var fontUrl = fileBridge.localFileUrl(currentFontPath())
         return exportController.exportTo(
-            controller.sourceText, fontUrl, chosenDestination, options, allowMissingGlyphs,
+            controller.sourceText, fontUrl, chosenDestination, options,
             controller.conversionMode, conversionOptions)
     }
 
@@ -210,10 +209,7 @@ FocusScope {
         }
         function onFailed(code, message, details) {
             root.statusText = root.errorText(code, message, details)
-            root.statusLevel = code === "MISSING_GLYPHS" && root.controller.conversionMode === "unicode"
-                ? "warning" : "error"
-            if (code === "MISSING_GLYPHS" && root.controller.conversionMode === "unicode")
-                missingGlyphDialog.open()
+            root.statusLevel = "error"
         }
     }
 
@@ -506,33 +502,7 @@ FocusScope {
         nameFilters: ["SVG images (*.svg)"]
         onAccepted: {
             root.chosenDestination = selectedFile
-            root.beginExport(false)
-        }
-    }
-
-    Dialog {
-        id: missingGlyphDialog
-        objectName: "missingGlyphDialog"
-        anchors.centerIn: parent
-        width: Math.min(460, Math.max(280, root.width - AppTheme.spacingXLarge * 2))
-        modal: true
-        title: root.uiText("export.missingGlyphTitle")
-        standardButtons: Dialog.Yes | Dialog.No
-        onAccepted: root.beginExport(true)
-
-        contentItem: Item {
-            implicitWidth: 400
-            implicitHeight: missingGlyphLabel.implicitHeight
-
-            Label {
-                id: missingGlyphLabel
-                width: parent.width
-                text: root.uiText("export.missingGlyphConfirm") + "\n\n" + root.glyphLabels(root.exportController.missingGlyphs)
-                wrapMode: Text.Wrap
-                font.family: AppTheme.fontFamily
-                font.pixelSize: AppTheme.fontBody
-                color: AppTheme.foreground
-            }
+            root.beginExport()
         }
     }
 }

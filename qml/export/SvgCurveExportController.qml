@@ -21,7 +21,6 @@ Item {
     property string pendingText: ""
     property url pendingDestination
     property var pendingOptions: ({})
-    property bool pendingAllowMissingGlyphs: false
     property string pendingConversionMode: ""
     property var pendingConversionOptions: ({})
     property string convertedText: ""
@@ -44,7 +43,7 @@ Item {
         return true
     }
 
-    function exportTo(text, fontUrl, destinationUrl, options, allowMissing, conversionMode, conversionOptions) {
+    function exportTo(text, fontUrl, destinationUrl, options, conversionMode, conversionOptions) {
         if (busy || !fileBridge || typeof fileBridge.readFontAsync !== "function")
             return false
         try {
@@ -64,7 +63,6 @@ Item {
         pendingText = text
         pendingDestination = destinationUrl
         pendingOptions = options || ({})
-        pendingAllowMissingGlyphs = allowMissing === true
         pendingConversionMode = conversionMode || ""
         pendingConversionOptions = conversionOptions || ({})
         requestId++
@@ -76,7 +74,7 @@ Item {
         return true
     }
 
-    function exportWithBundledFont(text, destinationUrl, options, allowMissing, conversionMode, conversionOptions) {
+    function exportWithBundledFont(text, destinationUrl, options, conversionMode, conversionOptions) {
         if (busy || !fileBridge || typeof fileBridge.readBundledFontAsync !== "function")
             return false
         try {
@@ -95,7 +93,6 @@ Item {
         pendingText = text
         pendingDestination = destinationUrl
         pendingOptions = options || ({})
-        pendingAllowMissingGlyphs = allowMissing === true
         pendingConversionMode = conversionMode || ""
         pendingConversionOptions = conversionOptions || ({})
         requestId++
@@ -165,10 +162,6 @@ Item {
         fontIdentity = message.font || ({})
         convertedText = String(message.convertedText || "")
         missingGlyphs = message.missingGlyphs || []
-        if (missingGlyphs.length > 0 && !pendingAllowMissingGlyphs) {
-            failExport("MISSING_GLYPHS", "The selected font is missing required glyphs.", missingGlyphs)
-            return true
-        }
         if (!fileBridge || typeof fileBridge.writeSvgAsync !== "function"
                 || !fileBridge.writeSvgAsync(activeRequestId, pendingDestination, message.svg)) {
             failExport("SVG_WRITE_FAILED", "The SVG write could not be started.", [])
@@ -208,7 +201,6 @@ Item {
         pendingText = ""
         pendingDestination = ""
         pendingOptions = ({})
-        pendingAllowMissingGlyphs = false
         pendingConversionMode = ""
         pendingConversionOptions = ({})
         fontByteView = null
