@@ -50,6 +50,14 @@ Item {
         page = "settings"
     }
 
+    function openExport() {
+        page = "export"
+    }
+
+    function closeExport() {
+        page = "editor"
+    }
+
     function closeSettings() {
         page = "editor"
     }

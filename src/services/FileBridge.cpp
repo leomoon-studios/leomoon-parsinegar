@@ -137,6 +137,21 @@ bool FileBridge::readBundledFontAsync(int requestId)
     return true;
 }
 
+QString FileBridge::localFilePath(const QUrl &url)
+{
+    QString path;
+    QVariantMap error;
+    return localPath(url, &path, &error) ? path : QString();
+}
+
+QUrl FileBridge::localFileUrl(const QString &path) const
+{
+    if (path.isEmpty() || !QFileInfo(path).isAbsolute()) {
+        return {};
+    }
+    return QUrl::fromLocalFile(QDir::cleanPath(path));
+}
+
 bool FileBridge::fontPathExists(const QString &path) const
 {
     if (path.isEmpty()) {

@@ -147,4 +147,49 @@ TestCase {
         compare(typography.family, "sans-serif")
         verify(typography.errorMessage.length > 0)
     }
+
+    function test_exportPageNavigationAndResponsiveControls() {
+        var applicationWindow = createMainWindow()
+        var controller = applicationWindow.editorController
+        var exportButton = findChild(applicationWindow, "exportButton")
+        var exportPage = findChild(applicationWindow, "exportPage")
+        var exportBackButton = findChild(applicationWindow, "exportBackButton")
+        var exportScroll = findChild(applicationWindow, "exportScroll")
+        var alignLeft = findChild(applicationWindow, "exportAlignLeft")
+        var alignCenter = findChild(applicationWindow, "exportAlignCenter")
+        var alignRight = findChild(applicationWindow, "exportAlignRight")
+        var compatibility = findChild(applicationWindow, "exportCompatibilityButton")
+        var saveButton = findChild(applicationWindow, "saveSvgButton")
+        verify(exportButton !== null)
+        verify(exportPage !== null)
+        verify(exportBackButton !== null)
+        verify(exportScroll !== null)
+        verify(alignLeft !== null)
+        verify(alignCenter !== null)
+        verify(alignRight !== null)
+        verify(compatibility !== null)
+        verify(saveButton !== null)
+
+        controller.sourceText = "draft متن"
+        exportButton.click()
+        compare(controller.page, "export")
+        verify(exportPage.visible)
+        verify(!findChild(applicationWindow, "headerActions").visible)
+        compare(exportScroll.leftPadding, AppTheme.spacingLarge)
+        compare(exportScroll.rightPadding, AppTheme.spacingLarge)
+        verify(Math.abs(alignLeft.width - alignCenter.width) <= 1)
+        verify(Math.abs(alignCenter.width - alignRight.width) <= 1)
+        verify(alignRight.selected)
+        compare(exportPage.fontDisplayName(), controller.uiText("export.bundledFont"))
+        verify(exportPage.validateBeforeSave())
+
+        compatibility.click()
+        compare(controller.conversionMode, "compatibility")
+        verify(!exportPage.validateBeforeSave())
+        compare(exportPage.statusText, controller.uiText("export.error.fontRequired"))
+
+        exportBackButton.click()
+        compare(controller.page, "editor")
+        compare(controller.sourceText, "draft متن")
+    }
 }

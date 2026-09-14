@@ -2,6 +2,7 @@
 #include <QJSEngine>
 #include <QJSValue>
 #include <QStringList>
+#include <QXmlStreamReader>
 #include <QtTest>
 
 class CoreTests final : public QObject
@@ -88,6 +89,26 @@ void CoreTests::exactFontSvgSuite()
     QVERIFY(results.property(QStringLiteral("passed")).toInt() > 30);
     QVERIFY2(failures.property(QStringLiteral("length")).toInt() == 0,
              qPrintable(failures.property(0).toString()));
+
+    const QString svg = results.property(QStringLiteral("sampleSvg")).toString();
+    QVERIFY(!svg.isEmpty());
+    QXmlStreamReader xml(svg);
+    int pathCount = 0;
+    while (!xml.atEnd()) {
+        xml.readNext();
+        if (!xml.isStartElement()) {
+            continue;
+        }
+        const QStringView name = xml.name();
+        QVERIFY(name != QStringLiteral("text"));
+        QVERIFY(name != QStringLiteral("tspan"));
+        QVERIFY(name != QStringLiteral("image"));
+        if (name == QStringLiteral("path")) {
+            pathCount++;
+        }
+    }
+    QVERIFY2(!xml.hasError(), qPrintable(xml.errorString()));
+    QCOMPARE(pathCount, 2);
 }
 
 QTEST_GUILESS_MAIN(CoreTests)

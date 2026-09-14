@@ -21,6 +21,8 @@ public:
     Q_INVOKABLE QVariantMap readFont(const QUrl &url);
     Q_INVOKABLE bool readFontAsync(int requestId, const QUrl &url);
     Q_INVOKABLE bool readBundledFontAsync(int requestId);
+    Q_INVOKABLE QString localFilePath(const QUrl &url);
+    Q_INVOKABLE QUrl localFileUrl(const QString &path) const;
     Q_INVOKABLE bool fontPathExists(const QString &path) const;
     Q_INVOKABLE QVariantMap writeSvg(const QUrl &url, const QString &svg);
     Q_INVOKABLE bool writeSvgAsync(int requestId, const QUrl &url, const QString &svg);

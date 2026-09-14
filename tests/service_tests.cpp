@@ -318,6 +318,11 @@ void ServiceTests::fileBridgeCompletesFontAndSvgWorkAsynchronously()
     QFile output(writeResult.value(QStringLiteral("path")).toString());
     QVERIFY(output.open(QIODevice::ReadOnly));
     QCOMPARE(output.readAll(), svg.toUtf8());
+
+    QCOMPARE(bridge.localFilePath(destination), QDir::cleanPath(destination.toLocalFile()));
+    QCOMPARE(bridge.localFileUrl(destination.toLocalFile()), destination);
+    QVERIFY(bridge.localFilePath(QUrl(QStringLiteral("https://example.com/font.ttf"))).isEmpty());
+    QVERIFY(bridge.localFileUrl(QStringLiteral("relative/font.ttf")).isEmpty());
 }
 
 void ServiceTests::textDirectionBridgeAlignsRenderedParagraphs()

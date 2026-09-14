@@ -109,5 +109,5 @@ var SvgCurveTestResults = (function () {
         failures.push(String(error && error.stack || error));
     }
 
-    return { passed: passed, failures: failures };
+    return { passed: passed, failures: failures, sampleSvg: typeof left === "string" ? left : "" };
 }());

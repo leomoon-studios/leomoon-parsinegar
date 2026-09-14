@@ -22,11 +22,29 @@ Item {
     property url pendingDestination
     property var pendingOptions: ({})
     property bool pendingAllowMissingGlyphs: false
+    property string pendingConversionMode: ""
+    property var pendingConversionOptions: ({})
+    property string convertedText: ""
+    property var fontByteView: null
+    property int fontByteOffset: 0
 
     signal exported(string path, var warnings, var font)
     signal failed(string code, string message, var details)
+    signal cancelled()
 
-    function exportTo(text, fontUrl, destinationUrl, options, allowMissing) {
+    function cancel() {
+        if (!busy)
+            return false
+        curveWorker.sendMessage({ action: "cancel", id: activeRequestId })
+        requestId++
+        activeRequestId = 0
+        resetPending()
+        busy = false
+        cancelled()
+        return true
+    }
+
+    function exportTo(text, fontUrl, destinationUrl, options, allowMissing, conversionMode, conversionOptions) {
         if (busy || !fileBridge || typeof fileBridge.readFontAsync !== "function")
             return false
         try {
@@ -47,6 +65,8 @@ Item {
         pendingDestination = destinationUrl
         pendingOptions = options || ({})
         pendingAllowMissingGlyphs = allowMissing === true
+        pendingConversionMode = conversionMode || ""
+        pendingConversionOptions = conversionOptions || ({})
         requestId++
         activeRequestId = requestId
         if (!fileBridge.readFontAsync(activeRequestId, fontUrl)) {
@@ -56,7 +76,7 @@ Item {
         return true
     }
 
-    function exportWithBundledFont(text, destinationUrl, options, allowMissing) {
+    function exportWithBundledFont(text, destinationUrl, options, allowMissing, conversionMode, conversionOptions) {
         if (busy || !fileBridge || typeof fileBridge.readBundledFontAsync !== "function")
             return false
         try {
@@ -76,6 +96,8 @@ Item {
         pendingDestination = destinationUrl
         pendingOptions = options || ({})
         pendingAllowMissingGlyphs = allowMissing === true
+        pendingConversionMode = conversionMode || ""
+        pendingConversionOptions = conversionOptions || ({})
         requestId++
         activeRequestId = requestId
         if (!fileBridge.readBundledFontAsync(activeRequestId)) {
@@ -92,13 +114,45 @@ Item {
             failExport(result && result.code, result && result.message, [])
             return true
         }
-        curveWorker.sendMessage({
-            id: id,
-            text: pendingText,
-            options: pendingOptions,
-            fontBytes: result.data
-        })
+        try {
+            fontByteView = new Uint8Array(result.data)
+            Limits.ResourceLimits.assertFontBytes(fontByteView)
+            fontByteOffset = 0
+            curveWorker.sendMessage({
+                action: "begin",
+                id: id,
+                text: pendingText,
+                options: pendingOptions,
+                conversionMode: pendingConversionMode,
+                conversionOptions: pendingConversionOptions
+            })
+            copyFontChunk()
+        } catch (error) {
+            failExport(error.code, error.message || error, error.details || [])
+        }
         return true
+    }
+
+    function copyFontChunk() {
+        if (!busy || !fontByteView)
+            return
+        var end = Math.min(fontByteOffset + 262144, fontByteView.length)
+        var chunk = []
+        for (var index = fontByteOffset; index < end; index++)
+            chunk.push(fontByteView[index])
+        fontByteOffset = end
+        curveWorker.sendMessage({
+            action: "chunk",
+            id: activeRequestId,
+            fontBytes: chunk,
+            final: fontByteOffset >= fontByteView.length
+        })
+        if (fontByteOffset < fontByteView.length) {
+            Qt.callLater(copyFontChunk)
+            return
+        }
+        fontByteView = null
+        fontByteOffset = 0
     }
 
     function finishWorker(message) {
@@ -109,6 +163,7 @@ Item {
             return true
         }
         fontIdentity = message.font || ({})
+        convertedText = String(message.convertedText || "")
         missingGlyphs = message.missingGlyphs || []
         if (missingGlyphs.length > 0 && !pendingAllowMissingGlyphs) {
             failExport("MISSING_GLYPHS", "The selected font is missing required glyphs.", missingGlyphs)
@@ -138,6 +193,8 @@ Item {
     }
 
     function failExport(code, message, details) {
+        if (activeRequestId !== 0)
+            curveWorker.sendMessage({ action: "cancel", id: activeRequestId })
         requestId++
         activeRequestId = 0
         resetPending()
@@ -152,6 +209,10 @@ Item {
         pendingDestination = ""
         pendingOptions = ({})
         pendingAllowMissingGlyphs = false
+        pendingConversionMode = ""
+        pendingConversionOptions = ({})
+        fontByteView = null
+        fontByteOffset = 0
     }
 
     WorkerScript {

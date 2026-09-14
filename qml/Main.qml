@@ -11,6 +11,7 @@ ApplicationWindow {
     readonly property bool bundledIconFontReady: AppTheme.iconFontReady
     readonly property bool bundledIconFontError: AppTheme.iconFontFailed
     readonly property alias editorController: controller
+    readonly property alias svgExportController: exportController
     required property var clipboardService
     property var settingsService: null
     property var fileService: null
@@ -34,6 +35,12 @@ ApplicationWindow {
         objectName: "editorController"
         clipboardBridge: root.clipboardService
         settingsStore: root.settingsService
+        fileBridge: root.fileService
+    }
+
+    SvgCurveExportController {
+        id: exportController
+        objectName: "svgExportController"
         fileBridge: root.fileService
     }
 
@@ -102,6 +109,15 @@ ApplicationWindow {
                 LayoutMirroring.childrenInherit: true
 
                 IconButton {
+                    id: exportButton
+                    objectName: "exportButton"
+                    glyph: AppTheme.iconExport
+                    toolTip: controller.uiText("export.title")
+                    enabled: controller.settingsReady && !controller.busy && !exportController.busy
+                    onClicked: controller.openExport()
+                }
+
+                IconButton {
                     id: settingsButton
                     objectName: "settingsButton"
                     glyph: AppTheme.iconSettings
@@ -140,6 +156,19 @@ ApplicationWindow {
             visible: controller.page === "settings"
             enabled: visible
             controller: controller
+            typography: typography
+        }
+
+        ExportPage {
+            id: exportPage
+            objectName: "exportPage"
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            visible: controller.page === "export"
+            enabled: visible
+            controller: controller
+            exportController: exportController
+            fileBridge: root.fileService
             typography: typography
         }
     }

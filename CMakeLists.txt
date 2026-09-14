@@ -76,6 +76,7 @@ set_source_files_properties(qml/settings/SettingsPage.qml PROPERTIES QT_RESOURCE
 set_source_files_properties(qml/core/ConversionWorker.js PROPERTIES QT_RESOURCE_ALIAS ConversionWorker.js)
 set_source_files_properties(qml/core/SvgCurveWorker.js PROPERTIES QT_RESOURCE_ALIAS SvgCurveWorker.js)
 set_source_files_properties(qml/export/SvgCurveExportController.qml PROPERTIES QT_RESOURCE_ALIAS SvgCurveExportController.qml)
+set_source_files_properties(qml/export/ExportPage.qml PROPERTIES QT_RESOURCE_ALIAS ExportPage.qml)
 
 qt_add_library(parsinegar_ui STATIC)
 
@@ -102,6 +103,7 @@ qt_add_qml_module(parsinegar_ui
         qml/editor/EditorPage.qml
         qml/settings/SettingsPage.qml
         qml/export/SvgCurveExportController.qml
+        qml/export/ExportPage.qml
     RESOURCES
         assets/app-icon.svg
         "assets/fonts/Vazirmatn[wght].ttf"
@@ -246,6 +248,7 @@ if(BUILD_TESTING)
 
     target_link_libraries(parsinegar_ui_tests PRIVATE
         Qt6::QuickTest
+        parsinegar_native_services
         parsinegar_uiplugin
     )
 

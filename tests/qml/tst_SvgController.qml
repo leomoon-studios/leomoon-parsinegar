@@ -98,4 +98,16 @@ TestCase {
         compare(controller.errorCode, "EXPORT_TEXT_TOO_LARGE")
         compare(controller.bridgeMock.bundledReadCount, 0)
     }
+
+    function test_cancelDiscardsLateResults() {
+        var controller = createController()
+        verify(controller.exportWithBundledFont("پارسی", "file:///tmp/result.svg", {}, true))
+        var cancelledId = controller.activeRequestId
+        verify(controller.cancel())
+        verify(!controller.busy)
+        compare(controller.activeRequestId, 0)
+        verify(!controller.finishWorker({ id: cancelledId, ok: true, svg: "<svg/>", missingGlyphs: [] }))
+        compare(controller.bridgeMock.writeCount, 0)
+        verify(!controller.cancel())
+    }
 }
