@@ -20,6 +20,8 @@ QtObject {
     readonly property string iconTools: "\uf10b"
     readonly property string iconBack: "\ue5c4"
     readonly property string iconForward: "\ue5c8"
+    readonly property string iconUndo: "\ue166"
+    readonly property string iconRedo: "\ue15a"
 
     readonly property int spacingUnit: 4
     readonly property int spacingTiny: spacingUnit

@@ -75,18 +75,6 @@ FocusScope {
                     }
                 }
 
-                RowLayout {
-                    width: parent.width
-                    layoutDirection: root.controller.uiLanguage === "fa" ? Qt.LeftToRight : Qt.RightToLeft
-
-                    AppButton {
-                        objectName: "textToolsUndoButton"
-                        visible: root.controller.textToolsUndoText !== ""
-                        text: root.uiText("tools.undo")
-                        onClicked: root.controller.undoTextTools()
-                    }
-                }
-
                 Repeater {
                     model: ["persian", "cleanup", "alternate"]
 

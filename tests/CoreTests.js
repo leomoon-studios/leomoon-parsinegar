@@ -60,6 +60,7 @@ var CoreTestResults;
     var settings = ReshaperSettings;
     var textTools = TextTools;
     var textToolFixtures = TextToolsFixtures;
+    var sourceHistory = SourceHistory;
     var metadata = settings.metadata;
     var strings = InterfaceStrings;
     var limits = ResourceLimits;
@@ -122,6 +123,46 @@ var CoreTestResults;
         var result = textTools.applyEnabled(fixture.input, fixture.enabled);
         equal(result.text, fixture.expected);
         jsonEqual(copy(result.applied), copy(fixture.applied));
+    });
+
+    test("source history is bounded and walks backward deterministically", function () {
+        var history = sourceHistory.create({ text: "a", cursor: 1, anchor: 1 }, 2);
+        history = sourceHistory.record(history, { text: "ab", cursor: 2, anchor: 2 });
+        history = sourceHistory.record(history, { text: "abc", cursor: 3, anchor: 3 });
+        history = sourceHistory.record(history, { text: "abcd", cursor: 4, anchor: 4 });
+        equal(history.undo.length, 2);
+        var first = sourceHistory.undo(history);
+        equal(first.state.text, "abc");
+        var second = sourceHistory.undo(first.history);
+        equal(second.state.text, "ab");
+        equal(sourceHistory.undo(second.history).changed, false);
+    });
+
+    test("source history restores cursor and selection through undo and redo", function () {
+        var history = sourceHistory.create({ text: "alpha", cursor: 2, anchor: 0 }, 100);
+        history = sourceHistory.record(history, { text: "alphabet", cursor: 8, anchor: 8 });
+        var undone = sourceHistory.undo(history);
+        jsonEqual(copy(undone.state), { text: "alpha", cursor: 2, anchor: 0 });
+        var redone = sourceHistory.redo(undone.history);
+        jsonEqual(copy(redone.state), { text: "alphabet", cursor: 8, anchor: 8 });
+    });
+
+    test("a divergent source edit clears redo history", function () {
+        var history = sourceHistory.create({ text: "a", cursor: 1, anchor: 1 }, 100);
+        history = sourceHistory.record(history, { text: "ab", cursor: 2, anchor: 2 });
+        history = sourceHistory.record(history, { text: "abc", cursor: 3, anchor: 3 });
+        history = sourceHistory.undo(history).history;
+        assert(sourceHistory.canRedo(history));
+        history = sourceHistory.record(history, { text: "abX", cursor: 3, anchor: 3 });
+        assert(!sourceHistory.canRedo(history));
+    });
+
+    test("selection updates do not create source history entries", function () {
+        var history = sourceHistory.create({ text: "alpha", cursor: 5, anchor: 5 }, 100);
+        history = sourceHistory.updateSelection(history, 2, 0);
+        equal(history.undo.length, 0);
+        equal(history.current.cursor, 2);
+        equal(history.current.anchor, 0);
     });
 
     test("core namespaces and APIs are immutable", function () {

@@ -14,6 +14,7 @@ Button {
     implicitWidth: 44
     implicitHeight: 44
     padding: 0
+    opacity: enabled ? 1 : 0.45
     Accessible.name: toolTip
 
     contentItem: Text {
@@ -21,7 +22,7 @@ Button {
         font.family: AppTheme.iconFontFamily
         font.pixelSize: 24
         font.weight: Font.Normal
-        color: AppTheme.foreground
+        color: control.enabled ? AppTheme.foreground : AppTheme.muted
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }
@@ -32,7 +33,13 @@ Button {
             : control.hovered
                 ? AppTheme.withAlpha(AppTheme.foreground, 0.08)
                 : AppTheme.surface
-        border.color: control.visualFocus ? AppTheme.focus : control.selected ? AppTheme.accent : AppTheme.border
+        border.color: !control.enabled
+            ? AppTheme.withAlpha(AppTheme.border, 0.65)
+            : control.visualFocus
+                ? AppTheme.focus
+                : control.selected
+                    ? AppTheme.accent
+                    : AppTheme.border
         border.width: control.visualFocus ? AppTheme.focusBorderWidth : AppTheme.borderWidth
         radius: AppTheme.cornerRadius
     }

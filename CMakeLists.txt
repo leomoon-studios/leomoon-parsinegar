@@ -122,6 +122,7 @@ qt_add_qml_module(parsinegar_ui
         qml/core/ParsiNegar.js
         qml/core/ReshaperSettings.js
         qml/core/ResourceLimits.js
+        qml/core/SourceHistory.js
         qml/core/TextTools.js
 )
 
@@ -196,6 +197,7 @@ if(BUILD_TESTING)
             qml/core/ParsiNegar.js
             qml/core/ReshaperSettings.js
             qml/core/ResourceLimits.js
+            qml/core/SourceHistory.js
             qml/core/TextTools.js
             qml/core/SvgCurveExporter.js
             tests/fixtures/ParsiNegarFixtures.js

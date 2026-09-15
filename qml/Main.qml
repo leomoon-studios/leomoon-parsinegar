@@ -127,6 +127,16 @@ ApplicationWindow {
                 }
 
                 IconButton {
+                    id: settingsButton
+                    objectName: "settingsButton"
+                    visible: controller.page === "editor"
+                    glyph: AppTheme.iconSettings
+                    toolTip: controller.uiText("button.settings")
+                    enabled: controller.settingsReady && !controller.busy
+                    onClicked: controller.openSettings()
+                }
+
+                IconButton {
                     id: textToolsButton
                     objectName: "textToolsButton"
                     visible: controller.page === "editor"
@@ -147,13 +157,29 @@ ApplicationWindow {
                 }
 
                 IconButton {
-                    id: settingsButton
-                    objectName: "settingsButton"
+                    id: undoButton
+                    objectName: "undoButton"
                     visible: controller.page === "editor"
-                    glyph: AppTheme.iconSettings
-                    toolTip: controller.uiText("button.settings")
-                    enabled: controller.settingsReady && !controller.busy
-                    onClicked: controller.openSettings()
+                    glyph: AppTheme.iconUndo
+                    toolTip: controller.uiText("history.undo")
+                    enabled: controller.canUndo && !controller.busy && !exportController.busy
+                    onClicked: {
+                        controller.undoSourceEdit()
+                        editorPage.focusEditor()
+                    }
+                }
+
+                IconButton {
+                    id: redoButton
+                    objectName: "redoButton"
+                    visible: controller.page === "editor"
+                    glyph: AppTheme.iconRedo
+                    toolTip: controller.uiText("history.redo")
+                    enabled: controller.canRedo && !controller.busy && !exportController.busy
+                    onClicked: {
+                        controller.redoSourceEdit()
+                        editorPage.focusEditor()
+                    }
                 }
 
                 IconButton {
@@ -215,4 +241,5 @@ ApplicationWindow {
             typography: typography
         }
     }
+
 }

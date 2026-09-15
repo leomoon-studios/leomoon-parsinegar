@@ -201,10 +201,83 @@ TestCase {
         compare(controller.sourceText, "می‌روم\n\nمیدان ۱۲٪")
         tryCompare(controller, "busy", false, 20000)
         verify(controller.statusText.indexOf(controller.uiText("tools.appliedStatus")) !== -1)
-        verify(controller.textToolsUndoText !== "")
-        verify(controller.undoTextTools())
+        var conversionStatus = controller.statusText
+        var conversionStatusLevel = controller.statusLevel
+        verify(controller.canUndo)
+        verify(controller.undoSourceEdit())
         compare(controller.sourceText, "می روم\n\nمیدان 12%")
-        compare(controller.statusText, controller.uiText("tools.undoStatus"))
+        compare(controller.statusText, conversionStatus)
+        compare(controller.statusLevel, conversionStatusLevel)
+        verify(controller.canRedo)
+        verify(controller.redoSourceEdit())
+        compare(controller.sourceText, "می‌روم\n\nمیدان ۱۲٪")
+        compare(controller.statusText, conversionStatus)
+        compare(controller.statusLevel, conversionStatusLevel)
+    }
+
+    function test_sourceHistoryRestoresSelectionAndInvalidatesDivergentRedo() {
+        var applicationWindow = createMainWindow()
+        var controller = applicationWindow.editorController
+        var editor = findChild(applicationWindow, "sourceEditor")
+
+        controller.sourceText = "alpha\n\nbeta"
+        controller.updateSourceSelection(5, 0, 5)
+        controller.sourceText = "replacement"
+        controller.updateSourceSelection(11, 11, 11)
+
+        verify(controller.undoSourceEdit())
+        compare(controller.sourceText, "alpha\n\nbeta")
+        compare(editor.selectionStart, 0)
+        compare(editor.selectionEnd, 5)
+        verify(controller.redoSourceEdit())
+        compare(controller.sourceText, "replacement")
+        verify(controller.undoSourceEdit())
+        controller.sourceText = "divergent"
+        verify(!controller.canRedo)
+    }
+
+    function test_editorShortcutsPreserveConsecutiveBlankLines() {
+        var applicationWindow = createMainWindow()
+        var controller = applicationWindow.editorController
+        var editor = findChild(applicationWindow, "sourceEditor")
+
+        editor.forceActiveFocus()
+        tryCompare(editor, "activeFocus", true)
+        keyClick(Qt.Key_A)
+        compare(controller.sourceText, "a")
+        compare(editor.cursorPosition, 1)
+        keyClick(Qt.Key_Return)
+        compare(controller.sourceText, "a\n")
+        compare(editor.cursorPosition, 2)
+        keyClick(Qt.Key_Return)
+        compare(controller.sourceText, "a\n\n")
+        compare(editor.cursorPosition, 3)
+        keyClick(Qt.Key_B)
+        compare(controller.sourceText, "a\n\nb")
+
+        keyClick(Qt.Key_Z, Qt.ControlModifier)
+        compare(controller.sourceText, "a\n\n")
+        keyClick(Qt.Key_Z, Qt.ControlModifier)
+        compare(controller.sourceText, "a\n")
+        keyClick(Qt.Key_Y, Qt.ControlModifier)
+        compare(controller.sourceText, "a\n\n")
+        verify(controller.canUndo)
+        verify(controller.canRedo)
+        keyClick(Qt.Key_Y, Qt.ControlModifier)
+        compare(controller.sourceText, "a\n\nb")
+        verify(controller.canUndo)
+        verify(!controller.canRedo)
+
+        keyClick(Qt.Key_Z, Qt.ControlModifier)
+        keyClick(Qt.Key_Z, Qt.ControlModifier)
+        keyClick(Qt.Key_Z, Qt.ControlModifier)
+        keyClick(Qt.Key_Z, Qt.ControlModifier)
+        compare(controller.sourceText, "")
+        verify(!controller.canUndo)
+        verify(controller.canRedo)
+        keyClick(Qt.Key_Z, Qt.ControlModifier)
+        compare(controller.sourceText, "")
+        verify(!controller.canUndo)
     }
 
     function test_maximumRequestKeepsSceneResponsiveAndRejectsRaces() {

@@ -2,6 +2,7 @@ import QtQuick
 import "qml/core/InterfaceStrings.js" as Strings
 import "qml/core/ReshaperSettings.js" as Settings
 import "qml/core/ResourceLimits.js" as Limits
+import "qml/core/SourceHistory.js" as History
 import "qml/core/TextTools.js" as TextTools
 
 Item {
@@ -23,10 +24,12 @@ Item {
     property var reshaperSettings: Settings.ReshaperSettings.defaults(Settings.ReshaperSettings.metadata)
     property var textTools: TextTools.TextTools.defaults()
     property var exportSettings: Settings.ReshaperSettings.desktopDefaults().exportSettings
-    property string textToolsUndoText: ""
     property var lastAppliedTextTools: []
     property string page: "editor"
     property int settingsRevision: 0
+    property int sourceHistoryLimit: 100
+    property var sourceHistory: History.SourceHistory.create({ text: "", cursor: 0, anchor: 0 }, sourceHistoryLimit)
+    property bool restoringSourceHistory: false
 
     readonly property var reshaperMetadata: Settings.ReshaperSettings.metadata
     readonly property string shapingProfile: state.shapingProfile
@@ -39,6 +42,8 @@ Item {
     readonly property string lastOutput: state.lastOutput
     readonly property int maximumTextLength: Limits.ResourceLimits.values.maxConversionTextLength
     readonly property bool settingsReady: state.settingsReady
+    readonly property bool canUndo: History.SourceHistory.canUndo(sourceHistory)
+    readonly property bool canRedo: History.SourceHistory.canRedo(sourceHistory)
     readonly property string settingsStatusText: state.settingsMessageKey === ""
         ? ""
         : uiText(state.settingsMessageKey) + state.settingsMessageDetail
@@ -46,6 +51,7 @@ Item {
 
     signal conversionFinished(bool ok, string output)
     signal settingsWritten(string json)
+    signal sourceHistoryRestored(int cursor, int anchor)
 
     function uiText(key) {
         return Strings.InterfaceStrings.text(uiLanguage, key)
@@ -96,22 +102,51 @@ Item {
         var input = sourceText
         var result = TextTools.TextTools.applyEnabled(input, textTools)
         lastAppliedTextTools = result.applied
-        if (result.text !== input) {
-            textToolsUndoText = input
-            sourceText = result.text
-        }
+        if (result.text !== input)
+            replaceSourceText(result.text, sourceHistory.current.cursor, sourceHistory.current.anchor)
         return result
     }
 
-    function undoTextTools() {
-        if (textToolsUndoText === "")
+    function selectionAnchor(cursor, selectionStart, selectionEnd) {
+        if (selectionStart === selectionEnd)
+            return cursor
+        return cursor === selectionStart ? selectionEnd : selectionStart
+    }
+
+    function updateSourceSelection(cursor, selectionStart, selectionEnd) {
+        var anchor = selectionAnchor(cursor, selectionStart, selectionEnd)
+        sourceHistory = History.SourceHistory.updateSelection(sourceHistory, cursor, anchor)
+    }
+
+    function replaceSourceText(text, cursor, anchor) {
+        var nextText = String(text === undefined || text === null ? "" : text)
+        if (sourceText === nextText) {
+            sourceHistory = History.SourceHistory.updateSelection(sourceHistory, cursor, anchor)
             return false
-        var previous = textToolsUndoText
-        textToolsUndoText = ""
-        sourceText = previous
-        state.statusText = uiText("tools.undoStatus")
-        state.statusLevel = "info"
+        }
+        sourceText = nextText
+        sourceHistory = History.SourceHistory.updateSelection(sourceHistory, cursor, anchor)
+        sourceHistoryRestored(sourceHistory.current.cursor, sourceHistory.current.anchor)
         return true
+    }
+
+    function restoreSourceHistory(result) {
+        if (!result.changed)
+            return false
+        restoringSourceHistory = true
+        sourceHistory = result.history
+        sourceText = result.state.text
+        restoringSourceHistory = false
+        sourceHistoryRestored(result.state.cursor, result.state.anchor)
+        return true
+    }
+
+    function undoSourceEdit() {
+        return restoreSourceHistory(History.SourceHistory.undo(sourceHistory))
+    }
+
+    function redoSourceEdit() {
+        return restoreSourceHistory(History.SourceHistory.redo(sourceHistory))
     }
 
     function setReverseWords(enabled) {
@@ -423,7 +458,16 @@ Item {
         return true
     }
 
-    onSourceTextChanged: clearStatus()
+    onSourceTextChanged: {
+        if (!restoringSourceHistory) {
+            clearStatus()
+            sourceHistory = History.SourceHistory.record(sourceHistory, {
+                text: sourceText,
+                cursor: sourceHistory.current.cursor,
+                anchor: sourceHistory.current.anchor
+            })
+        }
+    }
     Component.onCompleted: initializeSettings()
 
     WorkerScript {

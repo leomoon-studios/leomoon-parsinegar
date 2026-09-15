@@ -113,10 +113,13 @@ TestCase {
 
     function test_reusableControlsAndThemeSwitch() {
         var applicationWindow = createMainWindow()
+        var controller = applicationWindow.editorController
         var convertButton = findChild(applicationWindow, "convertButton")
         var exportButton = findChild(applicationWindow, "exportButton")
         var textToolsButton = findChild(applicationWindow, "textToolsButton")
         var settingsButton = findChild(applicationWindow, "settingsButton")
+        var undoButton = findChild(applicationWindow, "undoButton")
+        var redoButton = findChild(applicationWindow, "redoButton")
         var sourceEditor = findChild(applicationWindow, "sourceEditor")
         var editorCursor = findChild(applicationWindow, "editorCursor")
         var conversionStatus = findChild(applicationWindow, "conversionStatus")
@@ -126,6 +129,8 @@ TestCase {
         verify(exportButton !== null)
         verify(textToolsButton !== null)
         verify(settingsButton !== null)
+        verify(undoButton !== null)
+        verify(redoButton !== null)
         verify(sourceEditor !== null)
         verify(editorCursor !== null)
         sourceEditor.forceActiveFocus()
@@ -147,12 +152,32 @@ TestCase {
         compare(settingsButton.glyph, AppTheme.iconSettings)
         compare(exportButton.glyph, AppTheme.iconExport)
         compare(textToolsButton.glyph, AppTheme.iconTools)
+        compare(undoButton.glyph, AppTheme.iconUndo)
+        compare(redoButton.glyph, AppTheme.iconRedo)
         verify(textToolsButton.glyph !== "")
         verify(exportButton.glyph !== "")
         compare(exportButton.contentItem.font.family, AppTheme.iconFontFamily)
         compare(themeButton.contentItem.font.family, AppTheme.iconFontFamily)
         compare(settingsButton.width, themeButton.width)
         compare(textToolsButton.width, themeButton.width)
+        compare(undoButton.width, themeButton.width)
+        compare(redoButton.width, themeButton.width)
+        verify(!undoButton.enabled)
+        verify(!redoButton.enabled)
+
+        controller.sourceText = "one"
+        verify(undoButton.enabled)
+        undoButton.click()
+        compare(controller.sourceText, "")
+        verify(!undoButton.enabled)
+        verify(redoButton.enabled)
+        applicationWindow.requestActivate()
+        tryCompare(applicationWindow, "active", true, 2000)
+        tryCompare(sourceEditor, "activeFocus", true)
+        keyClick(Qt.Key_Y, Qt.ControlModifier)
+        compare(controller.sourceText, "one")
+        verify(undoButton.enabled)
+        verify(!redoButton.enabled)
 
         var originalMode = AppTheme.darkMode
         var originalThemeGlyph = themeButton.glyph
@@ -277,11 +302,13 @@ TestCase {
         controller.toggleTextTool("repairZwnj")
         controller.toggleTextTool("persianDigits")
         controller.openExport()
+        var historyLength = controller.sourceHistory.undo.length
         exportPage.chosenDestination = "file:///tmp/text-tools-export-test.svg"
 
         verify(exportPage.beginExport())
         compare(exportController.pendingText, source)
         compare(controller.sourceText, source)
+        compare(controller.sourceHistory.undo.length, historyLength)
         verify(exportController.cancel())
     }
 }

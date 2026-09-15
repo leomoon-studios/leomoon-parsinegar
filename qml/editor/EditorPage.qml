@@ -30,6 +30,23 @@ FocusScope {
             textDirectionService.applyAutomaticDirection(editor.textDocument)
     }
 
+    function reportEditorSelection() {
+        if (!syncingEditor)
+            controller.updateSourceSelection(editor.cursorPosition, editor.selectionStart, editor.selectionEnd)
+    }
+
+    function restoreEditorSelection(cursor, anchor) {
+        syncingEditor = true
+        try {
+            editor.cursorPosition = Math.max(0, Math.min(editor.length, anchor))
+            if (cursor !== anchor)
+                editor.moveCursorSelection(Math.max(0, Math.min(editor.length, cursor)), TextEdit.SelectCharacters)
+        } finally {
+            syncingEditor = false
+        }
+        reportEditorSelection()
+    }
+
     function syncEditorFromController() {
         if (textDirectionService !== null) {
             if (textDirectionService.plainText(editor.textDocument) !== controller.sourceText) {
@@ -59,6 +76,9 @@ FocusScope {
         target: root.controller
         function onSourceTextChanged() {
             root.syncEditorFromController()
+        }
+        function onSourceHistoryRestored(cursor, anchor) {
+            root.restoreEditorSelection(cursor, anchor)
         }
     }
 
@@ -126,7 +146,11 @@ FocusScope {
                                 root.controller.sourceText = source
                             if (!root.syncingEditor)
                                 root.updateParagraphDirections()
+                            root.reportEditorSelection()
                         }
+                        onCursorPositionChanged: root.reportEditorSelection()
+                        onSelectionStartChanged: root.reportEditorSelection()
+                        onSelectionEndChanged: root.reportEditorSelection()
                         font.family: AppTheme.fontFamily
                         font.pixelSize: AppTheme.fontBody
                         placeholderText: root.uiText("placeholder")
@@ -144,6 +168,24 @@ FocusScope {
                         persistentSelection: true
                         padding: AppTheme.spacingMedium
                         Accessible.name: qsTr("Source text editor")
+                        Keys.onPressed: function(event) {
+                            var primaryModifier = Qt.platform.os === "osx" ? Qt.MetaModifier : Qt.ControlModifier
+                            var hasPrimaryModifier = (event.modifiers & primaryModifier) !== 0
+                            var hasShift = (event.modifiers & Qt.ShiftModifier) !== 0
+                            var undoShortcut = event.matches(StandardKey.Undo)
+                                || (hasPrimaryModifier && !hasShift && event.key === Qt.Key_Z)
+                            var redoShortcut = event.matches(StandardKey.Redo)
+                                || (hasPrimaryModifier && !hasShift && event.key === Qt.Key_Y)
+                                || (hasPrimaryModifier && hasShift && event.key === Qt.Key_Z)
+
+                            if (undoShortcut) {
+                                root.controller.undoSourceEdit()
+                                event.accepted = true
+                            } else if (redoShortcut) {
+                                root.controller.redoSourceEdit()
+                                event.accepted = true
+                            }
+                        }
 
                         Rectangle {
                             id: editorCursor
