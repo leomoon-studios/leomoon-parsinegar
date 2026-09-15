@@ -23,6 +23,7 @@ QtObject {
     readonly property string iconUndo: "\ue166"
     readonly property string iconRedo: "\ue15a"
     readonly property string iconDocument: "\ue873"
+    readonly property string iconHelp: "\ue8fd"
 
     readonly property int spacingUnit: 4
     readonly property int spacingTiny: spacingUnit

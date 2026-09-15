@@ -235,6 +235,14 @@ Item {
         page = "settings"
     }
 
+    function openHelp() {
+        page = "help"
+    }
+
+    function closeHelp() {
+        page = "editor"
+    }
+
     function openExport() {
         page = "export"
     }

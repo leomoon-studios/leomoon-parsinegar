@@ -176,6 +176,8 @@ ApplicationWindow {
                             controller.closeExport()
                         } else if (controller.page === "tools") {
                             controller.closeTextTools()
+                        } else if (controller.page === "help") {
+                            controller.closeHelp()
                         } else if (settingsPage.ligatureGroupId !== "") {
                             settingsPage.closeGroup()
                         } else {
@@ -260,6 +262,16 @@ ApplicationWindow {
                     toolTip: AppTheme.darkMode ? controller.uiText("theme.light") : controller.uiText("theme.dark")
                     onClicked: AppTheme.darkMode = !AppTheme.darkMode
                 }
+
+                IconButton {
+                    id: helpButton
+                    objectName: "helpButton"
+                    visible: controller.page === "editor"
+                    glyph: AppTheme.iconHelp
+                    toolTip: controller.uiText("help.title")
+                    enabled: controller.settingsReady && !controller.busy && !exportController.busy
+                    onClicked: controller.openHelp()
+                }
             }
         }
 
@@ -285,6 +297,17 @@ ApplicationWindow {
             controller: controller
             typography: typography
             navigationBackButton: headerBackButton
+        }
+
+        HelpPage {
+            id: helpPage
+            objectName: "helpPage"
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            visible: controller.page === "help"
+            enabled: visible
+            controller: controller
+            typography: typography
         }
 
         TextToolsPage {

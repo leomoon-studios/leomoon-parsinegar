@@ -118,6 +118,7 @@ TestCase {
         var controller = applicationWindow.editorController
         var convertButton = findChild(applicationWindow, "convertButton")
         var exportButton = findChild(applicationWindow, "exportButton")
+        var helpButton = findChild(applicationWindow, "helpButton")
         var textToolsButton = findChild(applicationWindow, "textToolsButton")
         var settingsButton = findChild(applicationWindow, "settingsButton")
         var documentButton = findChild(applicationWindow, "documentButton")
@@ -130,6 +131,7 @@ TestCase {
         var themeButton = findChild(applicationWindow, "themeButton")
         verify(convertButton !== null)
         verify(exportButton !== null)
+        verify(helpButton !== null)
         verify(textToolsButton !== null)
         verify(documentButton !== null)
         verify(settingsButton !== null)
@@ -154,6 +156,7 @@ TestCase {
         verify(findChild(applicationWindow, "profile_standardPersianArabic") === null)
         verify(findChild(applicationWindow, "bidiToggle") === null)
         compare(settingsButton.glyph, AppTheme.iconSettings)
+        compare(helpButton.glyph, AppTheme.iconHelp)
         compare(documentButton.glyph, AppTheme.iconDocument)
         compare(exportButton.glyph, AppTheme.iconExport)
         compare(textToolsButton.glyph, AppTheme.iconTools)
@@ -165,6 +168,7 @@ TestCase {
         compare(themeButton.contentItem.font.family, AppTheme.iconFontFamily)
         compare(settingsButton.width, themeButton.width)
         compare(documentButton.width, themeButton.width)
+        compare(helpButton.width, themeButton.width)
         compare(textToolsButton.width, themeButton.width)
         compare(undoButton.width, themeButton.width)
         compare(redoButton.width, themeButton.width)
@@ -272,6 +276,32 @@ TestCase {
 
         controller.setUiLanguage("fa")
         compare(backButton.glyph, AppTheme.iconForward)
+        backButton.click()
+        compare(controller.page, "editor")
+    }
+
+    function test_helpPageNavigationAndMirroring() {
+        var applicationWindow = createMainWindow()
+        var controller = applicationWindow.editorController
+        var helpButton = findChild(applicationWindow, "helpButton")
+        var helpPage = findChild(applicationWindow, "helpPage")
+        var helpScroll = findChild(applicationWindow, "helpScroll")
+        var backButton = findChild(applicationWindow, "headerBackButton")
+        verify(helpButton !== null)
+        verify(helpPage !== null)
+        verify(helpScroll !== null)
+
+        helpButton.click()
+        compare(controller.page, "help")
+        verify(helpPage.visible)
+        verify(backButton.visible)
+        tryVerify(function() { return helpPage.contentImplicitHeight > helpScroll.height })
+
+        controller.setUiLanguage("fa")
+        compare(backButton.glyph, AppTheme.iconForward)
+        tryVerify(function() { return helpPage.firstSectionHeading !== null && helpPage.firstSectionBody !== null })
+        compare(helpPage.firstSectionHeading.effectiveHorizontalAlignment, Text.AlignRight)
+        compare(helpPage.firstSectionBody.effectiveHorizontalAlignment, Text.AlignRight)
         backButton.click()
         compare(controller.page, "editor")
     }
