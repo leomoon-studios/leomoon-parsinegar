@@ -168,6 +168,7 @@ FocusScope {
                         persistentSelection: true
                         padding: AppTheme.spacingMedium
                         Accessible.name: qsTr("Source text editor")
+                        ContextMenu.menu: null
                         Keys.onPressed: function(event) {
                             var primaryModifier = Qt.platform.os === "osx" ? Qt.MetaModifier : Qt.ControlModifier
                             var hasPrimaryModifier = (event.modifiers & primaryModifier) !== 0
@@ -204,6 +205,27 @@ FocusScope {
                             border.color: editor.activeFocus ? AppTheme.focus : AppTheme.border
                             border.width: editor.activeFocus ? AppTheme.focusBorderWidth : AppTheme.borderWidth
                             radius: AppTheme.cornerRadius
+                        }
+
+                        TextEditorContextMenu {
+                            id: editorContextMenu
+                            editor: editor
+                            controller: root.controller
+                            rightToLeft: root.controller.uiLanguage === "fa"
+                        }
+
+                        MouseArea {
+                            id: contextMenuMouseArea
+                            objectName: "editorContextMenuMouseArea"
+                            anchors.fill: parent
+                            acceptedButtons: Qt.RightButton
+                            preventStealing: true
+                            z: 2
+                            onPressed: function(mouse) {
+                                editor.forceActiveFocus()
+                                editorContextMenu.openAt(editor, mouse.x, mouse.y)
+                                mouse.accepted = true
+                            }
                         }
                     }
                 }

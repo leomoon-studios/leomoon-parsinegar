@@ -65,6 +65,7 @@ set_source_files_properties(qml/components/Typography.qml PROPERTIES QT_RESOURCE
 set_source_files_properties(qml/controls/AppButton.qml PROPERTIES QT_RESOURCE_ALIAS AppButton.qml)
 set_source_files_properties(qml/controls/AppMenuItem.qml PROPERTIES QT_RESOURCE_ALIAS AppMenuItem.qml)
 set_source_files_properties(qml/controls/DocumentMenu.qml PROPERTIES QT_RESOURCE_ALIAS DocumentMenu.qml)
+set_source_files_properties(qml/controls/TextEditorContextMenu.qml PROPERTIES QT_RESOURCE_ALIAS TextEditorContextMenu.qml)
 set_source_files_properties(qml/controls/AppToggle.qml PROPERTIES QT_RESOURCE_ALIAS AppToggle.qml)
 set_source_files_properties(qml/controls/IconButton.qml PROPERTIES QT_RESOURCE_ALIAS IconButton.qml)
 set_source_files_properties(qml/controls/ModeCard.qml PROPERTIES QT_RESOURCE_ALIAS ModeCard.qml)
@@ -97,6 +98,7 @@ qt_add_qml_module(parsinegar_ui
         qml/controls/AppButton.qml
         qml/controls/AppMenuItem.qml
         qml/controls/DocumentMenu.qml
+        qml/controls/TextEditorContextMenu.qml
         qml/controls/AppToggle.qml
         qml/controls/IconButton.qml
         qml/controls/ModeCard.qml

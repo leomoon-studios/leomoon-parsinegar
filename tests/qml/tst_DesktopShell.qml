@@ -220,6 +220,30 @@ TestCase {
         verify(!controller.documentDirty)
     }
 
+    function test_editorContextMenuUsesTheMousePositionAndAppStyle() {
+        var applicationWindow = createMainWindow()
+        var sourceEditor = findChild(applicationWindow, "sourceEditor")
+        var contextMenu = findChild(applicationWindow, "editorContextMenu")
+        var contextUndo = findChild(applicationWindow, "contextUndoAction")
+        var contextPaste = findChild(applicationWindow, "contextPasteAction")
+        verify(sourceEditor !== null)
+        verify(contextMenu !== null)
+        verify(contextUndo !== null)
+        verify(contextPaste !== null)
+
+        var mouseX = 120
+        var mouseY = 80
+        mousePress(sourceEditor, mouseX, mouseY, Qt.RightButton)
+        tryCompare(contextMenu, "visible", true)
+        compare(contextMenu.requestedX, mouseX)
+        compare(contextMenu.requestedY, mouseY)
+        compare(contextMenu.background.color, AppTheme.surface)
+        verify(!contextUndo.enabled)
+        compare(contextUndo.opacity, 0.42)
+        mouseRelease(sourceEditor, mouseX, mouseY, Qt.RightButton)
+        contextMenu.close()
+    }
+
     function test_textToolsPageNavigationAndMirroring() {
         var applicationWindow = createMainWindow()
         var controller = applicationWindow.editorController
