@@ -9,6 +9,7 @@ Control {
     property string description: ""
     property bool checked: false
     readonly property alias toggleItem: toggle
+    readonly property alias descriptionItem: descriptionLabel
     signal toggled(bool checked)
 
     implicitHeight: contentItem.implicitHeight
@@ -32,9 +33,12 @@ Control {
         }
 
         Label {
+            id: descriptionLabel
             Layout.fillWidth: true
-            Layout.leftMargin: toggle.mirrored ? 0 : toggle.indicator.width + toggle.spacing
-            Layout.rightMargin: toggle.mirrored ? toggle.indicator.width + toggle.spacing : 0
+            Layout.leftMargin: toggle.mirrored ? 0
+                : toggle.leftPadding + toggle.indicator.width + toggle.spacing
+            Layout.rightMargin: toggle.mirrored
+                ? toggle.rightPadding + toggle.indicator.width + toggle.spacing : 0
             visible: control.description !== ""
             text: control.description
             font.family: AppTheme.fontFamily

@@ -88,16 +88,16 @@ TestCase {
 
     function test_keyboardFocusHasVisibleTreatment() {
         var applicationWindow = createMainWindow()
-        var themeButton = findChild(applicationWindow, "themeButton")
-        verify(themeButton !== null)
+        var settingsButton = findChild(applicationWindow, "settingsButton")
+        verify(settingsButton !== null)
 
         applicationWindow.requestActivate()
         tryCompare(applicationWindow, "active", true, 2000)
-        themeButton.forceActiveFocus(Qt.TabFocusReason)
-        tryCompare(themeButton, "activeFocus", true)
-        verify(themeButton.focusIndicatorVisible)
-        compare(themeButton.background.border.width, AppTheme.focusBorderWidth)
-        compare(themeButton.background.border.color, AppTheme.focus)
+        settingsButton.forceActiveFocus(Qt.TabFocusReason)
+        tryCompare(settingsButton, "activeFocus", true)
+        verify(settingsButton.focusIndicatorVisible)
+        compare(settingsButton.background.border.width, AppTheme.focusBorderWidth)
+        compare(settingsButton.background.border.color, AppTheme.focus)
     }
 
     function test_lightAndDarkPalettesRemainLegible() {
@@ -128,7 +128,8 @@ TestCase {
         var editorCursor = findChild(applicationWindow, "editorCursor")
         var conversionStatus = findChild(applicationWindow, "conversionStatus")
         var statusSlot = findChild(applicationWindow, "statusSlot")
-        var themeButton = findChild(applicationWindow, "themeButton")
+        var settingsPage = findChild(applicationWindow, "settingsPage")
+        var darkThemeToggle = findChild(applicationWindow, "settingsDarkThemeToggle")
         verify(convertButton !== null)
         verify(exportButton !== null)
         verify(helpButton !== null)
@@ -137,6 +138,8 @@ TestCase {
         verify(settingsButton !== null)
         verify(undoButton !== null)
         verify(redoButton !== null)
+        verify(settingsPage !== null)
+        verify(darkThemeToggle !== null)
         verify(sourceEditor !== null)
         verify(editorCursor !== null)
         sourceEditor.forceActiveFocus()
@@ -165,13 +168,12 @@ TestCase {
         verify(textToolsButton.glyph !== "")
         verify(exportButton.glyph !== "")
         compare(exportButton.contentItem.font.family, AppTheme.iconFontFamily)
-        compare(themeButton.contentItem.font.family, AppTheme.iconFontFamily)
-        compare(settingsButton.width, themeButton.width)
-        compare(documentButton.width, themeButton.width)
-        compare(helpButton.width, themeButton.width)
-        compare(textToolsButton.width, themeButton.width)
-        compare(undoButton.width, themeButton.width)
-        compare(redoButton.width, themeButton.width)
+        compare(settingsButton.contentItem.font.family, AppTheme.iconFontFamily)
+        compare(documentButton.width, settingsButton.width)
+        compare(helpButton.width, settingsButton.width)
+        compare(textToolsButton.width, settingsButton.width)
+        compare(undoButton.width, settingsButton.width)
+        compare(redoButton.width, settingsButton.width)
         verify(!undoButton.enabled)
         verify(!redoButton.enabled)
 
@@ -190,11 +192,14 @@ TestCase {
         verify(!redoButton.enabled)
 
         var originalMode = AppTheme.darkMode
-        var originalThemeGlyph = themeButton.glyph
-        themeButton.click()
+        settingsButton.click()
+        compare(controller.page, "settings")
+        compare(darkThemeToggle.descriptionItem.mapToItem(applicationWindow.contentItem, 0, 0).x,
+            darkThemeToggle.toggleItem.contentItem.mapToItem(applicationWindow.contentItem, 0, 0).x
+            + darkThemeToggle.toggleItem.contentItem.leftPadding)
+        darkThemeToggle.toggleItem.click()
         compare(AppTheme.darkMode, !originalMode)
-        verify(themeButton.glyph !== originalThemeGlyph)
-        themeButton.click()
+        darkThemeToggle.toggleItem.click()
         compare(AppTheme.darkMode, originalMode)
     }
 
@@ -276,6 +281,8 @@ TestCase {
 
         controller.setUiLanguage("fa")
         compare(backButton.glyph, AppTheme.iconForward)
+        tryVerify(function() { return toolsPage.firstGroupHeading !== null })
+        compare(toolsPage.firstGroupHeading.effectiveHorizontalAlignment, Text.AlignRight)
         backButton.click()
         compare(controller.page, "editor")
     }

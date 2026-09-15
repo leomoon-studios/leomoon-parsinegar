@@ -73,6 +73,7 @@ set_source_files_properties(qml/controls/NumericField.qml PROPERTIES QT_RESOURCE
 set_source_files_properties(qml/controls/PageHeader.qml PROPERTIES QT_RESOURCE_ALIAS PageHeader.qml)
 set_source_files_properties(qml/controls/StatusMessage.qml PROPERTIES QT_RESOURCE_ALIAS StatusMessage.qml)
 set_source_files_properties(qml/controls/SettingsToggle.qml PROPERTIES QT_RESOURCE_ALIAS SettingsToggle.qml)
+set_source_files_properties(qml/controls/SectionHeading.qml PROPERTIES QT_RESOURCE_ALIAS SectionHeading.qml)
 set_source_files_properties(qml/editor/EditorController.qml PROPERTIES QT_RESOURCE_ALIAS EditorController.qml)
 set_source_files_properties(qml/editor/EditorPage.qml PROPERTIES QT_RESOURCE_ALIAS EditorPage.qml)
 set_source_files_properties(qml/settings/SettingsPage.qml PROPERTIES QT_RESOURCE_ALIAS SettingsPage.qml)
@@ -106,6 +107,7 @@ qt_add_qml_module(parsinegar_ui
         qml/controls/NumericField.qml
         qml/controls/PageHeader.qml
         qml/controls/SettingsToggle.qml
+        qml/controls/SectionHeading.qml
         qml/controls/StatusMessage.qml
         qml/editor/EditorController.qml
         qml/editor/EditorPage.qml

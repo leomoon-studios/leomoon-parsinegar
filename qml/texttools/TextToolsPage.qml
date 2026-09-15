@@ -12,6 +12,8 @@ FocusScope {
     required property Typography typography
     readonly property alias toolsScroll: toolsScroll
     readonly property real contentImplicitHeight: toolsContent.implicitHeight
+    readonly property var firstGroupHeading: toolsGroupRepeater.count > 0
+        ? toolsGroupRepeater.itemAt(0).headingItem : null
 
     LayoutMirroring.enabled: controller.uiLanguage === "fa"
     LayoutMirroring.childrenInherit: true
@@ -76,22 +78,20 @@ FocusScope {
                 }
 
                 Repeater {
+                    id: toolsGroupRepeater
                     model: ["persian", "cleanup", "alternate"]
 
                     delegate: Column {
                         id: groupColumn
                         required property string modelData
+                        readonly property alias headingItem: groupHeading
                         width: parent.width
                         spacing: AppTheme.spacingSmall
 
-                        Label {
+                        SectionHeading {
+                            id: groupHeading
                             width: parent.width
-                            text: root.uiText("tools.group." + groupColumn.modelData)
-                            font.family: AppTheme.fontFamily
-                            font.pixelSize: AppTheme.fontCaption
-                            font.weight: Font.DemiBold
-                            color: AppTheme.muted
-                            horizontalAlignment: root.controller.uiLanguage === "fa" ? Text.AlignRight : Text.AlignLeft
+                            label: root.uiText("tools.group." + groupColumn.modelData)
                         }
 
                         Repeater {

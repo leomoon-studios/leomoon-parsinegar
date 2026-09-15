@@ -272,12 +272,8 @@ FocusScope {
                         anchors.margins: AppTheme.spacingLarge
                         spacing: AppTheme.spacingMedium
 
-                        Label {
-                            text: root.uiText("export.mode")
-                            font.family: AppTheme.fontFamily
-                            font.pixelSize: AppTheme.fontCaption
-                            font.weight: Font.DemiBold
-                            color: AppTheme.muted
+                        SectionHeading {
+                            label: root.uiText("export.mode")
                         }
 
                         GridLayout {
@@ -305,12 +301,8 @@ FocusScope {
                             }
                         }
 
-                        Label {
-                            text: root.uiText("export.font")
-                            font.family: AppTheme.fontFamily
-                            font.pixelSize: AppTheme.fontCaption
-                            font.weight: Font.DemiBold
-                            color: AppTheme.muted
+                        SectionHeading {
+                            label: root.uiText("export.font")
                         }
 
                         RowLayout {

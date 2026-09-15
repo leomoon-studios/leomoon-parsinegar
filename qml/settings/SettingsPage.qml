@@ -100,13 +100,9 @@ FocusScope {
                 width: settingsScroll.availableWidth
                 spacing: AppTheme.spacingMedium
 
-                Label {
+                SectionHeading {
                     width: parent.width
-                    text: root.uiText("settings.interfaceLanguage")
-                    font.family: AppTheme.fontFamily
-                    font.pixelSize: AppTheme.fontCaption
-                    font.weight: Font.DemiBold
-                    color: AppTheme.muted
+                    label: root.uiText("settings.interfaceLanguage")
                 }
 
                 GridLayout {
@@ -133,13 +129,24 @@ FocusScope {
                     }
                 }
 
-                Label {
+                SectionHeading {
                     width: parent.width
-                    text: root.uiText("settings.language")
-                    font.family: AppTheme.fontFamily
-                    font.pixelSize: AppTheme.fontCaption
-                    font.weight: Font.DemiBold
-                    color: AppTheme.muted
+                    label: root.uiText("settings.appearance")
+                }
+
+                SettingsToggle {
+                    id: darkThemeToggle
+                    objectName: "settingsDarkThemeToggle"
+                    width: parent.width
+                    title: root.uiText("settings.darkTheme")
+                    description: root.uiText("settings.darkThemeDescription")
+                    checked: AppTheme.darkMode
+                    onToggled: function(checked) { AppTheme.darkMode = checked }
+                }
+
+                SectionHeading {
+                    width: parent.width
+                    label: root.uiText("settings.language")
                 }
 
                 GridLayout {
@@ -221,13 +228,9 @@ FocusScope {
                     }
                 }
 
-                Label {
+                SectionHeading {
                     width: parent.width
-                    text: root.uiText("settings.textShaping")
-                    font.family: AppTheme.fontFamily
-                    font.pixelSize: AppTheme.fontCaption
-                    font.weight: Font.DemiBold
-                    color: AppTheme.muted
+                    label: root.uiText("settings.textShaping")
                 }
 
                 SettingsToggle {
@@ -310,14 +313,10 @@ FocusScope {
                     onToggled: function(checked) { root.controller.setBaseOption("supportLigatures", checked) }
                 }
 
-                Label {
+                SectionHeading {
                     width: parent.width
                     visible: !root.controller.hebrewProfile
-                    text: root.uiText("settings.namedLigatures")
-                    font.family: AppTheme.fontFamily
-                    font.pixelSize: AppTheme.fontCaption
-                    font.weight: Font.DemiBold
-                    color: AppTheme.muted
+                    label: root.uiText("settings.namedLigatures")
                 }
 
                 Label {

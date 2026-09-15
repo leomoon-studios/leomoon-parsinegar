@@ -255,15 +255,6 @@ ApplicationWindow {
                 }
 
                 IconButton {
-                    id: themeButton
-                    objectName: "themeButton"
-                    visible: controller.page === "editor"
-                    glyph: AppTheme.darkMode ? AppTheme.iconLightMode : AppTheme.iconDarkMode
-                    toolTip: AppTheme.darkMode ? controller.uiText("theme.light") : controller.uiText("theme.dark")
-                    onClicked: AppTheme.darkMode = !AppTheme.darkMode
-                }
-
-                IconButton {
                     id: helpButton
                     objectName: "helpButton"
                     visible: controller.page === "editor"
