@@ -25,6 +25,31 @@ FocusScope {
         editor.forceActiveFocus()
     }
 
+    function pastePlainText() {
+        if (controller.clipboardBridge === null
+                || typeof controller.clipboardBridge.readText !== "function")
+            return false
+
+        var clipboardText = controller.clipboardBridge.readText()
+        if (clipboardText === undefined || clipboardText === null || clipboardText === "")
+            return false
+
+        var source = textDirectionService !== null
+            ? textDirectionService.plainText(editor.textDocument)
+            : editor.text
+        var selectionStart = Math.min(editor.selectionStart, editor.selectionEnd)
+        var selectionEnd = Math.max(editor.selectionStart, editor.selectionEnd)
+        var pastedText = String(clipboardText)
+        var cursor = selectionStart + pastedText.length
+
+        controller.replaceSourceText(
+            source.slice(0, selectionStart) + pastedText + source.slice(selectionEnd),
+            cursor,
+            cursor)
+        editor.forceActiveFocus()
+        return true
+    }
+
     function updateParagraphDirections() {
         if (textDirectionService !== null)
             textDirectionService.applyAutomaticDirection(editor.textDocument)
@@ -185,6 +210,10 @@ FocusScope {
                             } else if (redoShortcut) {
                                 root.controller.redoSourceEdit()
                                 event.accepted = true
+                            } else if (event.matches(StandardKey.Paste)
+                                    || (hasPrimaryModifier && !hasShift && event.key === Qt.Key_V)) {
+                                root.pastePlainText()
+                                event.accepted = true
                             }
                         }
 
@@ -211,6 +240,7 @@ FocusScope {
                             id: editorContextMenu
                             editor: editor
                             controller: root.controller
+                            pasteHandler: root.pastePlainText
                             rightToLeft: root.controller.uiLanguage === "fa"
                         }
 

@@ -6,6 +6,7 @@ Menu {
 
     required property var editor
     required property var controller
+    required property var pasteHandler
     property bool rightToLeft: false
     property real requestedX: 0
     property real requestedY: 0
@@ -90,7 +91,7 @@ Menu {
         rightToLeft: root.rightToLeft
         enabled: !root.editor.readOnly && root.editor.canPaste
         onTriggered: {
-            root.editor.paste()
+            root.pasteHandler()
             root.editor.forceActiveFocus()
         }
     }
