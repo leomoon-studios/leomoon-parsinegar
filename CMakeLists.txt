@@ -63,6 +63,8 @@ set_source_files_properties(qml/components/BusySpinner.qml PROPERTIES QT_RESOURC
 set_source_files_properties(qml/components/LetterBadge.qml PROPERTIES QT_RESOURCE_ALIAS LetterBadge.qml)
 set_source_files_properties(qml/components/Typography.qml PROPERTIES QT_RESOURCE_ALIAS Typography.qml)
 set_source_files_properties(qml/controls/AppButton.qml PROPERTIES QT_RESOURCE_ALIAS AppButton.qml)
+set_source_files_properties(qml/controls/AppMenuItem.qml PROPERTIES QT_RESOURCE_ALIAS AppMenuItem.qml)
+set_source_files_properties(qml/controls/DocumentMenu.qml PROPERTIES QT_RESOURCE_ALIAS DocumentMenu.qml)
 set_source_files_properties(qml/controls/AppToggle.qml PROPERTIES QT_RESOURCE_ALIAS AppToggle.qml)
 set_source_files_properties(qml/controls/IconButton.qml PROPERTIES QT_RESOURCE_ALIAS IconButton.qml)
 set_source_files_properties(qml/controls/ModeCard.qml PROPERTIES QT_RESOURCE_ALIAS ModeCard.qml)
@@ -93,6 +95,8 @@ qt_add_qml_module(parsinegar_ui
         qml/components/LetterBadge.qml
         qml/components/Typography.qml
         qml/controls/AppButton.qml
+        qml/controls/AppMenuItem.qml
+        qml/controls/DocumentMenu.qml
         qml/controls/AppToggle.qml
         qml/controls/IconButton.qml
         qml/controls/ModeCard.qml

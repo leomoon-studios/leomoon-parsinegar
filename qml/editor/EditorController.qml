@@ -30,6 +30,10 @@ Item {
     property int sourceHistoryLimit: 100
     property var sourceHistory: History.SourceHistory.create({ text: "", cursor: 0, anchor: 0 }, sourceHistoryLimit)
     property bool restoringSourceHistory: false
+    property string documentPath: ""
+    property string savedDocumentText: ""
+    property string savedDocumentFileText: ""
+    property string documentLineEnding: "\n"
 
     readonly property var reshaperMetadata: Settings.ReshaperSettings.metadata
     readonly property string shapingProfile: state.shapingProfile
@@ -44,6 +48,9 @@ Item {
     readonly property bool settingsReady: state.settingsReady
     readonly property bool canUndo: History.SourceHistory.canUndo(sourceHistory)
     readonly property bool canRedo: History.SourceHistory.canRedo(sourceHistory)
+    readonly property bool documentDirty: sourceText !== savedDocumentText
+    readonly property string documentDisplayName: documentPath === "" ? uiText("document.untitled") : fileName(documentPath)
+    readonly property string windowTitle: (documentDirty ? "*" : "") + documentDisplayName + " - " + uiText("app.title")
     readonly property string settingsStatusText: state.settingsMessageKey === ""
         ? ""
         : uiText(state.settingsMessageKey) + state.settingsMessageDetail
@@ -52,9 +59,176 @@ Item {
     signal conversionFinished(bool ok, string output)
     signal settingsWritten(string json)
     signal sourceHistoryRestored(int cursor, int anchor)
+    signal openDocumentDialogRequested()
+    signal saveDocumentDialogRequested()
+    signal unsavedChangesRequested()
+    signal applicationCloseApproved()
 
     function uiText(key) {
         return Strings.InterfaceStrings.text(uiLanguage, key)
+    }
+
+    function fileName(path) {
+        var normalized = String(path).replace(/\\/g, "/")
+        var parts = normalized.split("/")
+        return parts.length > 0 && parts[parts.length - 1] !== "" ? parts[parts.length - 1] : uiText("document.untitled")
+    }
+
+    function resetDocument(text, path) {
+        var fileText = String(text === undefined || text === null ? "" : text)
+        var nextText = normalizedDocumentText(fileText)
+        restoringSourceHistory = true
+        sourceText = nextText
+        sourceHistory = History.SourceHistory.create({ text: nextText, cursor: 0, anchor: 0 }, sourceHistoryLimit)
+        restoringSourceHistory = false
+        documentPath = String(path || "")
+        savedDocumentText = nextText
+        savedDocumentFileText = fileText
+        documentLineEnding = detectedLineEnding(fileText)
+        clearStatus()
+        sourceHistoryRestored(0, 0)
+    }
+
+    function detectedLineEnding(text) {
+        var value = String(text)
+        var crlf = value.indexOf("\r\n")
+        var lf = value.indexOf("\n")
+        var cr = value.indexOf("\r")
+        if (crlf >= 0 && (lf < 0 || crlf <= lf) && (cr < 0 || crlf <= cr))
+            return "\r\n"
+        if (cr >= 0 && (lf < 0 || cr < lf))
+            return "\r"
+        return "\n"
+    }
+
+    function normalizedDocumentText(text) {
+        return String(text).replace(/\r\n/g, "\n").replace(/\r/g, "\n")
+    }
+
+    function documentTextForWrite() {
+        if (sourceText === savedDocumentText)
+            return savedDocumentFileText
+        var normalized = normalizedDocumentText(sourceText)
+        return documentLineEnding === "\n" ? normalized : normalized.replace(/\n/g, documentLineEnding)
+    }
+
+    function requestUnsavedAction(action) {
+        if (!documentDirty) {
+            executeDocumentAction(action)
+            return true
+        }
+        state.pendingDocumentAction = action
+        unsavedChangesRequested()
+        return false
+    }
+
+    function executeDocumentAction(action) {
+        state.pendingDocumentAction = ""
+        if (action === "new") {
+            resetDocument("", "")
+        } else if (action === "open") {
+            openDocumentDialogRequested()
+        } else if (action === "close") {
+            applicationCloseApproved()
+        }
+    }
+
+    function newDocument() {
+        return requestUnsavedAction("new")
+    }
+
+    function openDocument() {
+        return requestUnsavedAction("open")
+    }
+
+    function saveDocument() {
+        if (documentPath === "") {
+            saveDocumentDialogRequested()
+            return false
+        }
+        if (!fileBridge || typeof fileBridge.localFileUrl !== "function") {
+            setDocumentFailure("document.error.save")
+            state.pendingDocumentAction = ""
+            return false
+        }
+        return writeDocument(fileBridge.localFileUrl(documentPath))
+    }
+
+    function saveDocumentAs() {
+        saveDocumentDialogRequested()
+    }
+
+    function openDocumentUrl(url) {
+        if (!fileBridge || typeof fileBridge.readTextDocument !== "function") {
+            setDocumentFailure("document.error.open")
+            return false
+        }
+        var result = fileBridge.readTextDocument(url)
+        if (!result || result.ok !== true) {
+            setDocumentFailure("document.error.open", result)
+            return false
+        }
+        resetDocument(result.data, result.path)
+        state.statusText = uiText("document.status.opened")
+        state.statusLevel = "success"
+        return true
+    }
+
+    function writeDocument(url) {
+        if (!fileBridge || typeof fileBridge.writeTextDocument !== "function") {
+            setDocumentFailure("document.error.save")
+            state.pendingDocumentAction = ""
+            return false
+        }
+        var fileText = documentTextForWrite()
+        var result = fileBridge.writeTextDocument(url, fileText)
+        if (!result || result.ok !== true) {
+            setDocumentFailure("document.error.save", result)
+            state.pendingDocumentAction = ""
+            return false
+        }
+        documentPath = String(result.path || fileBridge.localFilePath(url) || "")
+        savedDocumentText = sourceText
+        savedDocumentFileText = fileText
+        state.statusText = uiText("document.status.saved")
+        state.statusLevel = "success"
+        if (state.pendingDocumentAction !== "")
+            executeDocumentAction(state.pendingDocumentAction)
+        return true
+    }
+
+    function saveDocumentAsUrl(url) {
+        return writeDocument(url)
+    }
+
+    function cancelOpenDocumentDialog() {
+        state.pendingDocumentAction = ""
+    }
+
+    function cancelSaveDocumentDialog() {
+        state.pendingDocumentAction = ""
+    }
+
+    function resolveUnsavedChanges(choice) {
+        if (state.pendingDocumentAction === "")
+            return
+        if (choice === "discard") {
+            executeDocumentAction(state.pendingDocumentAction)
+        } else if (choice === "save") {
+            saveDocument()
+        } else {
+            state.pendingDocumentAction = ""
+        }
+    }
+
+    function requestApplicationClose() {
+        return requestUnsavedAction("close")
+    }
+
+    function setDocumentFailure(key, result) {
+        var detail = result && result.message ? " " + String(result.message) : ""
+        state.statusText = uiText(key) + detail
+        state.statusLevel = "error"
     }
 
     function openSettings() {
@@ -494,5 +668,6 @@ Item {
         property string settingsMessageKey: ""
         property string settingsMessageDetail: ""
         property string settingsStatusLevel: "info"
+        property string pendingDocumentAction: ""
     }
 }

@@ -39,6 +39,8 @@ private slots:
     void settingsReportsAtomicWriteFailure();
     void fileBridgeReadsExactFontBytes();
     void fileBridgeRejectsInvalidAndOversizedFonts();
+    void fileBridgeReadsAndWritesExactUtf8Documents();
+    void fileBridgeRejectsUnsafeDocuments();
     void fileBridgeWritesSvgAtomically();
     void fileBridgeReportsWriteFailuresAndLimits();
     void fileBridgeCompletesFontAndSvgWorkAsynchronously();
@@ -238,6 +240,60 @@ void ServiceTests::fileBridgeRejectsInvalidAndOversizedFonts()
     oversized.close();
     QCOMPARE(errorCode(bridge.readFont(QUrl::fromLocalFile(oversizedPath))), QStringLiteral("FONT_TOO_LARGE"));
     QCOMPARE(failureSpy.count(), 4);
+}
+
+void ServiceTests::fileBridgeReadsAndWritesExactUtf8Documents()
+{
+    QTemporaryDir temporaryDirectory;
+    QVERIFY(temporaryDirectory.isValid());
+    FileBridge bridge;
+    QSignalSpy readSpy(&bridge, &FileBridge::textDocumentRead);
+    QSignalSpy writtenSpy(&bridge, &FileBridge::textDocumentWritten);
+    const QString text = QStringLiteral("first\r\n\r\nپارسی\n");
+    const QString path = temporaryDirectory.filePath(QStringLiteral("document.txt"));
+
+    const QVariantMap writeResult = bridge.writeTextDocument(QUrl::fromLocalFile(path), text);
+    QVERIFY(succeeded(writeResult));
+    QCOMPARE(writeResult.value(QStringLiteral("path")).toString(), path);
+    QCOMPARE(writtenSpy.count(), 1);
+
+    QFile exactFile(path);
+    QVERIFY(exactFile.open(QIODevice::ReadOnly));
+    QCOMPARE(exactFile.readAll(), text.toUtf8());
+
+    const QVariantMap readResult = bridge.readTextDocument(QUrl::fromLocalFile(path));
+    QVERIFY(succeeded(readResult));
+    QCOMPARE(readResult.value(QStringLiteral("data")).toString(), text);
+    QCOMPARE(readResult.value(QStringLiteral("characterCount")).toLongLong(), text.size());
+    QCOMPARE(readResult.value(QStringLiteral("byteCount")).toLongLong(), text.toUtf8().size());
+    QCOMPARE(readSpy.count(), 1);
+}
+
+void ServiceTests::fileBridgeRejectsUnsafeDocuments()
+{
+    QTemporaryDir temporaryDirectory;
+    QVERIFY(temporaryDirectory.isValid());
+    FileBridge bridge;
+    QSignalSpy failureSpy(&bridge, &FileBridge::operationFailed);
+
+    QCOMPARE(errorCode(bridge.readTextDocument(QUrl(QStringLiteral("https://example.com/document.txt")))), QStringLiteral("INVALID_LOCAL_URL"));
+    QCOMPARE(errorCode(bridge.readTextDocument(QUrl::fromLocalFile(temporaryDirectory.filePath(QStringLiteral("missing.txt"))))), QStringLiteral("DOCUMENT_NOT_FOUND"));
+
+    const QString invalidPath = temporaryDirectory.filePath(QStringLiteral("invalid.txt"));
+    writeBytes(invalidPath, QByteArray::fromHex("c328"));
+    QCOMPARE(errorCode(bridge.readTextDocument(QUrl::fromLocalFile(invalidPath))), QStringLiteral("DOCUMENT_INVALID_UTF8"));
+
+    const QString oversizedPath = temporaryDirectory.filePath(QStringLiteral("oversized.txt"));
+    QFile oversized(oversizedPath);
+    QVERIFY(oversized.open(QIODevice::WriteOnly));
+    QVERIFY(oversized.resize(FileBridge::maximumDocumentBytes + 1));
+    oversized.close();
+    QCOMPARE(errorCode(bridge.readTextDocument(QUrl::fromLocalFile(oversizedPath))), QStringLiteral("DOCUMENT_TOO_LARGE"));
+
+    const QString oversizedText(FileBridge::maximumDocumentCharacters + 1, QLatin1Char('x'));
+    QCOMPARE(errorCode(bridge.writeTextDocument(QUrl::fromLocalFile(temporaryDirectory.filePath(QStringLiteral("large.txt"))), oversizedText)), QStringLiteral("DOCUMENT_TOO_LARGE"));
+    QCOMPARE(errorCode(bridge.writeTextDocument(QUrl::fromLocalFile(temporaryDirectory.filePath(QStringLiteral("missing/draft.txt"))), QStringLiteral("draft"))), QStringLiteral("DOCUMENT_DIRECTORY_NOT_FOUND"));
+    QCOMPARE(failureSpy.count(), 6);
 }
 
 void ServiceTests::fileBridgeWritesSvgAtomically()

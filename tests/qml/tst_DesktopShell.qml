@@ -27,6 +27,8 @@ TestCase {
                 function writeSvgAsync(requestId, destination, svg) { return true }
                 function localFileUrl(path) { return "file://" + path }
                 function localFilePath(url) { return String(url) }
+                function readTextDocument(url) { return { ok: false, code: "DOCUMENT_NOT_FOUND", message: "Missing" } }
+                function writeTextDocument(url, text) { return { ok: true, path: String(url) } }
                 function isReadableFontFile(path) { return true }
             }
             fileService: fileMock
@@ -118,6 +120,7 @@ TestCase {
         var exportButton = findChild(applicationWindow, "exportButton")
         var textToolsButton = findChild(applicationWindow, "textToolsButton")
         var settingsButton = findChild(applicationWindow, "settingsButton")
+        var documentButton = findChild(applicationWindow, "documentButton")
         var undoButton = findChild(applicationWindow, "undoButton")
         var redoButton = findChild(applicationWindow, "redoButton")
         var sourceEditor = findChild(applicationWindow, "sourceEditor")
@@ -128,6 +131,7 @@ TestCase {
         verify(convertButton !== null)
         verify(exportButton !== null)
         verify(textToolsButton !== null)
+        verify(documentButton !== null)
         verify(settingsButton !== null)
         verify(undoButton !== null)
         verify(redoButton !== null)
@@ -150,6 +154,7 @@ TestCase {
         verify(findChild(applicationWindow, "profile_standardPersianArabic") === null)
         verify(findChild(applicationWindow, "bidiToggle") === null)
         compare(settingsButton.glyph, AppTheme.iconSettings)
+        compare(documentButton.glyph, AppTheme.iconDocument)
         compare(exportButton.glyph, AppTheme.iconExport)
         compare(textToolsButton.glyph, AppTheme.iconTools)
         compare(undoButton.glyph, AppTheme.iconUndo)
@@ -159,6 +164,7 @@ TestCase {
         compare(exportButton.contentItem.font.family, AppTheme.iconFontFamily)
         compare(themeButton.contentItem.font.family, AppTheme.iconFontFamily)
         compare(settingsButton.width, themeButton.width)
+        compare(documentButton.width, themeButton.width)
         compare(textToolsButton.width, themeButton.width)
         compare(undoButton.width, themeButton.width)
         compare(redoButton.width, themeButton.width)
@@ -186,6 +192,32 @@ TestCase {
         verify(themeButton.glyph !== originalThemeGlyph)
         themeButton.click()
         compare(AppTheme.darkMode, originalMode)
+    }
+
+    function test_documentMenuOpensAndDismissesWithApplicableActions() {
+        var applicationWindow = createMainWindow()
+        var controller = applicationWindow.editorController
+        var documentButton = findChild(applicationWindow, "documentButton")
+        var documentMenu = findChild(applicationWindow, "documentMenu")
+        var newItem = findChild(applicationWindow, "newDocumentMenuItem")
+        var saveItem = findChild(applicationWindow, "saveDocumentMenuItem")
+        verify(documentButton !== null)
+        verify(documentMenu !== null)
+        verify(newItem !== null)
+        verify(saveItem !== null)
+        verify(!saveItem.enabled)
+        compare(saveItem.opacity, 0.42)
+        verify(saveItem.background.border.width > 0)
+
+        documentButton.click()
+        tryCompare(documentMenu, "visible", true)
+        controller.sourceText = "draft"
+        verify(saveItem.enabled)
+        controller.resetDocument("", "")
+        newItem.click()
+        tryCompare(documentMenu, "visible", false)
+        compare(controller.sourceText, "")
+        verify(!controller.documentDirty)
     }
 
     function test_textToolsPageNavigationAndMirroring() {

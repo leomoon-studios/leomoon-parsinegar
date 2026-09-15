@@ -22,6 +22,7 @@ QtObject {
     readonly property string iconForward: "\ue5c8"
     readonly property string iconUndo: "\ue166"
     readonly property string iconRedo: "\ue15a"
+    readonly property string iconDocument: "\ue873"
 
     readonly property int spacingUnit: 4
     readonly property int spacingTiny: spacingUnit

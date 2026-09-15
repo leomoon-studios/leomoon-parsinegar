@@ -12,7 +12,7 @@ The desktop host exposes three narrow QObject singletons under the `LeoMoon.Pars
 
 ## FileBridge
 
-`FileBridge.readFont(url)` accepts an absolute local `file:` URL for a TTF, OTF, or TTC file and returns its exact bytes up to 50 MiB. It does not resolve a font family, substitute another font, access network URLs, or parse the font. `FileBridge.writeSvg(url, svg)` accepts an absolute local destination, appends `.svg` when needed, enforces a 16 MiB UTF-8 limit, and commits through `QSaveFile` without creating unspecified parent directories.
+`FileBridge.readFont(url)` accepts an absolute local `file:` URL for a TTF, OTF, or TTC file and returns its exact bytes up to 50 MiB. It does not resolve a font family, substitute another font, access network URLs, or parse the font. `FileBridge.readTextDocument(url)` reads strict UTF-8 without normalizing line endings or final newlines, with limits of 250,000 UTF-16 code units and 1 MiB. `FileBridge.writeTextDocument(url, text)` writes the exact UTF-8 encoding through `QSaveFile`. `FileBridge.writeSvg(url, svg)` accepts an absolute local destination, appends `.svg` when needed, enforces a 16 MiB UTF-8 limit, and commits through `QSaveFile` without creating unspecified parent directories.
 
 ## Results and errors
 

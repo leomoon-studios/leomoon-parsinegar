@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Dialogs as Dialogs
 
 ApplicationWindow {
     id: root
@@ -16,14 +17,22 @@ ApplicationWindow {
     property var settingsService: null
     property var fileService: null
     property var textDirectionService: null
+    property bool allowApplicationClose: false
 
     width: 900
     height: 720
     minimumWidth: 640
     minimumHeight: 450
     visible: true
-    title: qsTr("ParsiNegar Desktop")
+    title: controller.windowTitle
     color: AppTheme.background
+
+    onClosing: function(close) {
+        if (allowApplicationClose)
+            return
+        close.accepted = false
+        controller.requestApplicationClose()
+    }
 
     Typography {
         id: typography
@@ -42,6 +51,55 @@ ApplicationWindow {
         id: exportController
         objectName: "svgExportController"
         fileBridge: root.fileService
+    }
+
+    Connections {
+        target: controller
+
+        function onOpenDocumentDialogRequested() {
+            openDocumentDialog.open()
+        }
+
+        function onSaveDocumentDialogRequested() {
+            saveDocumentDialog.open()
+        }
+
+        function onUnsavedChangesRequested() {
+            unsavedChangesDialog.open()
+        }
+
+        function onApplicationCloseApproved() {
+            root.allowApplicationClose = true
+            Qt.callLater(root.close)
+        }
+    }
+
+    Shortcut {
+        sequences: [StandardKey.New]
+        context: Qt.WindowShortcut
+        enabled: controller.page === "editor" && !controller.busy && !exportController.busy
+        onActivated: controller.newDocument()
+    }
+
+    Shortcut {
+        sequences: [StandardKey.Open]
+        context: Qt.WindowShortcut
+        enabled: controller.page === "editor" && !controller.busy && !exportController.busy
+        onActivated: controller.openDocument()
+    }
+
+    Shortcut {
+        sequences: [StandardKey.Save]
+        context: Qt.WindowShortcut
+        enabled: controller.page === "editor" && controller.documentDirty && !controller.busy && !exportController.busy
+        onActivated: controller.saveDocument()
+    }
+
+    Shortcut {
+        sequences: [StandardKey.SaveAs]
+        context: Qt.WindowShortcut
+        enabled: controller.page === "editor" && !controller.busy && !exportController.busy
+        onActivated: controller.saveDocumentAs()
     }
 
     Component.onCompleted: {
@@ -127,33 +185,15 @@ ApplicationWindow {
                 }
 
                 IconButton {
-                    id: settingsButton
-                    objectName: "settingsButton"
+                    id: documentButton
+                    objectName: "documentButton"
                     visible: controller.page === "editor"
-                    glyph: AppTheme.iconSettings
-                    toolTip: controller.uiText("button.settings")
-                    enabled: controller.settingsReady && !controller.busy
-                    onClicked: controller.openSettings()
-                }
-
-                IconButton {
-                    id: textToolsButton
-                    objectName: "textToolsButton"
-                    visible: controller.page === "editor"
-                    glyph: AppTheme.iconTools
-                    toolTip: controller.uiText("tools.title")
+                    glyph: AppTheme.iconDocument
+                    toolTip: controller.uiText("document.menu")
                     enabled: controller.settingsReady && !controller.busy && !exportController.busy
-                    onClicked: controller.openTextTools()
-                }
-
-                IconButton {
-                    id: exportButton
-                    objectName: "exportButton"
-                    visible: controller.page === "editor"
-                    glyph: AppTheme.iconExport
-                    toolTip: controller.uiText("export.title")
-                    enabled: controller.settingsReady && !controller.busy && !exportController.busy
-                    onClicked: controller.openExport()
+                    onClicked: documentMenu.popup(documentButton,
+                        controller.uiLanguage === "fa" ? documentButton.width - documentMenu.width : 0,
+                        documentButton.height + AppTheme.spacingSmall)
                 }
 
                 IconButton {
@@ -180,6 +220,36 @@ ApplicationWindow {
                         controller.redoSourceEdit()
                         editorPage.focusEditor()
                     }
+                }
+
+                IconButton {
+                    id: exportButton
+                    objectName: "exportButton"
+                    visible: controller.page === "editor"
+                    glyph: AppTheme.iconExport
+                    toolTip: controller.uiText("export.title")
+                    enabled: controller.settingsReady && !controller.busy && !exportController.busy
+                    onClicked: controller.openExport()
+                }
+
+                IconButton {
+                    id: textToolsButton
+                    objectName: "textToolsButton"
+                    visible: controller.page === "editor"
+                    glyph: AppTheme.iconTools
+                    toolTip: controller.uiText("tools.title")
+                    enabled: controller.settingsReady && !controller.busy && !exportController.busy
+                    onClicked: controller.openTextTools()
+                }
+
+                IconButton {
+                    id: settingsButton
+                    objectName: "settingsButton"
+                    visible: controller.page === "editor"
+                    glyph: AppTheme.iconSettings
+                    toolTip: controller.uiText("button.settings")
+                    enabled: controller.settingsReady && !controller.busy
+                    onClicked: controller.openSettings()
                 }
 
                 IconButton {
@@ -239,6 +309,98 @@ ApplicationWindow {
             exportController: exportController
             fileBridge: root.fileService
             typography: typography
+        }
+    }
+
+    DocumentMenu {
+        id: documentMenu
+        controller: controller
+    }
+
+    Dialogs.FileDialog {
+        id: openDocumentDialog
+        title: controller.uiText("document.open")
+        fileMode: Dialogs.FileDialog.OpenFile
+        nameFilters: ["Text files (*.txt)", "All files (*)"]
+        onAccepted: controller.openDocumentUrl(selectedFile)
+        onRejected: controller.cancelOpenDocumentDialog()
+    }
+
+    Dialogs.FileDialog {
+        id: saveDocumentDialog
+        title: controller.uiText("document.saveAs")
+        fileMode: Dialogs.FileDialog.SaveFile
+        defaultSuffix: "txt"
+        nameFilters: ["Text files (*.txt)", "All files (*)"]
+        onAccepted: controller.saveDocumentAsUrl(selectedFile)
+        onRejected: controller.cancelSaveDocumentDialog()
+    }
+
+    Dialog {
+        id: unsavedChangesDialog
+        objectName: "unsavedChangesDialog"
+        anchors.centerIn: parent
+        width: Math.min(480, root.width - AppTheme.spacingXLarge * 2)
+        modal: true
+        closePolicy: Popup.NoAutoClose
+        title: controller.uiText("document.unsavedTitle")
+        standardButtons: Dialog.NoButton
+
+        background: Rectangle {
+            color: AppTheme.surface
+            border.color: AppTheme.border
+            border.width: AppTheme.borderWidth
+            radius: AppTheme.cornerRadiusLarge
+        }
+
+        contentItem: ColumnLayout {
+            spacing: AppTheme.spacingLarge
+            LayoutMirroring.enabled: controller.uiLanguage === "fa"
+            LayoutMirroring.childrenInherit: true
+
+            Label {
+                Layout.fillWidth: true
+                text: controller.uiText("document.unsavedMessage").arg(controller.documentDisplayName)
+                wrapMode: Text.Wrap
+                font.family: AppTheme.fontFamily
+                font.pixelSize: AppTheme.fontBody
+                color: AppTheme.foreground
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: AppTheme.spacingSmall
+
+                AppButton {
+                    objectName: "discardUnsavedButton"
+                    text: controller.uiText("document.discard")
+                    onClicked: {
+                        unsavedChangesDialog.close()
+                        controller.resolveUnsavedChanges("discard")
+                    }
+                }
+
+                Item { Layout.fillWidth: true }
+
+                AppButton {
+                    objectName: "cancelUnsavedButton"
+                    text: controller.uiText("button.cancel")
+                    onClicked: {
+                        unsavedChangesDialog.close()
+                        controller.resolveUnsavedChanges("cancel")
+                    }
+                }
+
+                AppButton {
+                    objectName: "saveUnsavedButton"
+                    text: controller.uiText("document.save")
+                    accent: true
+                    onClicked: {
+                        unsavedChangesDialog.close()
+                        controller.resolveUnsavedChanges("save")
+                    }
+                }
+            }
         }
     }
 

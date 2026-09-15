@@ -10,6 +10,11 @@ TestCase {
     name: "SettingsWorkflow"
     when: windowShown
 
+    SignalSpy { id: openDocumentSpy; signalName: "openDocumentDialogRequested" }
+    SignalSpy { id: saveDocumentSpy; signalName: "saveDocumentDialogRequested" }
+    SignalSpy { id: unsavedChangesSpy; signalName: "unsavedChangesRequested" }
+    SignalSpy { id: applicationCloseSpy; signalName: "applicationCloseApproved" }
+
     QtObject {
         id: settingsStoreMock
         property bool exists: false
@@ -45,14 +50,35 @@ TestCase {
     QtObject {
         id: fileBridgeMock
         property var existingPaths: ({})
+        property var documents: ({})
+        property bool acceptDocumentWrites: true
         function fontPathExists(path) {
             return existingPaths[path] === true
+        }
+        function localFileUrl(path) { return "file://" + path }
+        function localFilePath(url) { return String(url).replace("file://", "") }
+        function readTextDocument(url) {
+            var path = localFilePath(url)
+            return Object.prototype.hasOwnProperty.call(documents, path)
+                ? { ok: true, path: path, data: documents[path] }
+                : { ok: false, code: "DOCUMENT_NOT_FOUND", message: "Missing test document." }
+        }
+        function writeTextDocument(url, text) {
+            if (!acceptDocumentWrites)
+                return { ok: false, code: "DOCUMENT_WRITE_FAILED", message: "Test write failure." }
+            var path = localFilePath(url)
+            var next = Object.assign({}, documents)
+            next[path] = text
+            documents = next
+            return { ok: true, path: path }
         }
         function reset() {
             existingPaths = ({
                 "/fonts/unicode.ttf": true,
                 "/fonts/compatibility.otf": true
             })
+            documents = ({ "/tmp/existing.txt": "first\r\n\r\nپارسی\r\n" })
+            acceptDocumentWrites = true
         }
     }
 
@@ -278,12 +304,90 @@ TestCase {
         verify(controller.settingsStatusText.indexOf("Test save failure.") !== -1)
     }
 
+    function test_documentWorkflowPreservesTextHistoryAndDirtyState() {
+        var controller = createController()
+        openDocumentSpy.target = controller
+        saveDocumentSpy.target = controller
+        unsavedChangesSpy.target = controller
+        applicationCloseSpy.target = controller
+        openDocumentSpy.clear()
+        saveDocumentSpy.clear()
+        unsavedChangesSpy.clear()
+        applicationCloseSpy.clear()
+
+        compare(controller.documentDisplayName, controller.uiText("document.untitled"))
+        verify(!controller.documentDirty)
+        controller.sourceText = "draft\n\n"
+        verify(controller.documentDirty)
+        verify(controller.windowTitle.indexOf("*") === 0)
+
+        controller.openDocument()
+        compare(unsavedChangesSpy.count, 1)
+        compare(openDocumentSpy.count, 0)
+        controller.resolveUnsavedChanges("cancel")
+        compare(controller.sourceText, "draft\n\n")
+
+        controller.openDocument()
+        controller.resolveUnsavedChanges("discard")
+        compare(openDocumentSpy.count, 1)
+        verify(controller.openDocumentUrl("file:///tmp/existing.txt"))
+        compare(controller.sourceText, "first\n\nپارسی\n")
+        compare(controller.documentPath, "/tmp/existing.txt")
+        verify(!controller.documentDirty)
+        verify(!controller.canUndo)
+        verify(controller.saveDocumentAsUrl("file:///tmp/roundtrip.txt"))
+        compare(fileBridgeMock.documents["/tmp/roundtrip.txt"], "first\r\n\r\nپارسی\r\n")
+
+        controller.sourceText = "changed\n\n"
+        verify(controller.saveDocument())
+        compare(fileBridgeMock.documents["/tmp/roundtrip.txt"], "changed\r\n\r\n")
+        verify(!controller.documentDirty)
+
+        controller.sourceText = "save as"
+        controller.saveDocumentAs()
+        compare(saveDocumentSpy.count, 1)
+        verify(controller.saveDocumentAsUrl("file:///tmp/copy.txt"))
+        compare(fileBridgeMock.documents["/tmp/copy.txt"], "save as")
+        compare(controller.documentPath, "/tmp/copy.txt")
+        verify(!controller.documentDirty)
+
+        controller.sourceText = "unsafe"
+        fileBridgeMock.acceptDocumentWrites = false
+        verify(!controller.saveDocument())
+        compare(controller.sourceText, "unsafe")
+        verify(controller.documentDirty)
+        verify(controller.canUndo)
+
+        controller.requestApplicationClose()
+        compare(unsavedChangesSpy.count, 3)
+        compare(applicationCloseSpy.count, 0)
+        controller.resolveUnsavedChanges("cancel")
+        compare(controller.sourceText, "unsafe")
+
+        controller.newDocument()
+        controller.resolveUnsavedChanges("discard")
+        compare(controller.sourceText, "")
+        compare(controller.documentPath, "")
+        verify(!controller.documentDirty)
+        verify(!controller.canUndo)
+        verify(!controller.canRedo)
+
+        controller.requestApplicationClose()
+        compare(applicationCloseSpy.count, 1)
+
+        openDocumentSpy.target = null
+        saveDocumentSpy.target = null
+        unsavedChangesSpy.target = null
+        applicationCloseSpy.target = null
+    }
+
     function test_settingsPageNavigationMirroringAndHebrewVisibility() {
         var applicationWindow = createTemporaryObject(mainWindowComponent, null)
         verify(applicationWindow !== null)
         tryCompare(applicationWindow, "bundledFontReady", true, 5000)
         tryCompare(applicationWindow, "bundledIconFontReady", true, 5000)
         var controller = applicationWindow.editorController
+        var documentButton = findChild(applicationWindow, "documentButton")
         var settingsButton = findChild(applicationWindow, "settingsButton")
         var textToolsButton = findChild(applicationWindow, "textToolsButton")
         var exportButton = findChild(applicationWindow, "exportButton")
@@ -306,6 +410,7 @@ TestCase {
         var unicodeButton = findChild(applicationWindow, "unicodeButton")
         var convertButton = findChild(applicationWindow, "convertButton")
 
+        verify(documentButton !== null)
         verify(settingsButton !== null)
         verify(textToolsButton !== null)
         verify(exportButton !== null)
@@ -314,11 +419,12 @@ TestCase {
         verify(themeButton !== null)
         verify(headerBackButton !== null)
         verify(headerActions.visible)
-        verify(settingsButton.x < textToolsButton.x)
-        verify(textToolsButton.x < exportButton.x)
-        verify(exportButton.x < undoButton.x)
+        verify(documentButton.x < undoButton.x)
         verify(undoButton.x < redoButton.x)
-        verify(redoButton.x < themeButton.x)
+        verify(redoButton.x < exportButton.x)
+        verify(exportButton.x < textToolsButton.x)
+        verify(textToolsButton.x < settingsButton.x)
+        verify(settingsButton.x < themeButton.x)
         settingsButton.click()
         compare(controller.page, "settings")
         verify(settingsPage.visible)
@@ -366,11 +472,12 @@ TestCase {
         wait(0)
         verify(headerActions.visible)
         verify(!headerBackButton.visible)
-        verify(settingsButton.x > textToolsButton.x)
-        verify(textToolsButton.x > exportButton.x)
-        verify(exportButton.x > undoButton.x)
+        verify(documentButton.x > undoButton.x)
         verify(undoButton.x > redoButton.x)
-        verify(redoButton.x > themeButton.x)
+        verify(redoButton.x > exportButton.x)
+        verify(exportButton.x > textToolsButton.x)
+        verify(textToolsButton.x > settingsButton.x)
+        verify(settingsButton.x > themeButton.x)
         verify(convertButton.mapToItem(applicationWindow.contentItem, 0, 0).x
             < unicodeButton.mapToItem(applicationWindow.contentItem, 0, 0).x)
 

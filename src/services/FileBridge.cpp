@@ -5,6 +5,7 @@
 #include <QFileInfo>
 #include <QFutureWatcher>
 #include <QSaveFile>
+#include <QStringConverter>
 #include <QtConcurrentRun>
 
 namespace {
@@ -162,6 +163,90 @@ bool FileBridge::fontPathExists(const QString &path) const
     return info.isAbsolute() && info.isFile() && info.isReadable()
         && (suffix == QStringLiteral("ttf") || suffix == QStringLiteral("otf")
             || suffix == QStringLiteral("ttc"));
+}
+
+QVariantMap FileBridge::readTextDocument(const QUrl &url)
+{
+    QString path;
+    QVariantMap pathError;
+    if (!localPath(url, &path, &pathError)) {
+        return pathError;
+    }
+
+    const QFileInfo info(path);
+    if (!info.exists() || !info.isFile()) {
+        return failure(QStringLiteral("DOCUMENT_NOT_FOUND"), QStringLiteral("The selected text file does not exist."));
+    }
+    if (info.size() > maximumDocumentBytes) {
+        return failure(QStringLiteral("DOCUMENT_TOO_LARGE"), QStringLiteral("The selected text file exceeds the supported size."));
+    }
+
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly)) {
+        return failure(QStringLiteral("DOCUMENT_READ_FAILED"), file.errorString());
+    }
+    const QByteArray bytes = file.read(maximumDocumentBytes + 1);
+    if (bytes.size() > maximumDocumentBytes) {
+        return failure(QStringLiteral("DOCUMENT_TOO_LARGE"), QStringLiteral("The selected text file exceeds the supported size."));
+    }
+
+    QStringDecoder decoder(QStringConverter::Utf8);
+    const QString text = decoder.decode(bytes);
+    if (decoder.hasError()) {
+        return failure(QStringLiteral("DOCUMENT_INVALID_UTF8"), QStringLiteral("The selected text file is not valid UTF-8."));
+    }
+    if (text.size() > maximumDocumentCharacters) {
+        return failure(QStringLiteral("DOCUMENT_TOO_LARGE"), QStringLiteral("The selected text file contains too many characters."));
+    }
+
+    emit textDocumentRead(path, text.size(), bytes.size());
+    return success({
+        { QStringLiteral("path"), path },
+        { QStringLiteral("data"), text },
+        { QStringLiteral("characterCount"), text.size() },
+        { QStringLiteral("byteCount"), bytes.size() },
+    });
+}
+
+QVariantMap FileBridge::writeTextDocument(const QUrl &url, const QString &text)
+{
+    QString path;
+    QVariantMap pathError;
+    if (!localPath(url, &path, &pathError)) {
+        return pathError;
+    }
+    if (text.size() > maximumDocumentCharacters) {
+        return failure(QStringLiteral("DOCUMENT_TOO_LARGE"), QStringLiteral("The document contains too many characters."));
+    }
+
+    const QByteArray bytes = text.toUtf8();
+    if (bytes.size() > maximumDocumentBytes) {
+        return failure(QStringLiteral("DOCUMENT_TOO_LARGE"), QStringLiteral("The document exceeds the supported size."));
+    }
+
+    const QFileInfo destination(path);
+    if (!destination.dir().exists()) {
+        return failure(QStringLiteral("DOCUMENT_DIRECTORY_NOT_FOUND"), QStringLiteral("The destination directory does not exist."));
+    }
+
+    QSaveFile file(path);
+    if (!file.open(QIODevice::WriteOnly)) {
+        return failure(QStringLiteral("DOCUMENT_WRITE_FAILED"), file.errorString());
+    }
+    if (file.write(bytes) != bytes.size()) {
+        file.cancelWriting();
+        return failure(QStringLiteral("DOCUMENT_WRITE_FAILED"), file.errorString());
+    }
+    if (!file.commit()) {
+        return failure(QStringLiteral("DOCUMENT_WRITE_FAILED"), file.errorString());
+    }
+
+    emit textDocumentWritten(path, text.size(), bytes.size());
+    return success({
+        { QStringLiteral("path"), path },
+        { QStringLiteral("characterCount"), text.size() },
+        { QStringLiteral("byteCount"), bytes.size() },
+    });
 }
 
 QVariantMap FileBridge::writeSvg(const QUrl &url, const QString &svg)
