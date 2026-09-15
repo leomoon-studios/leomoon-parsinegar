@@ -80,7 +80,7 @@ var InterfaceStrings = (function () {
       "tools.arabicKafToPersian": "تبدیل کاف عربی به کاف پارسی", "tools.arabicKafToPersianDescription": "ك را به ک تبدیل می‌کند.",
       "tools.normalizeHehYeh": "یکنواخت‌سازی هٔ", "tools.normalizeHehYehDescription": "از صورت استاندارد هٔ استفاده می‌کند.",
       "tools.tehMarbutaToHeh": "تبدیل تاء مربوطة به ه", "tools.tehMarbutaToHehDescription": "ة را به ه تبدیل می‌کند.",
-      "tools.alefFathatan": "اصلاح الف با تنوین فتح", "tools.alefFathatanDescription": "ا\" را به اً تبدیل می‌کند.",
+      "tools.alefFathatan": "اصلاح الف با تنوین فتحه", "tools.alefFathatanDescription": "ا\" را به اً تبدیل می‌کند.",
       "tools.persianDigits": "تبدیل به اعداد پارسی", "tools.persianDigitsDescription": "اعداد لاتین و عربی، درصد، ممیز و جداکننده را تبدیل می‌کند.",
       "tools.persianQuotes": "تبدیل به گیومهٔ پارسی", "tools.persianQuotesDescription": "برای نقل‌قول پارسی از «…» استفاده می‌کند.",
       "tools.repairZwnj": "اصلاح فاصلهٔ مجازی", "tools.repairZwnjDescription": "نیم‌فاصله‌ها را در صورت‌های رایج پارسی یکدست می‌کند.",
