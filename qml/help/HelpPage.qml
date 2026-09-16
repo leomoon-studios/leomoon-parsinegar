@@ -9,10 +9,12 @@ FocusScope {
 
     required property var controller
     required property Typography typography
+    property string settingsFilePath: ""
     readonly property alias helpScroll: helpScroll
     readonly property real contentImplicitHeight: helpContent.implicitHeight
     readonly property var firstSectionHeading: sectionRepeater.count > 0 ? sectionRepeater.itemAt(0).headingItem : null
     readonly property var firstSectionBody: sectionRepeater.count > 0 ? sectionRepeater.itemAt(0).bodyItem : null
+    readonly property string displayedSettingsFilePath: settingsFilePath !== "" ? settingsFilePath : "settings.json"
 
     LayoutMirroring.enabled: controller.uiLanguage === "fa"
     LayoutMirroring.childrenInherit: true
@@ -52,7 +54,9 @@ FocusScope {
         },
         {
             heading: "Settings and privacy",
-            body: "Desktop saves interface preferences, shaping options, Text tool toggles, and SVG export choices in ~/.config/leomoon-studios.parsinegar-desktop/settings.json. It does not save the editor draft, converted output, clipboard contents, status messages, or undo history in that settings file."
+            body: "Desktop saves interface preferences, shaping options, Text tool toggles, and SVG export choices in this platform-specific settings file:",
+            path: root.displayedSettingsFilePath,
+            footer: "It does not save the editor draft, converted output, clipboard contents, status messages, or undo history in that settings file."
         }
     ]
 
@@ -91,7 +95,9 @@ FocusScope {
         },
         {
             heading: "تنظیمات و حریم خصوصی",
-            body: "دسکتاپ زبان رابط، گزینه‌های شکل‌دهی، کلیدهای ابزار متن و انتخاب‌های SVG را در ~/.config/leomoon-studios.parsinegar-desktop/settings.json ذخیره می‌کند. متن مبدأ، خروجی تبدیل‌شده، کلیپ‌بورد، پیام‌های وضعیت و تاریخچهٔ واگردانی در این پرونده ذخیره نمی‌شوند."
+            body: "دسکتاپ زبان رابط، گزینه‌های شکل‌دهی، کلیدهای ابزار متن و انتخاب‌های SVG را در پروندهٔ تنظیمات ویژهٔ این سیستم ذخیره می‌کند:",
+            path: root.displayedSettingsFilePath,
+            footer: "متن مبدأ، خروجی تبدیل‌شده، کلیپ‌بورد، پیام‌های وضعیت و تاریخچهٔ واگردانی در این پرونده ذخیره نمی‌شوند."
         }
     ]
 
@@ -175,6 +181,32 @@ FocusScope {
                                 id: sectionBody
                                 Layout.fillWidth: true
                                 text: sectionCard.modelData.body
+                                font.family: AppTheme.fontFamily
+                                font.pixelSize: AppTheme.fontBody
+                                color: AppTheme.muted
+                                textFormat: Text.PlainText
+                                LayoutMirroring.enabled: false
+                                horizontalAlignment: root.controller.uiLanguage === "fa" ? Text.AlignRight : Text.AlignLeft
+                                wrapMode: Text.Wrap
+                            }
+
+                            Text {
+                                Layout.fillWidth: true
+                                visible: text !== ""
+                                text: sectionCard.modelData.path || ""
+                                font.family: AppTheme.fontFamily
+                                font.pixelSize: AppTheme.fontBody
+                                color: AppTheme.foreground
+                                textFormat: Text.PlainText
+                                LayoutMirroring.enabled: false
+                                horizontalAlignment: root.controller.uiLanguage === "fa" ? Text.AlignRight : Text.AlignLeft
+                                wrapMode: Text.WrapAnywhere
+                            }
+
+                            Text {
+                                Layout.fillWidth: true
+                                visible: text !== ""
+                                text: sectionCard.modelData.footer || ""
                                 font.family: AppTheme.fontFamily
                                 font.pixelSize: AppTheme.fontBody
                                 color: AppTheme.muted

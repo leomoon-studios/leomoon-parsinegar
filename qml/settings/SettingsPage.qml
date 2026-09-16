@@ -12,6 +12,7 @@ FocusScope {
     property var navigationBackButton: null
     property string ligatureGroupId: ""
     readonly property alias settingsScroll: settingsScroll
+    readonly property alias ligatureScroll: ligatureScroll
     readonly property alias ligatureList: ligatureList
 
     LayoutMirroring.enabled: controller.uiLanguage === "fa"
@@ -384,32 +385,41 @@ FocusScope {
             subtitle: root.uiText("settings.fontNotice")
         }
 
-        ListView {
-            id: ligatureList
-            objectName: "ligatureList"
+        ScrollView {
+            id: ligatureScroll
             Layout.fillWidth: true
             Layout.fillHeight: true
+            contentWidth: availableWidth
             clip: true
-            spacing: AppTheme.spacingSmall
-            boundsBehavior: Flickable.StopAtBounds
-            model: {
-                var group = root.groupById(root.ligatureGroupId)
-                return group ? group.ligatures : []
-            }
-            ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
+            leftPadding: AppTheme.spacingLarge
+            rightPadding: AppTheme.spacingLarge
+            ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+            ScrollBar.vertical.policy: ScrollBar.AsNeeded
 
-            delegate: SettingsToggle {
-                required property var modelData
-                required property int index
-                objectName: "ligatureRow_" + index
-                width: ligatureList.width
-                leftPadding: AppTheme.spacingLarge
-                rightPadding: AppTheme.spacingLarge
-                title: modelData.name
-                description: modelData.name === "RIAL SIGN" ? root.uiText("settings.rialDescription") : ""
-                checked: root.controller.ligatureEnabled(modelData.name)
-                enabled: root.controller.baseOption("supportLigatures")
-                onToggled: root.controller.toggleLigature(modelData.name)
+            ListView {
+                id: ligatureList
+                objectName: "ligatureList"
+                width: ligatureScroll.availableWidth
+                spacing: AppTheme.spacingSmall
+                boundsBehavior: Flickable.StopAtBounds
+                model: {
+                    var group = root.groupById(root.ligatureGroupId)
+                    return group ? group.ligatures : []
+                }
+
+                delegate: SettingsToggle {
+                    required property var modelData
+                    required property int index
+                    objectName: "ligatureRow_" + index
+                    width: ligatureList.width
+                    leftPadding: AppTheme.spacingLarge
+                    rightPadding: AppTheme.spacingLarge
+                    title: modelData.name
+                    description: modelData.name === "RIAL SIGN" ? root.uiText("settings.rialDescription") : ""
+                    checked: root.controller.ligatureEnabled(modelData.name)
+                    enabled: root.controller.baseOption("supportLigatures")
+                    onToggled: root.controller.toggleLigature(modelData.name)
+                }
             }
         }
     }

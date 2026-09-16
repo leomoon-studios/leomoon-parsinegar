@@ -195,12 +195,23 @@ TestCase {
         settingsButton.click()
         compare(controller.page, "settings")
         compare(darkThemeToggle.descriptionItem.mapToItem(applicationWindow.contentItem, 0, 0).x,
-            darkThemeToggle.toggleItem.contentItem.mapToItem(applicationWindow.contentItem, 0, 0).x
-            + darkThemeToggle.toggleItem.contentItem.leftPadding)
+            darkThemeToggle.titleItem.mapToItem(applicationWindow.contentItem, 0, 0).x)
         darkThemeToggle.toggleItem.click()
         compare(AppTheme.darkMode, !originalMode)
         darkThemeToggle.toggleItem.click()
         compare(AppTheme.darkMode, originalMode)
+
+        controller.setUiLanguage("fa")
+        tryCompare(darkThemeToggle.toggleItem, "mirrored", true)
+        compare(darkThemeToggle.titleItem.effectiveHorizontalAlignment, Text.AlignRight)
+        compare(darkThemeToggle.descriptionItem.effectiveHorizontalAlignment, Text.AlignRight)
+        verify(darkThemeToggle.titleItem.width
+            >= darkThemeToggle.width - darkThemeToggle.leftPadding
+                - darkThemeToggle.rightPadding - darkThemeToggle.toggleItem.width
+                - AppTheme.spacingLarge - 1)
+        verify(darkThemeToggle.titleItem.mapToItem(applicationWindow.contentItem, 0, 0).x
+            > darkThemeToggle.toggleItem.mapToItem(applicationWindow.contentItem, 0, 0).x)
+        controller.setUiLanguage("en")
     }
 
     function test_documentMenuOpensAndDismissesWithApplicableActions() {

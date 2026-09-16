@@ -299,6 +299,9 @@ ApplicationWindow {
             enabled: visible
             controller: controller
             typography: typography
+            settingsFilePath: root.settingsService
+                && typeof root.settingsService.settingsFilePath === "string"
+                ? root.settingsService.settingsFilePath : ""
         }
 
         TextToolsPage {
