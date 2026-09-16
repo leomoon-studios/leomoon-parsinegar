@@ -1,12 +1,13 @@
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Layouts
 
 MenuItem {
     id: control
 
     property string shortcutText: ""
     property bool rightToLeft: false
+    readonly property alias actionLabel: actionLabel
+    readonly property alias shortcutLabel: shortcutLabel
 
     implicitWidth: 230
     implicitHeight: 42
@@ -15,22 +16,36 @@ MenuItem {
     hoverEnabled: true
     opacity: enabled ? 1 : 0.42
 
-    contentItem: RowLayout {
-        spacing: AppTheme.spacingLarge
-        LayoutMirroring.enabled: control.rightToLeft
-        LayoutMirroring.childrenInherit: true
+    contentItem: Item {
+        width: control.availableWidth
+        height: control.availableHeight
+        implicitWidth: actionLabel.implicitWidth + shortcutLabel.implicitWidth + AppTheme.spacingLarge
+        implicitHeight: Math.max(actionLabel.implicitHeight, shortcutLabel.implicitHeight)
 
         Label {
-            Layout.fillWidth: true
+            id: actionLabel
+            x: control.rightToLeft && shortcutLabel.visible
+                ? shortcutLabel.width + AppTheme.spacingLarge
+                : 0
+            width: Math.max(0, parent.width - (shortcutLabel.visible
+                ? shortcutLabel.width + AppTheme.spacingLarge
+                : 0))
+            height: parent.height
             text: control.text
             font.family: AppTheme.fontFamily
             font.pixelSize: AppTheme.fontControl
             color: AppTheme.foreground
             horizontalAlignment: control.rightToLeft ? Text.AlignRight : Text.AlignLeft
+            verticalAlignment: Text.AlignVCenter
+            elide: Text.ElideRight
         }
 
         Label {
-            visible: text !== ""
+            id: shortcutLabel
+            x: control.rightToLeft ? 0 : parent.width - width
+            width: visible ? implicitWidth : 0
+            height: parent.height
+            visible: control.shortcutText !== ""
             text: control.shortcutText
             font.family: AppTheme.fontFamily
             font.pixelSize: AppTheme.fontCaption

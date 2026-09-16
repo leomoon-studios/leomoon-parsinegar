@@ -270,6 +270,11 @@ TestCase {
 
         documentButton.click()
         tryCompare(documentMenu, "visible", true)
+        controller.setUiLanguage("fa")
+        compare(newItem.actionLabel.effectiveHorizontalAlignment, Text.AlignRight)
+        verify(newItem.actionLabel.mapToItem(applicationWindow.contentItem, 0, 0).x
+            > newItem.shortcutLabel.mapToItem(applicationWindow.contentItem, 0, 0).x)
+        controller.setUiLanguage("en")
         controller.sourceText = "draft"
         verify(saveItem.enabled)
         controller.resetDocument("", "")
@@ -299,6 +304,15 @@ TestCase {
         compare(contextMenu.background.color, AppTheme.surface)
         verify(!contextUndo.enabled)
         compare(contextUndo.opacity, 0.42)
+        mouseRelease(sourceEditor, mouseX, mouseY, Qt.RightButton)
+        contextMenu.close()
+        tryCompare(contextMenu, "visible", false)
+        applicationWindow.editorController.setUiLanguage("fa")
+        mousePress(sourceEditor, mouseX, mouseY, Qt.RightButton)
+        tryCompare(contextMenu, "visible", true)
+        compare(contextUndo.actionLabel.effectiveHorizontalAlignment, Text.AlignRight)
+        verify(contextUndo.actionLabel.mapToItem(applicationWindow.contentItem, 0, 0).x
+            > contextUndo.shortcutLabel.mapToItem(applicationWindow.contentItem, 0, 0).x)
         mouseRelease(sourceEditor, mouseX, mouseY, Qt.RightButton)
         contextMenu.close()
     }
