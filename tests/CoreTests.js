@@ -502,6 +502,7 @@ var CoreTestResults;
             conversionMode: "compatibility",
             reverseWords: false,
             videoStudioPro: true,
+            editorFontSize: 14,
             fontPaths: { unicode: "/fonts/unicode.ttf", compatibility: "/fonts/maryam.otf" },
             exportSettings: settings.desktopDefaults().exportSettings
         });
@@ -521,6 +522,8 @@ var CoreTestResults;
         equal(hebrew.settings.language, "Kurdish");
         jsonEqual(copy(legacy.desktop), settings.desktopDefaults());
         jsonEqual(settings.sanitizeDesktop({ conversionMode: "invalid", fontPaths: { unicode: 1 } }), settings.desktopDefaults());
+        equal(settings.sanitizeDesktop({ editorFontSize: 9 }).editorFontSize, 14);
+        equal(settings.sanitizeDesktop({ editorFontSize: 49 }).editorFontSize, 14);
     });
 
     test("resource limits accept boundaries and reject oversized values", function () {

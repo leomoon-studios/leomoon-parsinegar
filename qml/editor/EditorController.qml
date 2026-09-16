@@ -18,6 +18,7 @@ Item {
     property string sourceText: ""
     property bool reverseWords: true
     property bool videoStudioPro: false
+    property int editorFontSize: Settings.ReshaperSettings.desktopDefaults().editorFontSize
     property string uiLanguage: "en"
     property string unicodeFontPath: ""
     property string compatibilityFontPath: ""
@@ -450,11 +451,25 @@ Item {
             : false
     }
 
+    function setEditorFontSize(value) {
+        var next = Math.max(10, Math.min(48, Math.round(Number(value))))
+        if (!isFinite(next) || editorFontSize === next)
+            return false
+        editorFontSize = next
+        saveSettings()
+        return true
+    }
+
+    function adjustEditorFontSize(delta) {
+        return setEditorFontSize(editorFontSize + (delta < 0 ? -1 : 1))
+    }
+
     function desktopSettings() {
         return {
             conversionMode: conversionMode,
             reverseWords: reverseWords,
             videoStudioPro: videoStudioPro,
+            editorFontSize: editorFontSize,
             fontPaths: {
                 unicode: unicodeFontPath,
                 compatibility: compatibilityFontPath
@@ -498,6 +513,7 @@ Item {
         videoStudioPro = !hebrewProfile && state.conversionMode === "compatibility"
             ? desktop.videoStudioPro
             : false
+        editorFontSize = desktop.editorFontSize
         exportSettings = Settings.ReshaperSettings.sanitizeExportSettings(desktop.exportSettings)
         unicodeFontPath = validFontPath(desktop.fontPaths.unicode) ? desktop.fontPaths.unicode : ""
         compatibilityFontPath = validFontPath(desktop.fontPaths.compatibility) ? desktop.fontPaths.compatibility : ""

@@ -1505,6 +1505,7 @@ var ReshaperSettings = (function () {
       conversionMode: "unicode",
       reverseWords: true,
       videoStudioPro: false,
+      editorFontSize: 14,
       fontPaths: { unicode: "", compatibility: "" },
       exportSettings: {
         advancedVisible: false,
@@ -1545,6 +1546,9 @@ var ReshaperSettings = (function () {
     ["reverseWords", "videoStudioPro"].forEach(function (name) {
       if (typeof value[name] === "boolean") result[name] = value[name];
     });
+    if (typeof value.editorFontSize === "number" && isFinite(value.editorFontSize) &&
+        value.editorFontSize >= 10 && value.editorFontSize <= 48)
+      result.editorFontSize = Math.round(value.editorFontSize);
     if (object(value.fontPaths)) {
       ["unicode", "compatibility"].forEach(function (mode) {
         if (typeof value.fontPaths[mode] === "string" && value.fontPaths[mode].length <= 4096)

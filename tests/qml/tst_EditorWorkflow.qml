@@ -280,6 +280,25 @@ TestCase {
         verify(!controller.canUndo)
     }
 
+    function test_primaryModifierWheelChangesOnlyEditorFontSize() {
+        var applicationWindow = createMainWindow()
+        var controller = applicationWindow.editorController
+        var editor = findChild(applicationWindow, "sourceEditor")
+        var primaryModifier = Qt.platform.os === "osx" ? Qt.MetaModifier : Qt.ControlModifier
+        var initialSize = controller.editorFontSize
+
+        compare(editor.font.pixelSize, initialSize)
+        mouseWheel(editor, editor.width / 2, editor.height / 2, 0, 120,
+            Qt.NoButton, primaryModifier)
+        compare(controller.editorFontSize, initialSize + 1)
+        compare(editor.font.pixelSize, initialSize + 1)
+
+        mouseWheel(editor, editor.width / 2, editor.height / 2, 0, -120,
+            Qt.NoButton, primaryModifier)
+        compare(controller.editorFontSize, initialSize)
+        compare(editor.font.pixelSize, initialSize)
+    }
+
     function test_maximumRequestKeepsSceneResponsiveAndRejectsRaces() {
         var applicationWindow = createMainWindow()
         var controller = applicationWindow.editorController

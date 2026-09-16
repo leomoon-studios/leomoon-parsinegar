@@ -177,7 +177,7 @@ FocusScope {
                         onSelectionStartChanged: root.reportEditorSelection()
                         onSelectionEndChanged: root.reportEditorSelection()
                         font.family: AppTheme.fontFamily
-                        font.pixelSize: AppTheme.fontBody
+                        font.pixelSize: root.controller.editorFontSize
                         placeholderText: root.uiText("placeholder")
                         placeholderTextColor: AppTheme.muted
                         color: AppTheme.foreground
@@ -194,6 +194,7 @@ FocusScope {
                         padding: AppTheme.spacingMedium
                         Accessible.name: qsTr("Source text editor")
                         ContextMenu.menu: null
+
                         Keys.onPressed: function(event) {
                             var primaryModifier = Qt.platform.os === "osx" ? Qt.MetaModifier : Qt.ControlModifier
                             var hasPrimaryModifier = (event.modifiers & primaryModifier) !== 0
@@ -255,6 +256,22 @@ FocusScope {
                                 editor.forceActiveFocus()
                                 editorContextMenu.openAt(editor, mouse.x, mouse.y)
                                 mouse.accepted = true
+                            }
+                            onWheel: function(wheel) {
+                                var primaryModifier = Qt.platform.os === "osx"
+                                    ? Qt.MetaModifier : Qt.ControlModifier
+                                if ((wheel.modifiers & primaryModifier) === 0) {
+                                    wheel.accepted = false
+                                    return
+                                }
+                                var delta = wheel.angleDelta.y !== 0
+                                    ? wheel.angleDelta.y : wheel.pixelDelta.y
+                                if (delta === 0) {
+                                    wheel.accepted = false
+                                    return
+                                }
+                                root.controller.adjustEditorFontSize(delta)
+                                wheel.accepted = true
                             }
                         }
                     }
