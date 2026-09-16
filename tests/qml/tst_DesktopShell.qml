@@ -371,7 +371,8 @@ TestCase {
             return section.heading === "میان‌برهای صفحه‌کلید"
         })
         compare(persianShortcutSections.length, 1)
-        verify(persianShortcutSections[0].body.indexOf("Ctrl+Enter: تبدیل") >= 0)
+        verify(persianShortcutSections[0].body.indexOf("تبدیل: \u2066Ctrl+Enter\u2069") >= 0)
+        verify(persianShortcutSections[0].body.indexOf("باز یا بستن تنظیمات: \u2066Ctrl+,\u2069") >= 0)
         backButton.click()
         compare(controller.page, "editor")
     }
