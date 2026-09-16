@@ -7,6 +7,8 @@ project(
     LANGUAGES CXX
 )
 
+include(GNUInstallDirs)
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -146,6 +148,38 @@ qt_add_executable(parsinegar_desktop
     src/main.cpp
 )
 
+if(WIN32)
+    enable_language(RC)
+    configure_file(
+        packaging/windows/ParsiNegar.rc.in
+        "${CMAKE_CURRENT_BINARY_DIR}/packaging/windows/ParsiNegar.rc"
+        @ONLY
+    )
+    target_sources(parsinegar_desktop PRIVATE
+        "${CMAKE_CURRENT_BINARY_DIR}/packaging/windows/ParsiNegar.rc"
+    )
+endif()
+
+if(APPLE)
+    set(parsinegar_macos_icon "${CMAKE_CURRENT_BINARY_DIR}/packaging/macos/app-icon.icns")
+    add_custom_command(
+        OUTPUT "${parsinegar_macos_icon}"
+        COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/packaging/macos"
+        COMMAND sh "${CMAKE_CURRENT_SOURCE_DIR}/packaging/macos/generate-icon.sh"
+            "${CMAKE_CURRENT_SOURCE_DIR}/assets/app-icon.svg"
+            "${parsinegar_macos_icon}"
+        DEPENDS
+            assets/app-icon.svg
+            packaging/macos/generate-icon.sh
+        VERBATIM
+    )
+    set_source_files_properties("${parsinegar_macos_icon}" PROPERTIES
+        GENERATED TRUE
+        MACOSX_PACKAGE_LOCATION Resources
+    )
+    target_sources(parsinegar_desktop PRIVATE "${parsinegar_macos_icon}")
+endif()
+
 target_link_libraries(parsinegar_desktop PRIVATE
     Qt6::Core
     Qt6::Gui
@@ -161,10 +195,14 @@ set_target_properties(parsinegar_desktop PROPERTIES
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
     MACOSX_BUNDLE_BUNDLE_NAME "ParsiNegar Desktop"
-    MACOSX_BUNDLE_GUI_IDENTIFIER "com.leomoon-studios.parsinegar-desktop"
+    MACOSX_BUNDLE_GUI_IDENTIFIER "com.leomoon.ParsiNegarDesktop"
     MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION}"
     MACOSX_BUNDLE_BUNDLE_VERSION "${PROJECT_VERSION}"
+    MACOSX_BUNDLE_ICON_FILE "app-icon.icns"
+    MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/packaging/macos/Info.plist.in"
 )
+
+include(cmake/Packaging.cmake)
 
 include(CTest)
 
@@ -284,5 +322,12 @@ if(BUILD_TESTING)
         COMMAND "${CMAKE_COMMAND}"
             "-DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}"
             -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/CheckQmlImports.cmake"
+    )
+
+    add_test(
+        NAME packaging_metadata
+        COMMAND "${CMAKE_COMMAND}"
+            "-DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/CheckPackaging.cmake"
     )
 endif()

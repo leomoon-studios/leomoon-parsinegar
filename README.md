@@ -64,9 +64,31 @@ cmake --build build --target parsinegar_ui_qmllint
 
 Replace the example prefix with the installed Qt version and compiler kit. For a multi-configuration generator, omit `CMAKE_BUILD_TYPE` and pass `--config Debug` to build and test commands.
 
+## Packaging
+
+All installers treat the application and its required runtime as mandatory. Windows and macOS installers expose two independent optional choices, both selected by default: install the bundled ParsiNegar compatibility fonts system-wide and create a desktop shortcut. AppImage does not modify the host font collection or desktop, while the CPack Debian build emits the fonts as a separate package so a graphical package frontend can offer it alongside the required application package.
+
+The bundled ParsiNegar compatibility fonts belong under `assets/fonts/system/` and are never embedded into the QML resources. The application package continues to embed only Vazirmatn and Material Symbols for its own interface.
+
+On Linux, configure a release build and create the component `.deb` or `.tar.gz` packages with:
+
+```sh
+cmake -S . -B build-release -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake --build build-release
+cpack --config build-release/CPackConfig.cmake -G DEB -B build-release/packages
+```
+
+Install `linuxdeploy` and its Qt plugin before configuration to expose the `package_appimage` target. That target stages only the mandatory application component, runs Qt deployment, and writes the AppImage below `build-release/package/linux/`.
+
+On Windows, install Inno Setup in addition to the matching Qt and compiler toolchain. A native configuration discovers `windeployqt` and exposes `deploy_windows`; when `ISCC` is also available it exposes `package_windows`, which creates the installer below the build directory's `package/windows/` folder. The Inno Setup task page keeps the system-font and desktop-shortcut choices checked unless the user opts out.
+
+On macOS, a native configuration discovers `macdeployqt` and exposes `deploy_macos` and `package_macos`. The package target creates an unsigned `.dmg` and a component `.pkg` with a mandatory application choice plus checked-by-default system-font and desktop-shortcut choices. Set `PARSINEGAR_CODESIGN_IDENTITY` and `PARSINEGAR_INSTALLER_IDENTITY` only when producing signed release artifacts; set `PARSINEGAR_NOTARY_PROFILE` to an existing `notarytool` keychain profile when the signed package and disk image should also be submitted and stapled. Local unsigned packages do not require credentials.
+
+Every deployed artifact includes the MIT license, third-party notices, source provenance, and the Qt dynamic-linking notice. The applicable LGPL text from the exact Qt SDK must also be copied into the final release and the release record must name the precise Qt version used.
+
 ## Smoke check
 
-The `resource_smoke` CTest starts the real application with an offscreen Qt platform, verifies the embedded resources, waits for the bundled Vazirmatn font to load, and exits. The `license_inventory` CTest requires every vendored artifact and its associated notices. The `conversion_core` CTest loads the embedded production scripts in `QJSEngine` and verifies conversions, profiles, settings, all ligature metadata, mappings, and resource limits without Node.js. The `native_services` CTest exercises platform paths, atomic persistence, exact font reads, local-URL boundaries, failure signals, clipboard round trips, and size limits. The `desktop_shell` Qt Quick Test checks responsive window geometry, visible keyboard focus, control behavior, font fallback, palette contrast, editor interactions, exact clipboard conversion output, profile invariants, settings restarts and recovery, language mirroring, request races, error handling, and responsiveness at the conversion limit. The `qml_import_boundaries` test prevents desktop QML from acquiring Omarchy or Quickshell imports.
+The `resource_smoke` CTest starts the real application with an offscreen Qt platform, verifies the embedded resources, waits for the bundled Vazirmatn font to load, and exits. The `license_inventory` CTest requires every vendored artifact and its associated notices. The `conversion_core` CTest loads the embedded production scripts in `QJSEngine` and verifies conversions, profiles, settings, all ligature metadata, mappings, and resource limits without Node.js. The `native_services` CTest exercises platform paths, atomic persistence, exact font reads, local-URL boundaries, failure signals, clipboard round trips, and size limits. The `desktop_shell` Qt Quick Test checks responsive window geometry, visible keyboard focus, control behavior, font fallback, palette contrast, editor interactions, exact clipboard conversion output, profile invariants, settings restarts and recovery, language mirroring, request races, error handling, and responsiveness at the conversion limit. The `qml_import_boundaries` test prevents desktop QML from acquiring Omarchy or Quickshell imports. The `packaging_metadata` test verifies required platform files, mandatory application metadata, checked-by-default optional choices, and the presence of the bundled system-font payload.
 
 ## Repository boundaries
 

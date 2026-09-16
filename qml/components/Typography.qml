@@ -30,5 +30,5 @@ QtObject {
     readonly property font bodyFont: sizedFont(AppTheme.fontBody, Font.Normal)
     readonly property font controlFont: sizedFont(AppTheme.fontControl, Font.Medium)
     readonly property font captionFont: sizedFont(AppTheme.fontCaption, Font.Normal)
-    readonly property font badgeFont: sizedFont(AppTheme.fontBody, Font.Bold)
+    readonly property font badgeFont: sizedFont(17, Font.Bold)
 }

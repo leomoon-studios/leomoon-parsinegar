@@ -1,0 +1,47 @@
+#define AppName "ParsiNegar Desktop"
+#define AppVersion "@PROJECT_VERSION@"
+#define AppPublisher "LeoMoon Studios"
+#define AppExeName "ParsiNegar.exe"
+#define StageDir "@PARSINEGAR_WINDOWS_STAGE_DIR@"
+#define SourceDir "@CMAKE_CURRENT_SOURCE_DIR@"
+
+[Setup]
+AppId={{A606C8EF-A831-48F2-90D0-A16499853D2E}
+AppName={#AppName}
+AppVersion={#AppVersion}
+AppPublisher={#AppPublisher}
+DefaultDirName={autopf}\ParsiNegar Desktop
+DefaultGroupName=ParsiNegar Desktop
+OutputDir=@CMAKE_CURRENT_BINARY_DIR@\package\windows
+OutputBaseFilename=ParsiNegar-Desktop-{#AppVersion}-Setup
+SetupIconFile={#SourceDir}\packaging\windows\app-icon.ico
+UninstallDisplayIcon={app}\bin\{#AppExeName}
+ArchitecturesAllowed=x64compatible
+ArchitecturesInstallIn64BitMode=x64compatible
+PrivilegesRequired=admin
+Compression=lzma2
+SolidCompression=yes
+WizardStyle=modern
+LicenseFile={#SourceDir}\LICENSE
+
+[Tasks]
+Name: "systemfonts"; Description: "Install bundled LMN and LMU fonts system-wide"; GroupDescription: "Additional options:"; Flags: checkedonce
+Name: "desktopshortcut"; Description: "Create a desktop shortcut"; GroupDescription: "Additional options:"; Flags: checkedonce
+
+[Files]
+Source: "{#StageDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#SourceDir}\assets\fonts\system\*.ttf"; DestDir: "{app}\system-fonts"; Flags: ignoreversion; Tasks: systemfonts
+Source: "{#SourceDir}\assets\fonts\system\*.otf"; DestDir: "{app}\system-fonts"; Flags: ignoreversion skipifsourcedoesntexist; Tasks: systemfonts
+Source: "{#SourceDir}\assets\fonts\system\*.ttc"; DestDir: "{app}\system-fonts"; Flags: ignoreversion skipifsourcedoesntexist; Tasks: systemfonts
+Source: "{#SourceDir}\packaging\windows\install-fonts.ps1"; DestDir: "{app}\helpers"; Flags: ignoreversion; Tasks: systemfonts
+Source: "{#SourceDir}\packaging\windows\uninstall-fonts.ps1"; DestDir: "{app}\helpers"; Flags: ignoreversion; Tasks: systemfonts
+
+[Icons]
+Name: "{group}\ParsiNegar Desktop"; Filename: "{app}\bin\{#AppExeName}"
+Name: "{autodesktop}\ParsiNegar Desktop"; Filename: "{app}\bin\{#AppExeName}"; Tasks: desktopshortcut
+
+[Run]
+Filename: "powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\helpers\install-fonts.ps1"" -SourceDirectory ""{app}\system-fonts"" -ManifestPath ""{app}\installed-fonts.txt"""; Flags: runhidden waituntilterminated; Tasks: systemfonts
+
+[UninstallRun]
+Filename: "powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\helpers\uninstall-fonts.ps1"" -ManifestPath ""{app}\installed-fonts.txt"""; Flags: runhidden waituntilterminated skipifdoesntexist; RunOnceId: "RemoveParsiNegarFonts"

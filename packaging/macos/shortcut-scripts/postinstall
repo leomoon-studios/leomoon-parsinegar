@@ -1,0 +1,13 @@
+#!/bin/sh
+set -eu
+
+console_user=$(stat -f '%Su' /dev/console)
+if [ "$console_user" = "root" ] || [ "$console_user" = "loginwindow" ]; then
+    exit 0
+fi
+
+desktop_dir="/Users/$console_user/Desktop"
+if [ -d "$desktop_dir" ]; then
+    ln -sfn "/Applications/ParsiNegar.app" "$desktop_dir/ParsiNegar Desktop.app"
+    chown -h "$console_user":staff "$desktop_dir/ParsiNegar Desktop.app"
+fi

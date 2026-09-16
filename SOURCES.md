@@ -12,6 +12,8 @@ ParsiNegar Desktop begins from the tested host-independent components bundled wi
 | `assets/fonts/Vazirmatn[wght].ttf` | Vazirmatn v33.003, commit `83629f877e8f084cc07b47030b5d3a0ff06c76ec` | `696249a2c74b39ffdef55de4df2809c5b639d3ff80d618d8160a095d2fd49dca` |
 | `assets/fonts/MaterialSymbolsRounded.ttf` | Material Symbols Rounded commit `40a7a292a79d9394157e1ea24f83d52d5e17c556`, subset to thirteen documented glyphs | `33ab18dce4e2ab9cceeadc1c062009ee9d21e15fcec496ae82a77eb858aaf5fc` |
 
+The fonts under `assets/fonts/system/` are first-party ParsiNegar Desktop compatibility fonts distributed as an optional system-wide installer component. They are not application resources.
+
 The complete supplied notices and library documentation are retained below `vendor/js-bidi/`, `vendor/js-parsi-reshaper/`, `vendor/typr/`, and `assets/fonts/`. The Material Symbols subset contains U+E15A, U+E166, U+E247, U+E248, U+E2C4, U+E518, U+E51C, U+E5C4, U+E5C8, U+E873, U+E8B8, U+E8FD, and U+F10B; its unchanged full-font input had SHA-256 `f1472f172c0fc4a922be22972e4752ccc54fe795ed82564ab6f6b097782f2dbc`. The `tests/CheckLicenses.cmake` inventory prevents a known artifact or required notice from being omitted accidentally.
 
 ## Application behavior reference
