@@ -34,6 +34,35 @@ ApplicationWindow {
         controller.requestApplicationClose()
     }
 
+    function togglePage(target) {
+        if (controller.page === target) {
+            if (target === "settings")
+                settingsPage.closeGroup()
+            if (target === "export")
+                controller.closeExport()
+            else if (target === "tools")
+                controller.closeTextTools()
+            else if (target === "help")
+                controller.closeHelp()
+            else
+                controller.closeSettings()
+            Qt.callLater(editorPage.focusEditor)
+            return
+        }
+
+        if (target === "settings") {
+            settingsPage.closeGroup()
+            controller.openSettings()
+        } else if (target === "export") {
+            controller.openExport()
+        } else if (target === "tools") {
+            controller.openTextTools()
+        } else if (target === "help") {
+            controller.openHelp()
+        }
+        Qt.callLater(headerBackButton.forceActiveFocus)
+    }
+
     Typography {
         id: typography
         onFamilyChanged: AppTheme.fontFamily = family
@@ -100,6 +129,50 @@ ApplicationWindow {
         context: Qt.WindowShortcut
         enabled: controller.page === "editor" && !controller.busy && !exportController.busy
         onActivated: controller.saveDocumentAs()
+    }
+
+    Shortcut {
+        objectName: "convertShortcut"
+        sequences: ["Ctrl+Return", "Ctrl+Enter"]
+        context: Qt.WindowShortcut
+        enabled: controller.page === "editor" && controller.settingsReady
+            && !controller.busy && !exportController.busy && typography.ready
+        onActivated: {
+            controller.convertAndCopy()
+            editorPage.focusEditor()
+        }
+    }
+
+    Shortcut {
+        objectName: "settingsShortcut"
+        sequence: "Ctrl+,"
+        context: Qt.WindowShortcut
+        enabled: controller.settingsReady && !controller.busy && !exportController.busy
+        onActivated: root.togglePage("settings")
+    }
+
+    Shortcut {
+        objectName: "textToolsShortcut"
+        sequence: "Ctrl+T"
+        context: Qt.WindowShortcut
+        enabled: controller.settingsReady && !controller.busy && !exportController.busy
+        onActivated: root.togglePage("tools")
+    }
+
+    Shortcut {
+        objectName: "exportShortcut"
+        sequence: "Ctrl+E"
+        context: Qt.WindowShortcut
+        enabled: controller.settingsReady && !controller.busy && !exportController.busy
+        onActivated: root.togglePage("export")
+    }
+
+    Shortcut {
+        objectName: "helpShortcut"
+        sequence: "Ctrl+H"
+        context: Qt.WindowShortcut
+        enabled: controller.settingsReady && !controller.busy && !exportController.busy
+        onActivated: root.togglePage("help")
     }
 
     Component.onCompleted: {
@@ -229,7 +302,7 @@ ApplicationWindow {
                     objectName: "exportButton"
                     visible: controller.page === "editor"
                     glyph: AppTheme.iconExport
-                    toolTip: controller.uiText("export.title")
+                    toolTip: controller.uiText("export.title") + " (Ctrl+E)"
                     enabled: controller.settingsReady && !controller.busy && !exportController.busy
                     onClicked: controller.openExport()
                 }
@@ -239,7 +312,7 @@ ApplicationWindow {
                     objectName: "textToolsButton"
                     visible: controller.page === "editor"
                     glyph: AppTheme.iconTools
-                    toolTip: controller.uiText("tools.title")
+                    toolTip: controller.uiText("tools.title") + " (Ctrl+T)"
                     enabled: controller.settingsReady && !controller.busy && !exportController.busy
                     onClicked: controller.openTextTools()
                 }
@@ -249,7 +322,7 @@ ApplicationWindow {
                     objectName: "settingsButton"
                     visible: controller.page === "editor"
                     glyph: AppTheme.iconSettings
-                    toolTip: controller.uiText("button.settings")
+                    toolTip: controller.uiText("button.settings") + " (Ctrl+,)"
                     enabled: controller.settingsReady && !controller.busy
                     onClicked: controller.openSettings()
                 }
@@ -259,7 +332,7 @@ ApplicationWindow {
                     objectName: "helpButton"
                     visible: controller.page === "editor"
                     glyph: AppTheme.iconHelp
-                    toolTip: controller.uiText("help.title")
+                    toolTip: controller.uiText("help.title") + " (Ctrl+H)"
                     enabled: controller.settingsReady && !controller.busy && !exportController.busy
                     onClicked: controller.openHelp()
                 }

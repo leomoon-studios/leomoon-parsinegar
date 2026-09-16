@@ -4,6 +4,15 @@ ParsiNegar Desktop is a standalone Qt 6 application for preparing Persian and ot
 
 The application now opens a branded, resizable conversion editor with independent LTR and RTL alignment, Persian/Arabic, Kurdish/Urdu, and Hebrew shaping profiles, Unicode and Compatibility modes, bidi ordering, and VideoStudio output. Conversion runs in a bounded background worker, successful output is copied through the native clipboard bridge, and the source remains visible in the editor. Holding `Ctrl` while scrolling over the editor changes its text size from 10 to 48 pixels; macOS uses `Command`, and the chosen size persists between launches. The Text tools page provides the same 15 source transformations as ParsiNegar Express, including verb-aware Persian ZWNJ repair, digit and quotation conversion, character normalization, and writing cleanup. Each tool is independently enabled, conflicting reverse transformations disable one another, and enabled tools update the source before conversion as one history transaction. Bounded source-text Undo and Redo actions restore text, selection, cursor position, and paragraph breaks across ordinary edits and Text Tools changes. The Document menu provides New, Open, Save, and Save As actions with standard keyboard shortcuts, exact UTF-8 line-ending preservation, atomic writes, dirty-state window titles, and Save, Discard, or Cancel protection before destructive actions and application exit. A bilingual English and Persian settings page provides all six reshaper options and all 286 named ligatures. Language, editor font size, profile, text-tool toggles, conversion preferences, reshaper choices, valid selected font paths, and every SVG export option persist between launches, while editor drafts, converted output, clipboard contents, status messages, and undo history never enter the settings file. On Linux, settings are stored at `~/.config/leomoon-studios.parsinegar-desktop/settings.json`. The desktop also includes application-owned light and dark palettes, Vazirmatn-aware typography, visible keyboard focus, reusable controls, pinned JavaScript dependencies, and narrow C++ services for clipboard, platform settings, exact font-byte reads, bounded UTF-8 document I/O, atomic text saves, and atomic SVG writes.
 
+## Keyboard shortcuts
+
+- `Ctrl+Enter`: Convert
+- `Ctrl+,`: Toggle Settings
+- `Ctrl+T`: Toggle Text Tools
+- `Ctrl+E`: Toggle Export
+- `Ctrl+H`: Toggle Help
+- `Ctrl+wheel`: Change editor text size (`Command+wheel` on macOS)
+
 ## Development requirements
 
 - CMake 3.21 or newer

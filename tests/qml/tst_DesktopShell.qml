@@ -100,6 +100,45 @@ TestCase {
         compare(settingsButton.background.border.color, AppTheme.focus)
     }
 
+    function test_pageAndConversionShortcuts() {
+        var applicationWindow = createMainWindow()
+        var controller = applicationWindow.editorController
+        var clipboard = applicationWindow.clipboardMock
+        verify(findChild(applicationWindow, "convertShortcut") !== null)
+        verify(findChild(applicationWindow, "settingsShortcut") !== null)
+        verify(findChild(applicationWindow, "textToolsShortcut") !== null)
+        verify(findChild(applicationWindow, "exportShortcut") !== null)
+        verify(findChild(applicationWindow, "helpShortcut") !== null)
+
+        applicationWindow.requestActivate()
+        tryCompare(applicationWindow, "active", true, 2000)
+
+        keyClick(Qt.Key_T, Qt.ControlModifier)
+        compare(controller.page, "tools")
+        keyClick(Qt.Key_T, Qt.ControlModifier)
+        compare(controller.page, "editor")
+
+        keyClick(Qt.Key_E, Qt.ControlModifier)
+        compare(controller.page, "export")
+        keyClick(Qt.Key_E, Qt.ControlModifier)
+        compare(controller.page, "editor")
+
+        keyClick(Qt.Key_H, Qt.ControlModifier)
+        compare(controller.page, "help")
+        keyClick(Qt.Key_H, Qt.ControlModifier)
+        compare(controller.page, "editor")
+
+        keyClick(Qt.Key_Comma, Qt.ControlModifier)
+        compare(controller.page, "settings")
+        keyClick(Qt.Key_Comma, Qt.ControlModifier)
+        compare(controller.page, "editor")
+
+        controller.sourceText = "shortcut test"
+        keyClick(Qt.Key_Return, Qt.ControlModifier)
+        tryCompare(controller, "busy", false, 20000)
+        compare(clipboard.text, "shortcut test")
+    }
+
     function test_lightAndDarkPalettesRemainLegible() {
         var originalMode = AppTheme.darkMode
         var modes = [true, false]
