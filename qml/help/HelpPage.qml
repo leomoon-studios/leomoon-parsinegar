@@ -46,7 +46,11 @@ FocusScope {
         },
         {
             heading: "Documents and editing",
-            body: "The Document menu provides New, Open, Save, and Save As for UTF-8 text documents. Desktop preserves the document's original line-ending style when possible and warns before discarding unsaved changes.\n\nUse Undo and Redo, or Ctrl+Z, Ctrl+Y, and Ctrl+Shift+Z, to restore source edits, selections, cursor positions, and paragraph breaks. Ctrl+Enter converts; Ctrl+, opens or closes Settings; Ctrl+T toggles Text Tools; Ctrl+E toggles Export; and Ctrl+H toggles Help.\n\nHold Ctrl and scroll over the editor to change its text size. On macOS, use Command and scroll. The selected size is saved between launches."
+            body: "The Document menu provides New, Open, Save, and Save As for UTF-8 text documents. Desktop preserves the document's original line-ending style when possible and warns before discarding unsaved changes.\n\nUndo and Redo restore source edits, selections, cursor positions, and paragraph breaks."
+        },
+        {
+            heading: "Keyboard shortcuts",
+            body: "Conversion and pages\nCtrl+Enter: Convert\nCtrl+,: Toggle Settings\nCtrl+T: Toggle Text Tools\nCtrl+E: Toggle Export\nCtrl+H: Toggle Help\n\nEditing\nCtrl+Z: Undo\nCtrl+Y or Ctrl+Shift+Z: Redo\nCtrl+Scroll up: Increase editor text size\nCtrl+Scroll down: Decrease editor text size\n\nDocuments\nCtrl+N: New\nCtrl+O: Open\nCtrl+S: Save\nCtrl+Shift+S: Save As\n\nOn macOS, document, editing, and editor-size shortcuts use Command instead of Ctrl. Conversion and page shortcuts remain Ctrl combinations. The selected editor text size is saved between launches."
         },
         {
             heading: "Troubleshooting",
@@ -87,7 +91,11 @@ FocusScope {
         },
         {
             heading: "پرونده‌ها و ویرایش",
-            body: "منوی پرونده گزینه‌های پروندهٔ نو، باز کردن، ذخیره و ذخیره با نام را برای پرونده‌های متنی UTF-8 فراهم می‌کند. دسکتاپ تا حد امکان سبک اصلی شکست خط را نگه می‌دارد و پیش از کنارگذاشتن تغییرات ذخیره‌نشده هشدار می‌دهد.\n\nبا واگردانی و انجام دوباره یا Ctrl+Z، Ctrl+Y و Ctrl+Shift+Z می‌توانید ویرایش متن، انتخاب، جایگاه نشانگر و شکست پاراگراف را بازگردانید. Ctrl+Enter تبدیل را اجرا می‌کند؛ Ctrl+, تنظیمات را باز یا بسته می‌کند؛ Ctrl+T ابزارهای متن، Ctrl+E خروجی و Ctrl+H راهنما را باز یا بسته می‌کنند.\n\nبرای تغییر اندازهٔ متن ویرایشگر، Ctrl را نگه دارید و روی ویرایشگر پیمایش کنید. در macOS از Command و پیمایش استفاده کنید. اندازهٔ انتخاب‌شده میان اجراهای برنامه ذخیره می‌شود."
+            body: "منوی پرونده گزینه‌های پروندهٔ نو، باز کردن، ذخیره و ذخیره با نام را برای پرونده‌های متنی UTF-8 فراهم می‌کند. دسکتاپ تا حد امکان سبک اصلی شکست خط را نگه می‌دارد و پیش از کنارگذاشتن تغییرات ذخیره‌نشده هشدار می‌دهد.\n\nواگردانی و انجام دوباره، ویرایش متن، انتخاب، جایگاه نشانگر و شکست پاراگراف را بازمی‌گردانند."
+        },
+        {
+            heading: "میان‌برهای صفحه‌کلید",
+            body: "تبدیل و صفحه‌ها\nCtrl+Enter: تبدیل\n,+Ctrl: باز یا بستن تنظیمات\nCtrl+T: باز یا بستن ابزارهای متن\nCtrl+E: باز یا بستن خروجی\nCtrl+H: باز یا بستن راهنما\n\nویرایش\nCtrl+Z: واگردانی\nCtrl+Y یا Ctrl+Shift+Z: انجام دوباره\nCtrl+پیمایش به بالا: افزایش اندازهٔ متن ویرایشگر\nCtrl+پیمایش به پایین: کاهش اندازهٔ متن ویرایشگر\n\nپرونده‌ها\nCtrl+N: پروندهٔ نو\nCtrl+O: باز کردن\nCtrl+S: ذخیره\nCtrl+Shift+S: ذخیره با نام\n\nدر macOS، میان‌برهای پرونده، ویرایش و اندازهٔ متن به‌جای Ctrl از Command استفاده می‌کنند. میان‌برهای تبدیل و صفحه‌ها همچنان با Ctrl کار می‌کنند. اندازهٔ انتخاب‌شدهٔ متن ویرایشگر میان اجراهای برنامه ذخیره می‌شود."
         },
         {
             heading: "رفع اشکال",

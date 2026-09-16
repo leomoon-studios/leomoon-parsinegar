@@ -353,12 +353,25 @@ TestCase {
         verify(helpPage.visible)
         verify(backButton.visible)
         tryVerify(function() { return helpPage.contentImplicitHeight > helpScroll.height })
+        var englishShortcutSections = helpPage.englishSections.filter(function(section) {
+            return section.heading === "Keyboard shortcuts"
+        })
+        compare(englishShortcutSections.length, 1)
+        verify(englishShortcutSections[0].body.indexOf("Ctrl+Enter: Convert") >= 0)
+        verify(englishShortcutSections[0].body.indexOf("Ctrl+Scroll up") >= 0)
+        verify(englishShortcutSections[0].body.indexOf("Ctrl+Scroll down") >= 0)
+        verify(englishShortcutSections[0].body.indexOf("Ctrl+Shift+S: Save As") >= 0)
 
         controller.setUiLanguage("fa")
         compare(backButton.glyph, AppTheme.iconForward)
         tryVerify(function() { return helpPage.firstSectionHeading !== null && helpPage.firstSectionBody !== null })
         compare(helpPage.firstSectionHeading.effectiveHorizontalAlignment, Text.AlignRight)
         compare(helpPage.firstSectionBody.effectiveHorizontalAlignment, Text.AlignRight)
+        var persianShortcutSections = helpPage.persianSections.filter(function(section) {
+            return section.heading === "میان‌برهای صفحه‌کلید"
+        })
+        compare(persianShortcutSections.length, 1)
+        verify(persianShortcutSections[0].body.indexOf("Ctrl+Enter: تبدیل") >= 0)
         backButton.click()
         compare(controller.page, "editor")
     }
