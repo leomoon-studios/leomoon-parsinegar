@@ -15,8 +15,9 @@ FocusScope {
     readonly property var firstSectionHeading: sectionRepeater.count > 0 ? sectionRepeater.itemAt(0).headingItem : null
     readonly property var firstSectionBody: sectionRepeater.count > 0 ? sectionRepeater.itemAt(0).bodyItem : null
     readonly property string displayedSettingsFilePath: settingsFilePath !== "" ? settingsFilePath : "settings.json"
+    readonly property bool rightToLeft: controller.uiLanguage === "fa" || controller.uiLanguage === "ar"
 
-    LayoutMirroring.enabled: controller.uiLanguage === "fa"
+    LayoutMirroring.enabled: rightToLeft
     LayoutMirroring.childrenInherit: true
 
     readonly property var englishSections: [
@@ -109,7 +110,52 @@ FocusScope {
         }
     ]
 
-    readonly property var sections: controller.uiLanguage === "fa" ? persianSections : englishSections
+    readonly property var arabicSections: [
+        {
+            heading: "ما الذي يفعله پارسی‌نگار دسكتاپ؟",
+            body: "يُعدّ پارسی‌نگار دسكتاپ النصوص الفارسية والعربية والكردية والأردية والعبرية للتطبيقات التي لا تدعم التشكيل أو النص ثنائي الاتجاه دعمًا كاملًا. أدخل النص المصدر أو الصقه، واختر ملف التشكيل ووضع التحويل، ثم اختر تحويل. تُنسخ النتيجة إلى الحافظة لاستخدامها في تطبيق آخر.\n\nيُعدّ پارسی‌نگار أشكال الحروف وترتيبها المرئي، بينما يظل مظهر النص النهائي معتمدًا على الخط المحدد في التطبيق الهدف."
+        },
+        {
+            heading: "البدء السريع",
+            body: "1. أدخل النص المصدر أو الصقه. يلصق النص العادي فقط من دون خطوط صفحة الويب أو ألوانها أو روابطها أو تنسيق HTML.\n2. اختر في الإعدادات الفارسي/العربي أو الكردي/الأردي أو العبري.\n3. اختر وضع Unicode ما لم يكن التطبيق الهدف يتطلب خطًا قديمًا متوافقًا مع Maryam.\n4. فعّل تطبيق الترتيب المرئي ثنائي الاتجاه فقط عندما لا يدعم التطبيق الهدف التخطيط من اليمين إلى اليسار.\n5. فعّل أدوات النص المطلوبة واختر تحويل.\n6. الصق النتيجة المنسوخة في التطبيق الهدف واختر خطًا مناسبًا."
+        },
+        {
+            heading: "أوضاع التحويل",
+            body: "وضع Unicode هو الاختيار المعتاد للتطبيقات الحديثة. يهيّئ نص Unicode للتطبيقات ذات تشكيل النص غير المكتمل. استخدم خط Unicode يدعم النص الهدف.\n\nيستخدم وضع التوافق خطوط Maryam/LMN القديمة المتوافقة للتطبيقات القديمة التي لا تدعم نص Unicode. بعد اللصق، اختر خط Maryam المطابق. من دونه تظهر النتيجة كرموز غير مرتبطة. وضع التوافق غير متاح للعبرية وقد لا يحافظ على النص اللاتيني كما هو.\n\nملف العبرية يعمل في وضع Unicode فقط، ويستخدم الترتيب المرئي ثنائي الاتجاه من دون تشكيل سياقي على نمط العربية."
+        },
+        {
+            heading: "الاتجاه والنص المختلط",
+            body: "يستخدم كل فقرة أول حرف قوي فيها لتحديد الاتجاه. تُحاذى الفقرات اللاتينية إلى اليسار، وتُحاذى الفقرات الفارسية والعربية والأردية والكردية والعبرية إلى اليمين.\n\nيُستخدم تطبيق الترتيب المرئي ثنائي الاتجاه عندما يعامل التطبيق الهدف النص من اليمين إلى اليسار كنص عادي من اليسار إلى اليمين. يرتب كل فقرة على حدة قبل التحويل. اتركه معطّلًا عندما يتعامل التطبيق الهدف مع النص ثنائي الاتجاه بصورة صحيحة."
+        },
+        {
+            heading: "أدوات النص",
+            body: "أدوات النص تحويلات اختيارية للنص المصدر. لكل أداة مفتاح خاص بها. تعمل الأدوات المفعّلة معًا مباشرة قبل التحويل، وتحدّث النص المصدر، ثم تصبح تعديلًا واحدًا قابلًا للتراجع.\n\nيشمل تطبيع الفارسية الياء والكاف وهاء-ياء والتاء المربوطة والألف مع تنوين الفتح. يشمل تنظيف الكتابة الأرقام الفارسية وعلامات الاقتباس وإصلاح ZWNJ المراعي للأفعال والحركات والتطويل. توفر الأشكال البديلة الياء والكاف العربيتين وهاء-ياء القديمة والأرقام الإنجليزية وعلامات الاقتباس الإنجليزية.\n\nلا يمكن تفعيل التحويلات المتعاكسة معًا. يتعرف إصلاح ZWNJ على الأفعال الفارسية الشائعة، ولذلك يستطيع إصلاح «می خواهم» من دون تغيير كلمات غير مرتبطة مثل «میدان» بلا داعٍ."
+        },
+        {
+            heading: "تصدير SVG",
+            body: "يُنشئ تصدير SVG منحنيات متجهية قابلة للتحرير من النص المحوّل. اختر الخط واضبط حجمه وتباعد الأسطر والمحاذاة، ثم احفظ SVG. يبدأ تصدير Unicode بخط Vazirmatn المضمّن. يتطلب تصدير التوافق خط TTF أو OTF متوافقًا مع Maryam.\n\nافتح الخيارات الإضافية فقط للعرض أو الارتفاع الثابت والحشو والدقة ولون التعبئة وفهرس الخط ومحاور الخط المتغير. العرض والارتفاع التلقائيان مفعّلان افتراضيًا ويعطّلان حقولهما إلى أن توقفهما.\n\nيستخدم SVG الخط المحدد بدقة. إذا كان يفتقد حرفًا رسوميًا مطلوبًا، يحذّر پارسی‌نگار من أن SVG المحفوظ يحتوي على مخطط الحرف المفقود في الخط."
+        },
+        {
+            heading: "المستندات والتحرير",
+            body: "توفر قائمة المستند جديد وفتح وحفظ وحفظ باسم لمستندات نصية بترميز UTF-8. يحافظ سطح المكتب على نمط نهاية السطر الأصلي للمستند عندما يكون ذلك ممكنًا، ويحذّر قبل تجاهل التغييرات غير المحفوظة.\n\nيعيد التراجع والإعادة تعديلات المصدر والتحديدات ومواضع المؤشر وفواصل الفقرات."
+        },
+        {
+            heading: "اختصارات لوحة المفاتيح",
+            body: "التحويل والصفحات\nتحويل: \u2066Ctrl+Enter\u2069\nفتح أو إغلاق الإعدادات: \u2066Ctrl+,\u2069\nفتح أو إغلاق أدوات النص: \u2066Ctrl+T\u2069\nفتح أو إغلاق التصدير: \u2066Ctrl+E\u2069\nفتح أو إغلاق المساعدة: \u2066Ctrl+H\u2069\n\nالتحرير\nتراجع: \u2066Ctrl+Z\u2069\nإعادة: \u2066Ctrl+Y\u2069 أو \u2066Ctrl+Shift+Z\u2069\nزيادة حجم نص المحرر: \u2066Ctrl+Scroll Up\u2069\nتقليل حجم نص المحرر: \u2066Ctrl+Scroll Down\u2069\n\nالمستندات\nجديد: \u2066Ctrl+N\u2069\nفتح: \u2066Ctrl+O\u2069\nحفظ: \u2066Ctrl+S\u2069\nحفظ باسم: \u2066Ctrl+Shift+S\u2069\n\nفي macOS، تستخدم اختصارات المستندات والتحرير وحجم نص المحرر Command بدلًا من Ctrl. أما اختصارات التحويل والصفحات فتبقى تركيبات Ctrl. يُحفظ حجم نص المحرر المحدد بين مرات تشغيل التطبيق."
+        },
+        {
+            heading: "استكشاف الأخطاء",
+            body: "إذا كان النص الملصق مفصولًا أو معكوسًا أو بترتيب خاطئ، فتحقق من الملف والوضع وخط التطبيق الهدف وإعداد الترتيب المرئي ثنائي الاتجاه.\n\nإذا ظهرت النتيجة كرموز عشوائية، فربما استُخدم وضع التوافق من دون خط Maryam المطابق.\n\nإذا كان حرف مفقودًا، فاختر خط التطبيق الهدف أو التصدير الذي يحتويه. في Photoshop، عطّل All Caps وSmall Caps في إعدادات Character. استخدم خيار VideoStudio Pro لهذا التطبيق فقط."
+        },
+        {
+            heading: "الإعدادات والخصوصية",
+            body: "يحفظ سطح المكتب تفضيلات الواجهة وحجم خط المحرر وخيارات التشكيل ومفاتيح أدوات النص وخيارات تصدير SVG في ملف الإعدادات الخاص بهذه المنصة:",
+            path: root.displayedSettingsFilePath,
+            footer: "لا يحفظ مسودة المحرر أو الناتج المحوّل أو محتويات الحافظة أو رسائل الحالة أو محفوظات التراجع في ملف الإعدادات هذا."
+        }
+    ]
+
+    readonly property var sections: controller.uiLanguage === "fa" ? persianSections : controller.uiLanguage === "ar" ? arabicSections : englishSections
 
     Keys.onEscapePressed: function(event) {
         controller.closeHelp()
@@ -181,7 +227,7 @@ FocusScope {
                                 color: AppTheme.foreground
                                 textFormat: Text.PlainText
                                 LayoutMirroring.enabled: false
-                                horizontalAlignment: root.controller.uiLanguage === "fa" ? Text.AlignRight : Text.AlignLeft
+                                horizontalAlignment: root.rightToLeft ? Text.AlignRight : Text.AlignLeft
                                 wrapMode: Text.Wrap
                             }
 
@@ -194,7 +240,7 @@ FocusScope {
                                 color: AppTheme.muted
                                 textFormat: Text.PlainText
                                 LayoutMirroring.enabled: false
-                                horizontalAlignment: root.controller.uiLanguage === "fa" ? Text.AlignRight : Text.AlignLeft
+                                horizontalAlignment: root.rightToLeft ? Text.AlignRight : Text.AlignLeft
                                 wrapMode: Text.Wrap
                             }
 
@@ -207,7 +253,7 @@ FocusScope {
                                 color: AppTheme.foreground
                                 textFormat: Text.PlainText
                                 LayoutMirroring.enabled: false
-                                horizontalAlignment: root.controller.uiLanguage === "fa" ? Text.AlignRight : Text.AlignLeft
+                                horizontalAlignment: root.rightToLeft ? Text.AlignRight : Text.AlignLeft
                                 wrapMode: Text.WrapAnywhere
                             }
 
@@ -220,7 +266,7 @@ FocusScope {
                                 color: AppTheme.muted
                                 textFormat: Text.PlainText
                                 LayoutMirroring.enabled: false
-                                horizontalAlignment: root.controller.uiLanguage === "fa" ? Text.AlignRight : Text.AlignLeft
+                                horizontalAlignment: root.rightToLeft ? Text.AlignRight : Text.AlignLeft
                                 wrapMode: Text.Wrap
                             }
                         }

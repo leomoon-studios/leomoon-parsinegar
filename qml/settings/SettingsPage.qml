@@ -14,8 +14,9 @@ FocusScope {
     readonly property alias settingsScroll: settingsScroll
     readonly property alias ligatureScroll: ligatureScroll
     readonly property alias ligatureList: ligatureList
+    readonly property bool rightToLeft: controller.uiLanguage === "fa" || controller.uiLanguage === "ar"
 
-    LayoutMirroring.enabled: controller.uiLanguage === "fa"
+    LayoutMirroring.enabled: rightToLeft
     LayoutMirroring.childrenInherit: true
 
     function uiText(key) {
@@ -108,7 +109,7 @@ FocusScope {
 
                 GridLayout {
                     width: parent.width
-                    columns: 2
+                    columns: 3
                     columnSpacing: AppTheme.spacingSmall
 
                     AppButton {
@@ -127,6 +128,15 @@ FocusScope {
                         text: root.uiText("language.persian")
                         selected: root.controller.uiLanguage === "fa"
                         onClicked: root.controller.setUiLanguage("fa")
+                    }
+
+                    AppButton {
+                        objectName: "languageArabicButton"
+                        Layout.fillWidth: true
+                        Layout.preferredWidth: 0
+                        text: root.uiText("language.arabic")
+                        selected: root.controller.uiLanguage === "ar"
+                        onClicked: root.controller.setUiLanguage("ar")
                     }
                 }
 

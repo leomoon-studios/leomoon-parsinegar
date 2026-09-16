@@ -13,8 +13,9 @@ FocusScope {
     property bool syncingEditor: false
     readonly property alias editorItem: editor
     readonly property alias editorScroll: editorScroll
+    readonly property bool rightToLeft: controller.uiLanguage === "fa" || controller.uiLanguage === "ar"
 
-    LayoutMirroring.enabled: controller.uiLanguage === "fa"
+    LayoutMirroring.enabled: rightToLeft
     LayoutMirroring.childrenInherit: true
 
     function uiText(key) {
@@ -242,7 +243,7 @@ FocusScope {
                             editor: editor
                             controller: root.controller
                             pasteHandler: root.pastePlainText
-                            rightToLeft: root.controller.uiLanguage === "fa"
+                            rightToLeft: root.rightToLeft
                         }
 
                         MouseArea {
@@ -283,7 +284,7 @@ FocusScope {
                     Layout.fillWidth: true
                     Layout.maximumHeight: implicitHeight
                     spacing: AppTheme.spacingMedium
-                    layoutDirection: root.controller.uiLanguage === "fa" ? Qt.RightToLeft : Qt.LeftToRight
+                    layoutDirection: root.rightToLeft ? Qt.RightToLeft : Qt.LeftToRight
                     LayoutMirroring.enabled: false
                     LayoutMirroring.childrenInherit: false
 
@@ -295,7 +296,7 @@ FocusScope {
                         ModeCard {
                             objectName: "unicodeButton"
                             Layout.fillWidth: true
-                            LayoutMirroring.enabled: root.controller.uiLanguage === "fa"
+                            LayoutMirroring.enabled: root.rightToLeft
                             LayoutMirroring.childrenInherit: true
                             title: root.uiText("mode.unicode")
                             description: root.uiText("mode.unicodeDescription")
@@ -306,7 +307,7 @@ FocusScope {
                         ModeCard {
                             objectName: "compatibilityButton"
                             Layout.fillWidth: true
-                            LayoutMirroring.enabled: root.controller.uiLanguage === "fa"
+                            LayoutMirroring.enabled: root.rightToLeft
                             LayoutMirroring.childrenInherit: true
                             title: root.uiText("mode.compatibility")
                             description: root.uiText("mode.compatibilityDescription")

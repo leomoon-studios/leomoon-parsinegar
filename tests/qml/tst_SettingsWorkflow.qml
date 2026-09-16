@@ -142,7 +142,8 @@ TestCase {
     function test_languageAndPreferenceRoundTrips_data() {
         return [
             { tag: "english", language: "en" },
-            { tag: "persian", language: "fa" }
+            { tag: "persian", language: "fa" },
+            { tag: "arabic", language: "ar" }
         ]
     }
 
@@ -402,6 +403,7 @@ TestCase {
         var settingsPage = findChild(applicationWindow, "settingsPage")
         var englishButton = findChild(applicationWindow, "languageEnglishButton")
         var persianButton = findChild(applicationWindow, "languagePersianButton")
+        var arabicButton = findChild(applicationWindow, "languageArabicButton")
         var standardButton = findChild(applicationWindow, "settingsProfileStandard")
         var kurdishButton = findChild(applicationWindow, "settingsProfileKurdish")
         var hebrewButton = findChild(applicationWindow, "settingsProfileHebrew")
@@ -436,11 +438,18 @@ TestCase {
         compare(settingsPage.settingsScroll.leftPadding, AppTheme.spacingLarge)
         compare(settingsPage.settingsScroll.rightPadding, AppTheme.spacingLarge)
         compare(englishButton.width, persianButton.width)
+        compare(persianButton.width, arabicButton.width)
         compare(standardButton.width, kurdishButton.width)
         compare(kurdishButton.width, hebrewButton.width)
 
         persianButton.click()
         compare(controller.uiLanguage, "fa")
+        verify(settingsPage.LayoutMirroring.enabled)
+        verify(headerActions.LayoutMirroring.enabled)
+        compare(headerBackButton.glyph, AppTheme.iconForward)
+
+        arabicButton.click()
+        compare(controller.uiLanguage, "ar")
         verify(settingsPage.LayoutMirroring.enabled)
         verify(headerActions.LayoutMirroring.enabled)
         compare(headerBackButton.glyph, AppTheme.iconForward)

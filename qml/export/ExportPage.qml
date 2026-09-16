@@ -19,8 +19,9 @@ FocusScope {
     property url chosenDestination
     property string statusText: ""
     property string statusLevel: "info"
+    readonly property bool rightToLeft: controller.uiLanguage === "fa" || controller.uiLanguage === "ar"
 
-    LayoutMirroring.enabled: controller.uiLanguage === "fa"
+    LayoutMirroring.enabled: rightToLeft
     LayoutMirroring.childrenInherit: true
 
     function uiText(key) {

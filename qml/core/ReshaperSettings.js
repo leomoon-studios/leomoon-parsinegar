@@ -1499,7 +1499,7 @@ var ReshaperSettings = (function () {
     });
     return result;
   }
-  function sanitizeUiLanguage(value) { return value === "fa" ? "fa" : "en"; }
+  function sanitizeUiLanguage(value) { return value === "fa" || value === "ar" ? value : "en"; }
   function desktopDefaults() {
     return {
       conversionMode: "unicode",

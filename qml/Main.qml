@@ -18,6 +18,7 @@ ApplicationWindow {
     property var fileService: null
     property var textDirectionService: null
     property bool allowApplicationClose: false
+    readonly property bool rightToLeft: controller.uiLanguage === "fa" || controller.uiLanguage === "ar"
 
     width: 900
     height: 720
@@ -191,7 +192,7 @@ ApplicationWindow {
         RowLayout {
             Layout.fillWidth: true
             spacing: AppTheme.spacingMedium
-            LayoutMirroring.enabled: controller.uiLanguage === "fa"
+            LayoutMirroring.enabled: root.rightToLeft
             LayoutMirroring.childrenInherit: true
 
             Rectangle {
@@ -234,7 +235,7 @@ ApplicationWindow {
                 id: headerActions
                 objectName: "headerActions"
                 spacing: AppTheme.spacingSmall
-                LayoutMirroring.enabled: controller.uiLanguage === "fa"
+                LayoutMirroring.enabled: root.rightToLeft
                 LayoutMirroring.childrenInherit: true
 
                 IconButton {
@@ -242,7 +243,7 @@ ApplicationWindow {
                     objectName: "headerBackButton"
                     visible: controller.page !== "editor"
                     enabled: visible && (controller.page !== "export" || !exportController.busy)
-                    glyph: controller.uiLanguage === "fa" ? AppTheme.iconForward : AppTheme.iconBack
+                    glyph: root.rightToLeft ? AppTheme.iconForward : AppTheme.iconBack
                     toolTip: controller.uiText("button.back")
                     onClicked: {
                         if (controller.page === "export") {
@@ -267,7 +268,7 @@ ApplicationWindow {
                     toolTip: controller.uiText("document.menu")
                     enabled: controller.settingsReady && !controller.busy && !exportController.busy
                     onClicked: documentMenu.popup(documentButton,
-                        controller.uiLanguage === "fa" ? documentButton.width - documentMenu.width : 0,
+                        root.rightToLeft ? documentButton.width - documentMenu.width : 0,
                         documentButton.height + AppTheme.spacingSmall)
                 }
 
@@ -445,7 +446,7 @@ ApplicationWindow {
 
         contentItem: ColumnLayout {
             spacing: AppTheme.spacingLarge
-            LayoutMirroring.enabled: controller.uiLanguage === "fa"
+            LayoutMirroring.enabled: root.rightToLeft
             LayoutMirroring.childrenInherit: true
 
             Label {

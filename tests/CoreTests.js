@@ -103,7 +103,7 @@ var CoreTestResults;
         });
         textTools.operations.forEach(function (operation) {
             assert(seen[operation.id], "missing fixture for " + operation.id);
-            ["en", "fa"].forEach(function (language) {
+            ["en", "fa", "ar"].forEach(function (language) {
                 assert(strings.text(language, operation.labelKey) !== operation.labelKey, language + " label " + operation.id);
                 assert(strings.text(language, operation.descriptionKey) !== operation.descriptionKey, language + " description " + operation.id);
             });
@@ -425,11 +425,13 @@ var CoreTestResults;
             { id: "hebrew", language: null }
         ]);
         equal(metadata.ligatureGroups[0].ligatures.length + metadata.ligatureGroups[1].ligatures.length + metadata.ligatureGroups[2].ligatures.length, 286);
-        jsonEqual(Array.prototype.slice.call(strings.languages), ["en", "fa"]);
+        jsonEqual(Array.prototype.slice.call(strings.languages), ["en", "fa", "ar"]);
         equal(strings.text("en", "settings.title"), "Settings");
         equal(strings.text("fa", "settings.title"), "تنظیمات");
+        equal(strings.text("ar", "settings.title"), "الإعدادات");
         equal(strings.text("en", "settings.profileLabel.hebrew"), "Hebrew");
         equal(strings.text("fa", "toggle.reverse"), "اعمال ترتیب نمایشی دوجهته");
+        equal(strings.text("ar", "toggle.reverse"), "تطبيق الترتيب المرئي ثنائي الاتجاه");
         equal(strings.normalize("unknown"), "en");
     });
 
@@ -495,6 +497,7 @@ var CoreTestResults;
         var restored = settings.parse(metadata, serialized);
         equal(restored.recovered, false);
         equal(restored.uiLanguage, "fa");
+        equal(settings.parse(metadata, settings.serialize(metadata, custom, "ar")).uiLanguage, "ar");
         equal(restored.shapingProfile, "kurdishUrdu");
         jsonEqual(copy(restored.textTools), { repairZwnj: true, persianDigits: true });
         jsonEqual(copy(restored.settings), copy(custom));

@@ -5,6 +5,7 @@ Menu {
     id: root
 
     required property var controller
+    readonly property bool rightToLeft: controller.uiLanguage === "fa" || controller.uiLanguage === "ar"
 
     objectName: "documentMenu"
     width: 230
@@ -27,7 +28,7 @@ Menu {
         objectName: "newDocumentMenuItem"
         text: root.controller.uiText("document.new")
         shortcutText: "Ctrl+N"
-        rightToLeft: root.controller.uiLanguage === "fa"
+        rightToLeft: root.rightToLeft
         enabled: !root.controller.busy
         onTriggered: root.controller.newDocument()
     }
@@ -36,7 +37,7 @@ Menu {
         objectName: "openDocumentMenuItem"
         text: root.controller.uiText("document.open")
         shortcutText: "Ctrl+O"
-        rightToLeft: root.controller.uiLanguage === "fa"
+        rightToLeft: root.rightToLeft
         enabled: !root.controller.busy
         onTriggered: root.controller.openDocument()
     }
@@ -47,7 +48,7 @@ Menu {
         objectName: "saveDocumentMenuItem"
         text: root.controller.uiText("document.save")
         shortcutText: "Ctrl+S"
-        rightToLeft: root.controller.uiLanguage === "fa"
+        rightToLeft: root.rightToLeft
         enabled: root.controller.documentDirty && !root.controller.busy
         onTriggered: root.controller.saveDocument()
     }
@@ -56,7 +57,7 @@ Menu {
         objectName: "saveAsDocumentMenuItem"
         text: root.controller.uiText("document.saveAs")
         shortcutText: "Ctrl+Shift+S"
-        rightToLeft: root.controller.uiLanguage === "fa"
+        rightToLeft: root.rightToLeft
         enabled: !root.controller.busy
         onTriggered: root.controller.saveDocumentAs()
     }

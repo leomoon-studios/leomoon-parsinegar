@@ -14,8 +14,9 @@ FocusScope {
     readonly property real contentImplicitHeight: toolsContent.implicitHeight
     readonly property var firstGroupHeading: toolsGroupRepeater.count > 0
         ? toolsGroupRepeater.itemAt(0).headingItem : null
+    readonly property bool rightToLeft: controller.uiLanguage === "fa" || controller.uiLanguage === "ar"
 
-    LayoutMirroring.enabled: controller.uiLanguage === "fa"
+    LayoutMirroring.enabled: rightToLeft
     LayoutMirroring.childrenInherit: true
 
     function uiText(key) {
