@@ -41,7 +41,6 @@ jobs:
           host: linux
           target: desktop
           arch: linux_gcc_64
-          modules: qtwayland
           cache: true
           setup-python: true
 
