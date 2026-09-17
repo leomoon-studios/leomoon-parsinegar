@@ -194,7 +194,6 @@ FocusScope {
                         persistentSelection: true
                         padding: AppTheme.spacingMedium
                         Accessible.name: qsTr("Source text editor")
-                        ContextMenu.menu: null
 
                         Keys.onPressed: function(event) {
                             var primaryModifier = Qt.platform.os === "osx" ? Qt.MetaModifier : Qt.ControlModifier
