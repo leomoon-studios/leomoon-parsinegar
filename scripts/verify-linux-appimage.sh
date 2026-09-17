@@ -41,7 +41,7 @@ for relative_path in "${required_paths[@]}"; do
 done
 
 for library in Core Gui Qml Quick QuickControls2 Concurrent; do
-    if ! find "$app_dir/usr" \( -type f -o -type l \) | grep -q "/libQt6${library}\.so"; then
+    if [[ -z "$(find "$app_dir/usr" \( -type f -o -type l \) -name "libQt6${library}.so*" -print -quit)" ]]; then
         echo "AppImage is missing bundled Qt library: Qt6$library" >&2
         exit 1
     fi
