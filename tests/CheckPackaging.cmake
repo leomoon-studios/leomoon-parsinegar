@@ -17,6 +17,10 @@ set(required_files
     packaging/windows/deploy.cmake
     packaging/windows/install-fonts.ps1
     packaging/windows/uninstall-fonts.ps1
+    docs/WINDOWS_SIGNING.md
+    scripts/package-windows.ps1
+    scripts/smoke-windows-installer.ps1
+    scripts/verify-windows-package.ps1
     packaging/macos/Info.plist.in
     packaging/macos/distribution.xml.in
     packaging/macos/generate-icon.sh

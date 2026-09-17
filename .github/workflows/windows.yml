@@ -1,0 +1,172 @@
+name: Windows
+
+on:
+  push:
+    branches: [master]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  QT_VERSION: 6.8.3
+  INNO_SETUP: C:\Program Files (x86)\Inno Setup 6\ISCC.exe
+
+jobs:
+  build-test-package:
+    name: Build, test, and package
+    runs-on: windows-2022
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Configure MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Install pinned Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ env.QT_VERSION }}
+          host: windows
+          target: desktop
+          arch: win64_msvc2022_64
+          cache: true
+          setup-python: true
+
+      - name: Check release version
+        if: github.ref_type == 'tag'
+        shell: pwsh
+        run: |
+          $expected = "v$((Get-Content -LiteralPath VERSION -Raw).Trim())"
+          if ($env:GITHUB_REF_NAME -ne $expected) {
+            throw "Release tag $env:GITHUB_REF_NAME does not match $expected"
+          }
+
+      - name: Configure release build
+        shell: pwsh
+        run: cmake -S . -B build-windows -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON
+
+      - name: Build
+        shell: pwsh
+        run: cmake --build build-windows --parallel 2
+
+      - name: Test
+        shell: pwsh
+        run: ctest --test-dir build-windows --output-on-failure --no-tests=error
+
+      - name: Lint QML
+        shell: pwsh
+        run: cmake --build build-windows --target parsinegar_ui_qmllint
+
+      - name: Deploy Windows runtime
+        shell: pwsh
+        run: cmake --build build-windows --target deploy_windows --parallel 2
+
+      - name: Prepare optional signing certificate
+        if: github.ref_type == 'tag'
+        shell: pwsh
+        env:
+          CERTIFICATE_BASE64: ${{ secrets.WINDOWS_SIGNING_CERTIFICATE_BASE64 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_SIGNING_CERTIFICATE_PASSWORD }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:CERTIFICATE_BASE64)) {
+            Write-Host "No protected Windows signing certificate is configured; producing an unsigned installer."
+            exit 0
+          }
+          $certificatePath = Join-Path $env:RUNNER_TEMP "parsinegar-signing.pfx"
+          [System.IO.File]::WriteAllBytes($certificatePath, [Convert]::FromBase64String($env:CERTIFICATE_BASE64))
+          "PARSINEGAR_WINDOWS_CERTIFICATE_PATH=$certificatePath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "PARSINEGAR_WINDOWS_CERTIFICATE_PASSWORD=$env:CERTIFICATE_PASSWORD" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Package and verify Windows installer
+        shell: pwsh
+        env:
+          PARSINEGAR_WINDOWS_TIMESTAMP_URL: http://timestamp.digicert.com
+        run: |
+          & scripts/package-windows.ps1 -BuildDirectory "$env:GITHUB_WORKSPACE\build-windows" -DistDirectory "$env:GITHUB_WORKSPACE\dist" -IsccPath $env:INNO_SETUP -Commit $env:GITHUB_SHA
+
+      - name: Remove temporary signing certificate
+        if: always()
+        shell: pwsh
+        run: Remove-Item -LiteralPath "$env:RUNNER_TEMP\parsinegar-signing.pfx" -Force -ErrorAction SilentlyContinue
+
+      - name: Retain failure logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-failure-logs
+          path: |
+            build-windows/CMakeFiles/CMakeConfigureLog.yaml
+            build-windows/Testing/Temporary/*.log
+            ${{ runner.temp }}/parsinegar-*.log
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: parsinegar-windows-${{ github.sha }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14
+
+  clean-installer-smoke:
+    name: Clean Windows installer smoke test
+    needs: build-test-package
+    runs-on: windows-2022
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out verification scripts
+        uses: actions/checkout@v4
+
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: parsinegar-windows-${{ github.sha }}
+          path: dist
+
+      - name: Verify default install, opt-out install, launch, and uninstall
+        shell: pwsh
+        run: scripts/smoke-windows-installer.ps1 -ArtifactDirectory "$env:GITHUB_WORKSPACE\dist"
+
+      - name: Retain installer logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer-failure-logs
+          path: ${{ runner.temp }}/parsinegar-*.log
+          if-no-files-found: ignore
+          retention-days: 14
+
+  release:
+    name: Publish Windows release
+    if: github.ref_type == 'tag'
+    needs: clean-installer-smoke
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download verified artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: parsinegar-windows-${{ github.sha }}
+          path: dist
+
+      - name: Publish Windows artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 || gh release create "$GITHUB_REF_NAME" --verify-tag --generate-notes --title "ParsiNegar Desktop $GITHUB_REF_NAME" || gh release view "$GITHUB_REF_NAME"
+          gh release upload "$GITHUB_REF_NAME" dist/* --clobber

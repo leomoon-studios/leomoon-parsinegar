@@ -125,7 +125,10 @@ if(WIN32)
     get_target_property(parsinegar_qmake_executable Qt6::qmake IMPORTED_LOCATION)
     get_filename_component(parsinegar_qt_bin_dir "${parsinegar_qmake_executable}" DIRECTORY)
     find_program(PARSINEGAR_WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${parsinegar_qt_bin_dir}")
-    find_program(PARSINEGAR_INNO_SETUP_EXECUTABLE ISCC)
+    find_program(PARSINEGAR_INNO_SETUP_EXECUTABLE
+        NAMES ISCC ISCC.exe
+        HINTS "C:/Program Files (x86)/Inno Setup 6"
+    )
     set(PARSINEGAR_WINDOWS_STAGE_DIR "${CMAKE_CURRENT_BINARY_DIR}/package/windows/stage")
     configure_file(
         "${CMAKE_CURRENT_SOURCE_DIR}/packaging/windows/ParsiNegar.iss.in"

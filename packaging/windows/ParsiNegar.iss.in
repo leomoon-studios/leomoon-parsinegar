@@ -9,6 +9,7 @@
 AppId={{A606C8EF-A831-48F2-90D0-A16499853D2E}
 AppName={#AppName}
 AppVersion={#AppVersion}
+AppVerName={#AppName} {#AppVersion}
 AppPublisher={#AppPublisher}
 DefaultDirName={autopf}\ParsiNegar Desktop
 DefaultGroupName=ParsiNegar Desktop
@@ -16,6 +17,7 @@ OutputDir=@CMAKE_CURRENT_BINARY_DIR@\package\windows
 OutputBaseFilename=ParsiNegar-Desktop-{#AppVersion}-Setup
 SetupIconFile={#SourceDir}\packaging\windows\app-icon.ico
 UninstallDisplayIcon={app}\bin\{#AppExeName}
+UninstallDisplayName={#AppName}
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 PrivilegesRequired=admin
@@ -23,6 +25,11 @@ Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
 LicenseFile={#SourceDir}\LICENSE
+VersionInfoCompany={#AppPublisher}
+VersionInfoDescription={#AppName} installer
+VersionInfoProductName={#AppName}
+VersionInfoProductVersion={#AppVersion}
+VersionInfoVersion={#AppVersion}
 
 [Tasks]
 Name: "systemfonts"; Description: "Install bundled LMN and LMU fonts system-wide"; GroupDescription: "Additional options:"; Flags: checkedonce
