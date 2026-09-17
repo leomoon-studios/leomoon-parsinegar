@@ -9,7 +9,7 @@ if [[ "${GITHUB_REF_TYPE:-}" == "tag" ]]; then
     release_tag="${GITHUB_REF_NAME:-}"
 fi
 version="$($repo_dir/scripts/check-release-version.sh "$release_tag")"
-release_date="$(tr -d '[:space:]' < "$repo_dir/RELEASE_DATE")"
+release_date="$(tr -d '[:space:]' < "$repo_dir/metadata/RELEASE_DATE")"
 
 case "$dist_dir" in
     ""|/|"$repo_dir")

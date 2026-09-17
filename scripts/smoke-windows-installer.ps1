@@ -3,7 +3,7 @@ param([Parameter(Mandatory = $true)][string]$ArtifactDirectory)
 
 $ErrorActionPreference = "Stop"
 $repoDirectory = Split-Path -Parent $PSScriptRoot
-$version = (Get-Content -LiteralPath (Join-Path $repoDirectory "VERSION") -Raw).Trim()
+$version = (Get-Content -LiteralPath (Join-Path $repoDirectory "metadata\VERSION") -Raw).Trim()
 $artifacts = (Resolve-Path -LiteralPath $ArtifactDirectory).Path
 $installer = Join-Path $artifacts "ParsiNegar-Desktop-$Version-Setup.exe"
 $checksums = Join-Path $artifacts "SHA256SUMS"

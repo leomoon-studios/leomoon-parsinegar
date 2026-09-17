@@ -47,7 +47,7 @@ jobs:
         if: github.ref_type == 'tag'
         shell: pwsh
         run: |
-          $expected = "v$((Get-Content -LiteralPath VERSION -Raw).Trim())"
+          $expected = "v$((Get-Content -LiteralPath metadata\VERSION -Raw).Trim())"
           if ($env:GITHUB_REF_NAME -ne $expected) {
             throw "Release tag $env:GITHUB_REF_NAME does not match $expected"
           }

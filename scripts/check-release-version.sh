@@ -2,8 +2,8 @@
 set -euo pipefail
 
 repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-version="$(tr -d '[:space:]' < "$repo_dir/VERSION")"
-release_date="$(tr -d '[:space:]' < "$repo_dir/RELEASE_DATE")"
+version="$(tr -d '[:space:]' < "$repo_dir/metadata/VERSION")"
+release_date="$(tr -d '[:space:]' < "$repo_dir/metadata/RELEASE_DATE")"
 tag="${1:-}"
 
 if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then

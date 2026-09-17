@@ -8,8 +8,8 @@ param(
 
 $ErrorActionPreference = "Stop"
 $repoDirectory = Split-Path -Parent $PSScriptRoot
-$version = (Get-Content -LiteralPath (Join-Path $repoDirectory "VERSION") -Raw).Trim()
-$releaseDate = (Get-Content -LiteralPath (Join-Path $repoDirectory "RELEASE_DATE") -Raw).Trim()
+$version = (Get-Content -LiteralPath (Join-Path $repoDirectory "metadata\VERSION") -Raw).Trim()
+$releaseDate = (Get-Content -LiteralPath (Join-Path $repoDirectory "metadata\RELEASE_DATE") -Raw).Trim()
 if ($version -notmatch '^\d+\.\d+\.\d+$') {
     throw "VERSION must contain a semantic version such as 1.2.3"
 }

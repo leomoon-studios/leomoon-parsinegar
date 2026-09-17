@@ -47,7 +47,7 @@ Release packaging is platform-specific. Linux provides AppImage and Debian compo
 
 The bundled compatibility fonts are in `assets/fonts/system/`. Vazirmatn and Material Symbols are embedded for the application interface.
 
-`VERSION` is the single release-version source, and `RELEASE_DATE` supplies its AppStream date. A Linux release tag must use the matching `vX.Y.Z` form. The Linux workflow builds with Qt 6.8.3, runs the complete test and QML lint suites, produces a self-contained AppImage plus separate application and optional-font Debian packages, verifies X11 and Wayland startup without a Qt SDK, and publishes checksums with tagged releases.
+`metadata/VERSION` is the single release-version source, and `metadata/RELEASE_DATE` supplies its AppStream date. A release tag must use the matching `vX.Y.Z` form. The Linux workflow builds with Qt 6.8.3, runs the complete test and QML lint suites, produces a self-contained AppImage plus separate application and optional-font Debian packages, verifies X11 and Wayland startup without a Qt SDK, and publishes checksums with tagged releases.
 
 The Windows workflow builds with Qt 6.8.3 and MSVC 2022, runs the same tests and QML linting, deploys the Qt runtime with `windeployqt`, and produces a versioned Inno Setup installer with checksums. A fresh Windows job tests the default font and desktop-shortcut selections, both opt-out choices, application launch, and uninstall. Tagged builds support optional Authenticode signing through protected repository secrets as described in [Windows release signing](docs/WINDOWS_SIGNING.md).
 
