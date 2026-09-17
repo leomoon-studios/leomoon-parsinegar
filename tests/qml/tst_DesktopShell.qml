@@ -86,6 +86,16 @@ TestCase {
         verify(editorScroll.height > conversionActions.height)
     }
 
+    function test_headerDisplaysApplicationVersion() {
+        var applicationWindow = createMainWindow()
+        var applicationTitle = findChild(applicationWindow, "applicationTitle")
+        var applicationVersion = findChild(applicationWindow, "applicationVersion")
+        verify(applicationTitle !== null)
+        verify(applicationVersion !== null)
+        compare(applicationVersion.text, "v" + Qt.application.version)
+        verify(applicationVersion.x >= applicationTitle.x + applicationTitle.width)
+    }
+
     function test_keyboardFocusHasVisibleTreatment() {
         var applicationWindow = createMainWindow()
         var settingsButton = findChild(applicationWindow, "settingsButton")

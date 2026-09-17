@@ -211,14 +211,37 @@ ApplicationWindow {
                 Layout.fillWidth: true
                 spacing: 0
 
-                Label {
+                RowLayout {
                     Layout.fillWidth: true
-                    text: controller.uiText("app.title")
-                    font.family: AppTheme.fontFamily
-                    font.pixelSize: AppTheme.fontHeading
-                    font.weight: Font.DemiBold
-                    color: AppTheme.foreground
-                    elide: Text.ElideRight
+                    spacing: AppTheme.spacingSmall
+
+                    Label {
+                        objectName: "applicationTitle"
+                        text: controller.uiText("app.title")
+                        font.family: AppTheme.fontFamily
+                        font.pixelSize: AppTheme.fontHeading
+                        font.weight: Font.DemiBold
+                        color: AppTheme.foreground
+                        elide: Text.ElideRight
+                        Layout.maximumWidth: parent.width - applicationVersion.implicitWidth - parent.spacing
+                        Layout.alignment: Qt.AlignBaseline
+                    }
+
+                    Label {
+                        id: applicationVersion
+                        objectName: "applicationVersion"
+                        text: "v" + Qt.application.version
+                        font.family: AppTheme.fontFamily
+                        font.pixelSize: AppTheme.fontCaption
+                        color: AppTheme.muted
+                        horizontalAlignment: Text.AlignLeft
+                        LayoutMirroring.enabled: false
+                        Layout.alignment: Qt.AlignBaseline
+                    }
+
+                    Item {
+                        Layout.fillWidth: true
+                    }
                 }
 
                 Label {
