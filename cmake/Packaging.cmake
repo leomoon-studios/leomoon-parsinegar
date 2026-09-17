@@ -16,14 +16,7 @@ file(GLOB PARSINEGAR_SYSTEM_FONT_FILES CONFIGURE_DEPENDS
     "${PARSINEGAR_SYSTEM_FONT_SOURCE_DIR}/*.ttc"
 )
 
-find_file(PARSINEGAR_QT_LGPL3_FILE
-    NAMES LGPL-3.0-only.txt
-    PATHS
-        "${QT6_INSTALL_PREFIX}/LICENSES"
-        "${Qt6_DIR}/../../../LICENSES"
-        /usr/share/licenses/qt6-base
-    NO_DEFAULT_PATH
-)
+set(PARSINEGAR_QT_LGPL3_FILE "${CMAKE_CURRENT_SOURCE_DIR}/packaging/licenses/Qt-LGPL-3.0-only.txt")
 
 install(TARGETS parsinegar_desktop
     BUNDLE DESTINATION . COMPONENT Application
@@ -38,15 +31,11 @@ install(FILES
     DESTINATION "${CMAKE_INSTALL_DATADIR}/doc/parsinegar-desktop"
     COMPONENT Application
 )
-if(PARSINEGAR_QT_LGPL3_FILE)
-    install(FILES "${PARSINEGAR_QT_LGPL3_FILE}"
-        DESTINATION "${CMAKE_INSTALL_DATADIR}/doc/parsinegar-desktop"
-        RENAME Qt-LGPL-3.0-only.txt
-        COMPONENT Application
-    )
-else()
-    message(WARNING "Qt LGPL-3.0 license text was not found; release packaging must provide it")
-endif()
+install(FILES "${PARSINEGAR_QT_LGPL3_FILE}"
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/doc/parsinegar-desktop"
+    RENAME Qt-LGPL-3.0-only.txt
+    COMPONENT Application
+)
 
 if(UNIX AND NOT APPLE)
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/packaging/linux/${PARSINEGAR_APP_ID}.desktop"

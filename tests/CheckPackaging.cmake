@@ -5,6 +5,7 @@ endif()
 set(required_files
     cmake/Packaging.cmake
     packaging/Qt-LGPL-NOTICE.md
+    packaging/licenses/Qt-LGPL-3.0-only.txt
     packaging/linux/com.leomoon.ParsiNegarDesktop.desktop
     packaging/linux/com.leomoon.ParsiNegarDesktop.metainfo.xml.in
     packaging/linux/build-appimage.cmake
