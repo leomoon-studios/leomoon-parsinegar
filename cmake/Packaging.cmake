@@ -2,6 +2,13 @@ include(CPackComponent)
 
 set(PARSINEGAR_APP_ID "com.leomoon.ParsiNegarDesktop")
 set(PARSINEGAR_PACKAGE_NAME "ParsiNegar Desktop")
+set(PARSINEGAR_LINUX_METADATA_DIR "${CMAKE_CURRENT_BINARY_DIR}/packaging/linux")
+file(MAKE_DIRECTORY "${PARSINEGAR_LINUX_METADATA_DIR}")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/packaging/linux/${PARSINEGAR_APP_ID}.metainfo.xml.in"
+    "${PARSINEGAR_LINUX_METADATA_DIR}/${PARSINEGAR_APP_ID}.metainfo.xml"
+    @ONLY
+)
 set(PARSINEGAR_SYSTEM_FONT_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/assets/fonts/system")
 file(GLOB PARSINEGAR_SYSTEM_FONT_FILES CONFIGURE_DEPENDS
     "${PARSINEGAR_SYSTEM_FONT_SOURCE_DIR}/*.otf"
@@ -46,8 +53,9 @@ if(UNIX AND NOT APPLE)
         DESTINATION "${CMAKE_INSTALL_DATADIR}/applications"
         COMPONENT Application
     )
-    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/packaging/linux/${PARSINEGAR_APP_ID}.metainfo.xml"
+    install(FILES "${PARSINEGAR_LINUX_METADATA_DIR}/${PARSINEGAR_APP_ID}.metainfo.xml"
         DESTINATION "${CMAKE_INSTALL_DATADIR}/metainfo"
+        RENAME "${PARSINEGAR_APP_ID}.appdata.xml"
         COMPONENT Application
     )
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/assets/app-icon.svg"
@@ -181,13 +189,17 @@ elseif(APPLE)
         )
     endif()
 elseif(UNIX)
+    get_target_property(parsinegar_qmake_executable Qt6::qmake IMPORTED_LOCATION)
     find_program(PARSINEGAR_LINUXDEPLOY_EXECUTABLE linuxdeploy)
     if(PARSINEGAR_LINUXDEPLOY_EXECUTABLE)
         add_custom_target(package_appimage
             COMMAND "${CMAKE_COMMAND}"
                 "-DBUILD_DIR=${CMAKE_BINARY_DIR}"
                 "-DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}"
+                "-DARCH=${CMAKE_SYSTEM_PROCESSOR}"
                 "-DLINUXDEPLOY=${PARSINEGAR_LINUXDEPLOY_EXECUTABLE}"
+                "-DQMAKE=${parsinegar_qmake_executable}"
+                "-DVERSION=${PROJECT_VERSION}"
                 -P "${CMAKE_CURRENT_SOURCE_DIR}/packaging/linux/build-appimage.cmake"
             DEPENDS parsinegar_desktop
             VERBATIM

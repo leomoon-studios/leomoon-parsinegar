@@ -6,7 +6,7 @@ set(required_files
     cmake/Packaging.cmake
     packaging/Qt-LGPL-NOTICE.md
     packaging/linux/com.leomoon.ParsiNegarDesktop.desktop
-    packaging/linux/com.leomoon.ParsiNegarDesktop.metainfo.xml
+    packaging/linux/com.leomoon.ParsiNegarDesktop.metainfo.xml.in
     packaging/linux/build-appimage.cmake
     packaging/linux/fonts-postinst
     packaging/linux/fonts-postrm

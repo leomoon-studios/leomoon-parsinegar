@@ -1,8 +1,19 @@
 cmake_minimum_required(VERSION 3.21)
 
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/VERSION" PARSINEGAR_VERSION)
+string(STRIP "${PARSINEGAR_VERSION}" PARSINEGAR_VERSION)
+if(NOT PARSINEGAR_VERSION MATCHES "^[0-9]+\\.[0-9]+\\.[0-9]+$")
+    message(FATAL_ERROR "VERSION must contain a semantic version such as 1.2.3")
+endif()
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/RELEASE_DATE" PARSINEGAR_RELEASE_DATE)
+string(STRIP "${PARSINEGAR_RELEASE_DATE}" PARSINEGAR_RELEASE_DATE)
+if(NOT PARSINEGAR_RELEASE_DATE MATCHES "^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]$")
+    message(FATAL_ERROR "RELEASE_DATE must use YYYY-MM-DD format")
+endif()
+
 project(
     ParsiNegarDesktop
-    VERSION 0.1.0
+    VERSION "${PARSINEGAR_VERSION}"
     DESCRIPTION "Standalone ParsiNegar desktop application"
     LANGUAGES CXX
 )
@@ -190,6 +201,10 @@ target_link_libraries(parsinegar_desktop PRIVATE
     parsinegar_uiplugin
 )
 
+target_compile_definitions(parsinegar_desktop PRIVATE
+    PARSINEGAR_VERSION="${PROJECT_VERSION}"
+)
+
 set_target_properties(parsinegar_desktop PROPERTIES
     OUTPUT_NAME ParsiNegar
     WIN32_EXECUTABLE TRUE
@@ -329,5 +344,15 @@ if(BUILD_TESTING)
         COMMAND "${CMAKE_COMMAND}"
             "-DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}"
             -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/CheckPackaging.cmake"
+    )
+
+    add_test(
+        NAME release_version
+        COMMAND "${CMAKE_COMMAND}"
+            "-DEXPECTED_VERSION=${PROJECT_VERSION}"
+            "-DEXPECTED_RELEASE_DATE=${PARSINEGAR_RELEASE_DATE}"
+            "-DAPP_PATH=$<TARGET_FILE:parsinegar_desktop>"
+            "-DMETADATA_PATH=${CMAKE_CURRENT_BINARY_DIR}/packaging/linux/com.leomoon.ParsiNegarDesktop.metainfo.xml"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/CheckReleaseVersion.cmake"
     )
 endif()

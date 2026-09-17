@@ -17,6 +17,8 @@
 #include <qqml.h>
 
 #include <array>
+#include <cstdio>
+#include <cstring>
 
 namespace {
 
@@ -94,10 +96,17 @@ bool verifyEmbeddedResources()
 
 int main(int argc, char *argv[])
 {
+    for (int index = 1; index < argc; ++index) {
+        if (std::strcmp(argv[index], "--version") == 0) {
+            std::printf("ParsiNegar Desktop %s\n", PARSINEGAR_VERSION);
+            return EXIT_SUCCESS;
+        }
+    }
+
     QCoreApplication::setOrganizationName(QStringLiteral("LeoMoon Studios"));
     QCoreApplication::setOrganizationDomain(QStringLiteral("leomoon-studios.com"));
     QCoreApplication::setApplicationName(QStringLiteral("ParsiNegar Desktop"));
-    QCoreApplication::setApplicationVersion(QStringLiteral("0.1.0"));
+    QCoreApplication::setApplicationVersion(QStringLiteral(PARSINEGAR_VERSION));
     qInstallMessageHandler(applicationMessageHandler);
 
     QGuiApplication application(argc, argv);

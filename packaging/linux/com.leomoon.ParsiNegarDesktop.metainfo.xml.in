@@ -16,5 +16,8 @@
   <provides>
     <binary>ParsiNegar</binary>
   </provides>
+  <releases>
+    <release version="@PROJECT_VERSION@" date="@PARSINEGAR_RELEASE_DATE@"/>
+  </releases>
   <content_rating type="oars-1.1"/>
 </component>

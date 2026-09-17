@@ -1,0 +1,163 @@
+name: Linux
+
+on:
+  push:
+    branches: [master]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: linux-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  QT_VERSION: 6.8.3
+  LINUXDEPLOY_VERSION: 1-alpha-20251107-1
+  LINUXDEPLOY_QT_VERSION: 1-alpha-20250213-1
+
+jobs:
+  build-test-package:
+    name: Build, test, and package
+    runs-on: ubuntu-22.04
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes build-essential cmake curl dpkg-dev file libfuse2 libgl1-mesa-dev libwayland-client0 libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xfixes0 libxcb-xinerama0 ninja-build
+
+      - name: Install pinned Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ env.QT_VERSION }}
+          host: linux
+          target: desktop
+          arch: linux_gcc_64
+          modules: qtwayland
+          cache: true
+          setup-python: true
+
+      - name: Install pinned Linux deployment tools
+        run: |
+          mkdir -p "$RUNNER_TEMP/parsinegar-tools"
+          curl --fail --location --retry 3 --output "$RUNNER_TEMP/parsinegar-tools/linuxdeploy" "https://github.com/linuxdeploy/linuxdeploy/releases/download/$LINUXDEPLOY_VERSION/linuxdeploy-x86_64.AppImage"
+          curl --fail --location --retry 3 --output "$RUNNER_TEMP/parsinegar-tools/linuxdeploy-plugin-qt" "https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/$LINUXDEPLOY_QT_VERSION/linuxdeploy-plugin-qt-x86_64.AppImage"
+          curl --fail --location --retry 3 --output "$RUNNER_TEMP/parsinegar-tools/runtime-x86_64" "https://github.com/AppImage/type2-runtime/releases/download/continuous/runtime-x86_64"
+          chmod +x "$RUNNER_TEMP/parsinegar-tools/linuxdeploy" "$RUNNER_TEMP/parsinegar-tools/linuxdeploy-plugin-qt"
+          echo "$RUNNER_TEMP/parsinegar-tools" >> "$GITHUB_PATH"
+          echo "LDAI_RUNTIME_FILE=$RUNNER_TEMP/parsinegar-tools/runtime-x86_64" >> "$GITHUB_ENV"
+
+      - name: Check release version
+        if: github.ref_type == 'tag'
+        run: scripts/check-release-version.sh "$GITHUB_REF_NAME"
+
+      - name: Configure release build
+        run: cmake -S . -B build-linux -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON
+
+      - name: Build
+        run: cmake --build build-linux --parallel 2
+
+      - name: Test
+        run: ctest --test-dir build-linux --output-on-failure --no-tests=error
+
+      - name: Lint QML
+        run: cmake --build build-linux --target parsinegar_ui_qmllint
+
+      - name: Package and verify Linux artifacts
+        run: scripts/package-linux.sh "$GITHUB_WORKSPACE/build-linux" "$GITHUB_WORKSPACE/dist"
+
+      - name: Retain failure logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-failure-logs
+          path: |
+            build-linux/CMakeFiles/CMakeConfigureLog.yaml
+            build-linux/Testing/Temporary/*.log
+            build-linux/package/linux/**/*.log
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: parsinegar-linux-${{ github.sha }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14
+
+  clean-package-smoke:
+    name: Clean Ubuntu ${{ matrix.version }} package smoke test
+    needs: build-test-package
+    runs-on: ubuntu-24.04
+    container: ubuntu:${{ matrix.version }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ["22.04", "24.04"]
+
+    steps:
+      - name: Install clean-runtime test dependencies
+        run: |
+          apt-get update
+          fuse_package=libfuse2
+          if [[ "${{ matrix.version }}" == "24.04" ]]; then
+            fuse_package=libfuse2t64
+          fi
+          DEBIAN_FRONTEND=noninteractive apt-get install --yes ca-certificates file fontconfig libdbus-1-3 libegl1 libfontconfig1 "$fuse_package" libgl1 libwayland-client0 libwayland-cursor0 libx11-6 libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xfixes0 libxcb-xinerama0 weston xauth xvfb
+
+      - name: Check out verification scripts
+        uses: actions/checkout@v4
+
+      - name: Download Linux artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: parsinegar-linux-${{ github.sha }}
+          path: dist
+
+      - name: Verify install, runtimes, launch, and uninstall
+        run: scripts/smoke-linux-packages.sh "$GITHUB_WORKSPACE/dist"
+
+      - name: Retain compositor logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-${{ matrix.version }}-smoke-failure-logs
+          path: /tmp/**/weston.log
+          if-no-files-found: ignore
+          retention-days: 14
+
+  release:
+    name: Publish Linux release
+    if: github.ref_type == 'tag'
+    needs: clean-package-smoke
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Verify release tag
+        run: scripts/check-release-version.sh "$GITHUB_REF_NAME"
+
+      - name: Download verified artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: parsinegar-linux-${{ github.sha }}
+          path: dist
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" dist/* --verify-tag --generate-notes --title "ParsiNegar Desktop $GITHUB_REF_NAME"
