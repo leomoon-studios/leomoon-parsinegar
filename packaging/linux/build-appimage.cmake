@@ -52,6 +52,7 @@ endforeach()
 list(JOIN wayland_plugin_names ";" extra_platform_plugins)
 
 set(ENV{APPIMAGE_EXTRACT_AND_RUN} 1)
+set(ENV{EXTRA_QT_MODULES} "waylandcompositor")
 set(ENV{EXTRA_PLATFORM_PLUGINS} "${extra_platform_plugins}")
 set(ENV{NO_STRIP} 1)
 set(ENV{QMAKE} "${QMAKE}")
@@ -71,6 +72,7 @@ execute_process(
     RESULT_VARIABLE appimage_result
 )
 unset(ENV{APPIMAGE_EXTRACT_AND_RUN})
+unset(ENV{EXTRA_QT_MODULES})
 unset(ENV{EXTRA_PLATFORM_PLUGINS})
 unset(ENV{NO_STRIP})
 unset(ENV{QMAKE})

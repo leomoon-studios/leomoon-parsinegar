@@ -55,6 +55,14 @@ if ! find "$app_dir/usr" -path '*/platforms/libqwayland*.so' -print -quit | grep
     echo "AppImage is missing the Qt Wayland platform plugin" >&2
     exit 1
 fi
+if ! find "$app_dir/usr" -path '*/wayland-shell-integration/libxdg-shell*.so' -print -quit | grep -q .; then
+    echo "AppImage is missing the Qt Wayland XDG shell integration" >&2
+    exit 1
+fi
+if ! find "$app_dir/usr" -path '*/wayland-graphics-integration-client/*.so' -print -quit | grep -q .; then
+    echo "AppImage is missing Qt Wayland client graphics integration" >&2
+    exit 1
+fi
 
 if find "$app_dir/usr/bin" -maxdepth 1 -type f -printf '%f\n' | grep -Eiq '^(python|python3|node|npm|omarchy|quickshell)$'; then
     echo "AppImage contains an unexpected external runtime" >&2
