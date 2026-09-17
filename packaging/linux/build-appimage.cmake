@@ -25,6 +25,21 @@ if(NOT qmake_result EQUAL 0 OR NOT IS_DIRECTORY "${qt_plugins_dir}/platforms")
     message(FATAL_ERROR "Could not locate Qt platform plugins with ${QMAKE}")
 endif()
 
+execute_process(
+    COMMAND "${QMAKE}" -query QT_INSTALL_LIBS
+    RESULT_VARIABLE qmake_libs_result
+    OUTPUT_VARIABLE qt_libraries_dir
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+find_file(qt_concurrent_library
+    NAMES libQt6Concurrent.so.6 libQt6Concurrent.so
+    PATHS "${qt_libraries_dir}"
+    NO_DEFAULT_PATH
+)
+if(NOT qmake_libs_result EQUAL 0 OR NOT qt_concurrent_library)
+    message(FATAL_ERROR "Could not locate the Qt Concurrent runtime library with ${QMAKE}")
+endif()
+
 file(GLOB wayland_plugin_paths "${qt_plugins_dir}/platforms/libqwayland*.so")
 if(NOT wayland_plugin_paths)
     message(FATAL_ERROR "The selected Qt installation has no Wayland platform plugin")
@@ -47,6 +62,7 @@ execute_process(
     COMMAND "${LINUXDEPLOY}"
         --appdir "${app_dir}"
         --executable "${app_dir}/usr/bin/ParsiNegar"
+        --library "${qt_concurrent_library}"
         --desktop-file "${SOURCE_DIR}/packaging/linux/com.leomoon.ParsiNegarDesktop.desktop"
         --icon-file "${SOURCE_DIR}/assets/app-icon.svg"
         --plugin qt
