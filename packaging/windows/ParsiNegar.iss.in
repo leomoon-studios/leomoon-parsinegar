@@ -48,7 +48,7 @@ Name: "{group}\ParsiNegar Desktop"; Filename: "{app}\bin\{#AppExeName}"
 Name: "{autodesktop}\ParsiNegar Desktop"; Filename: "{app}\bin\{#AppExeName}"; Tasks: desktopshortcut
 
 [Run]
-Filename: "powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\helpers\install-fonts.ps1"" -SourceDirectory ""{app}\system-fonts"" -ManifestPath ""{app}\installed-fonts.txt"""; Flags: runhidden waituntilterminated; Tasks: systemfonts
+Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\helpers\install-fonts.ps1"" -SourceDirectory ""{app}\system-fonts"" -ManifestPath ""{app}\installed-fonts.txt"""; Flags: runhidden waituntilterminated; Tasks: systemfonts
 
 [UninstallRun]
-Filename: "powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\helpers\uninstall-fonts.ps1"" -ManifestPath ""{app}\installed-fonts.txt"""; Flags: runhidden waituntilterminated skipifdoesntexist; RunOnceId: "RemoveParsiNegarFonts"
+Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\helpers\uninstall-fonts.ps1"" -ManifestPath ""{app}\installed-fonts.txt"""; Flags: runhidden waituntilterminated; RunOnceId: "RemoveParsiNegarFonts"
