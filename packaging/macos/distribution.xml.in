@@ -8,13 +8,13 @@
         <line choice="systemfonts"/>
         <line choice="desktopshortcut"/>
     </choices-outline>
-    <choice id="application" title="ParsiNegar Desktop" visible="false" enabled="false" selected="true">
+    <choice id="application" title="ParsiNegar Desktop" start_visible="false" start_enabled="false" start_selected="true">
         <pkg-ref id="com.leomoon.ParsiNegarDesktop.app"/>
     </choice>
-    <choice id="systemfonts" title="Install bundled LMN and LMU fonts system-wide" selected="true">
+    <choice id="systemfonts" title="Install bundled LMN and LMU fonts system-wide" start_selected="true">
         <pkg-ref id="com.leomoon.ParsiNegarDesktop.fonts"/>
     </choice>
-    <choice id="desktopshortcut" title="Create a desktop shortcut" selected="true">
+    <choice id="desktopshortcut" title="Create a desktop shortcut" start_selected="true">
         <pkg-ref id="com.leomoon.ParsiNegarDesktop.shortcut"/>
     </choice>
     <pkg-ref id="com.leomoon.ParsiNegarDesktop.app" version="@PROJECT_VERSION@">ParsiNegar-app.pkg</pkg-ref>

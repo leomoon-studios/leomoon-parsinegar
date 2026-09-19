@@ -116,7 +116,10 @@ cat > "$choices_file" <<'EOF'
 EOF
 
 echo "Installing with system-font and desktop-shortcut choices disabled"
-sudo installer -applyChoiceChangesXML "$choices_file" -pkg "$pkg" -target /
+effective_choices_file="${RUNNER_TEMP:-/tmp}/parsinegar-effective-choices.xml"
+installer -showChoicesAfterApplyingChangesXML "$choices_file" -pkg "$pkg" -target / > "$effective_choices_file"
+cat "$effective_choices_file"
+sudo installer -dumplog -applyChoiceChangesXML "$choices_file" -pkg "$pkg" -target /
 rm -f "$choices_file"
 [[ -x "$application/Contents/MacOS/ParsiNegar" ]]
 "$application/Contents/MacOS/ParsiNegar" --smoke-test

@@ -78,9 +78,9 @@ endforeach()
 
 file(READ "${SOURCE_DIR}/packaging/macos/distribution.xml.in" macos_installer)
 foreach(expected IN ITEMS
-    "id=\"application\" title=\"ParsiNegar Desktop\" visible=\"false\" enabled=\"false\" selected=\"true\""
-    "id=\"systemfonts\" title=\"Install bundled LMN and LMU fonts system-wide\" selected=\"true\""
-    "id=\"desktopshortcut\" title=\"Create a desktop shortcut\" selected=\"true\""
+    "id=\"application\" title=\"ParsiNegar Desktop\" start_visible=\"false\" start_enabled=\"false\" start_selected=\"true\""
+    "id=\"systemfonts\" title=\"Install bundled LMN and LMU fonts system-wide\" start_selected=\"true\""
+    "id=\"desktopshortcut\" title=\"Create a desktop shortcut\" start_selected=\"true\""
 )
     string(FIND "${macos_installer}" "${expected}" position)
     if(position EQUAL -1)
