@@ -30,6 +30,11 @@ bool isPrivateTransferFile(const QFileInfo &info)
 {
     const QString temporaryDirectory = QFileInfo(QDir::tempPath()).canonicalFilePath();
     const QString parentDirectory = info.dir().canonicalPath();
+#ifdef Q_OS_WIN
+    return info.isFile()
+        && info.fileName().startsWith(QString::fromLatin1(transferFilePrefix))
+        && parentDirectory.compare(temporaryDirectory, Qt::CaseInsensitive) == 0;
+#else
     const QFileDevice::Permissions publicPermissions = QFileDevice::ReadGroup
         | QFileDevice::WriteGroup
         | QFileDevice::ExeGroup
@@ -40,6 +45,7 @@ bool isPrivateTransferFile(const QFileInfo &info)
         && info.fileName().startsWith(QString::fromLatin1(transferFilePrefix))
         && parentDirectory == temporaryDirectory
         && (info.permissions() & publicPermissions) == QFileDevice::Permissions {};
+#endif
 }
 
 } // namespace
