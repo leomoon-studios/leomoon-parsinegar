@@ -51,6 +51,16 @@ function Invoke-CheckedProcess([string]$FilePath, [string[]]$Arguments, [int]$Ti
     }
 }
 
+function Wait-PathAbsent([string]$Path, [int]$TimeoutSeconds = 60) {
+    $deadline = [DateTime]::UtcNow.AddSeconds($TimeoutSeconds)
+    while (Test-Path -LiteralPath $Path) {
+        if ([DateTime]::UtcNow -ge $deadline) {
+            throw "Path remains after $TimeoutSeconds seconds: $Path"
+        }
+        Start-Sleep -Milliseconds 200
+    }
+}
+
 function Test-InstalledApplication {
     $application = Join-Path $installDirectory "bin\ParsiNegar.exe"
     if (-not (Test-Path -LiteralPath $application -PathType Leaf)) {
@@ -117,9 +127,7 @@ function Uninstall-Application {
     }
     Write-Host "Uninstalling application"
     Invoke-CheckedProcess $uninstaller @("/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/LOG=`"$uninstallLog`"") 600
-    if (Test-Path -LiteralPath (Join-Path $installDirectory "bin\ParsiNegar.exe")) {
-        throw "Application executable remains after uninstall"
-    }
+    Wait-PathAbsent $installDirectory
 }
 
 try {
