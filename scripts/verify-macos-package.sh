@@ -69,7 +69,7 @@ while IFS= read -r -d '' candidate; do
     if ! file "$candidate" | grep -q 'Mach-O'; then
         continue
     fi
-    dependencies="$(otool -L "$candidate")"
+    dependencies="$(otool -L "$candidate" | sed -n '/^[[:space:]]/p')"
     if grep -Eq '/Users/|/opt/homebrew/|/usr/local/|/Qt/[0-9]' <<<"$dependencies"; then
         echo "Mach-O file references a build-machine dependency: $candidate" >&2
         echo "$dependencies" >&2

@@ -180,6 +180,8 @@ elseif(APPLE)
                 "$<TARGET_BUNDLE_DIR:parsinegar_desktop>"
                 "-qmldir=${CMAKE_CURRENT_SOURCE_DIR}/qml"
                 -always-overwrite
+            COMMAND "${CMAKE_COMMAND}" -E remove_directory
+                "$<TARGET_BUNDLE_DIR:parsinegar_desktop>/Contents/PlugIns/sqldrivers"
             DEPENDS parsinegar_desktop
             VERBATIM
         )
