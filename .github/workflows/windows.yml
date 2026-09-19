@@ -26,12 +26,28 @@ jobs:
 
     steps:
       - name: Check out source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Configure MSVC
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: x64
+        shell: pwsh
+        run: |
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $installationPath = (& $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath).Trim()
+          if ([string]::IsNullOrWhiteSpace($installationPath)) {
+            throw "Visual Studio with the x64 C++ toolchain was not found"
+          }
+          $devCommand = Join-Path $installationPath "Common7\Tools\VsDevCmd.bat"
+          & cmd.exe /s /c "`"$devCommand`" -no_logo -arch=x64 -host_arch=x64 && set" |
+            ForEach-Object {
+              $separator = $_.IndexOf("=")
+              if ($separator -gt 0) {
+                $name = $_.Substring(0, $separator)
+                $value = $_.Substring($separator + 1)
+                if ($name -notmatch '^(GITHUB_|RUNNER_|ACTIONS_)') {
+                  "$name=$value" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+                }
+              }
+            }
 
       - name: Install pinned Qt
         uses: jurplel/install-qt-action@v4
@@ -102,7 +118,7 @@ jobs:
 
       - name: Retain failure logs
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: windows-failure-logs
           path: |
@@ -113,7 +129,7 @@ jobs:
           retention-days: 14
 
       - name: Upload Windows artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: parsinegar-windows-${{ github.sha }}
           path: dist/
@@ -128,10 +144,10 @@ jobs:
 
     steps:
       - name: Check out verification scripts
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Download Windows artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: parsinegar-windows-${{ github.sha }}
           path: dist
@@ -142,7 +158,7 @@ jobs:
 
       - name: Retain installer logs
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: windows-installer-failure-logs
           path: ${{ runner.temp }}/parsinegar-*.log
@@ -159,7 +175,7 @@ jobs:
 
     steps:
       - name: Download verified artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: parsinegar-windows-${{ github.sha }}
           path: dist
