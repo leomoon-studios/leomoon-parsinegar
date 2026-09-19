@@ -92,12 +92,21 @@ trap cleanup EXIT
 
 pkgutil --expand "$pkg" "$expanded_pkg"
 for component in ParsiNegar-app.pkg ParsiNegar-fonts.pkg ParsiNegar-shortcut.pkg; do
-    require_file "$expanded_pkg/$component"
+    if [[ ! -e "$expanded_pkg/$component" ]]; then
+        echo "Required macOS installer component is missing: $component" >&2
+        exit 1
+    fi
 done
 require_file "$expanded_pkg/Distribution"
 
 source_font_count="$(find "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/assets/fonts/system" -type f \( -name '*.ttf' -o -name '*.otf' -o -name '*.ttc' \) | wc -l | tr -d ' ')"
-packaged_font_count="$(pkgutil --payload-files "$expanded_pkg/ParsiNegar-fonts.pkg" | grep -Ec '\.(ttf|otf|ttc)$' || true)"
+font_component="$expanded_pkg/ParsiNegar-fonts.pkg"
+if [[ -d "$font_component" ]]; then
+    require_file "$font_component/Bom"
+    packaged_font_count="$(lsbom -s "$font_component/Bom" | grep -Ec '\.(ttf|otf|ttc)$' || true)"
+else
+    packaged_font_count="$(pkgutil --payload-files "$font_component" | grep -Ec '\.(ttf|otf|ttc)$' || true)"
+fi
 if [[ "$packaged_font_count" != "$source_font_count" ]]; then
     echo "macOS installer contains $packaged_font_count fonts, expected $source_font_count" >&2
     exit 1
