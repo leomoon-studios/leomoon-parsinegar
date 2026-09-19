@@ -130,6 +130,20 @@ if(WIN32)
         HINTS "C:/Program Files (x86)/Inno Setup 6"
     )
     set(PARSINEGAR_WINDOWS_STAGE_DIR "${CMAKE_CURRENT_BINARY_DIR}/package/windows/stage")
+    file(GLOB parsinegar_windows_font_files CONFIGURE_DEPENDS
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/fonts/system/*.ttf"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/fonts/system/*.otf"
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets/fonts/system/*.ttc"
+    )
+    list(SORT parsinegar_windows_font_files)
+    set(PARSINEGAR_WINDOWS_FONT_FILE_ENTRIES "")
+    foreach(font_path IN LISTS parsinegar_windows_font_files)
+        get_filename_component(font_filename "${font_path}" NAME)
+        get_filename_component(font_name "${font_path}" NAME_WE)
+        string(APPEND PARSINEGAR_WINDOWS_FONT_FILE_ENTRIES
+            "Source: \"{#SourceDir}\\assets\\fonts\\system\\${font_filename}\"; DestDir: \"{commonfonts}\"; FontInstall: \"${font_name}\"; Flags: ignoreversion; Tasks: systemfonts\n"
+        )
+    endforeach()
     configure_file(
         "${CMAKE_CURRENT_SOURCE_DIR}/packaging/windows/ParsiNegar.iss.in"
         "${CMAKE_CURRENT_BINARY_DIR}/packaging/windows/ParsiNegar.iss"

@@ -33,6 +33,12 @@ $desktopLocations = @(
     [Environment]::GetFolderPath("Desktop"),
     [Environment]::GetFolderPath("CommonDesktopDirectory")
 ) | Select-Object -Unique
+$bundledFontFiles = @(
+    Get-ChildItem -LiteralPath (Join-Path $repoDirectory "assets\fonts\system") -File |
+        Where-Object { $_.Extension -in ".ttf", ".otf", ".ttc" }
+)
+$fontsDirectory = Join-Path $env:SystemRoot "Fonts"
+$fontsRegistry = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts"
 
 function Invoke-CheckedProcess([string]$FilePath, [string[]]$Arguments, [int]$TimeoutSeconds = 600) {
     $process = Start-Process -FilePath $FilePath -ArgumentList $Arguments -PassThru
@@ -74,24 +80,37 @@ function Find-DesktopShortcut {
     return $null
 }
 
-function Assert-SystemFontsInstalled([string[]]$FontRecords) {
-    $fontsDirectory = Join-Path $env:SystemRoot "Fonts"
-    $fontsRegistry = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts"
-    foreach ($record in $FontRecords) {
-        $parts = $record -split "`t", 2
-        if ($parts.Count -ne 2) {
-            throw "Invalid installed-font manifest entry: $record"
+function Get-RegisteredFontFiles {
+    return @(
+        (Get-ItemProperty -Path $fontsRegistry).PSObject.Properties |
+            Where-Object { $_.Name -notlike "PS*" -and $_.Value -is [string] } |
+            ForEach-Object { [string]$_.Value }
+    )
+}
+
+function Assert-SystemFontsInstalled {
+    $registeredFontFiles = @(Get-RegisteredFontFiles)
+    foreach ($font in $bundledFontFiles) {
+        if (-not (Test-Path -LiteralPath (Join-Path $fontsDirectory $font.Name) -PathType Leaf)) {
+            throw "System-wide font file is missing: $($font.Name)"
         }
-        if (-not (Test-Path -LiteralPath (Join-Path $fontsDirectory $parts[0]) -PathType Leaf)) {
-            throw "System-wide font file is missing: $($parts[0])"
-        }
-        if ((Get-ItemPropertyValue -Path $fontsRegistry -Name $parts[1]) -ne $parts[0]) {
-            throw "System-wide font registration is missing: $($parts[0])"
+        if ($font.Name -notin $registeredFontFiles) {
+            throw "System-wide font registration is missing: $($font.Name)"
         }
     }
 }
 
-function Uninstall-Application([string[]]$FontRecords = @()) {
+function Assert-SystemFontsAbsent {
+    $registeredFontFiles = @(Get-RegisteredFontFiles)
+    foreach ($font in $bundledFontFiles) {
+        if ((Test-Path -LiteralPath (Join-Path $fontsDirectory $font.Name)) -or
+            ($font.Name -in $registeredFontFiles)) {
+            throw "System-wide font remains after uninstall or opt-out: $($font.Name)"
+        }
+    }
+}
+
+function Uninstall-Application {
     $uninstaller = Join-Path $installDirectory "unins000.exe"
     if (-not (Test-Path -LiteralPath $uninstaller -PathType Leaf)) {
         throw "Windows uninstaller is missing"
@@ -100,15 +119,6 @@ function Uninstall-Application([string[]]$FontRecords = @()) {
     Invoke-CheckedProcess $uninstaller @("/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/LOG=`"$uninstallLog`"") 600
     if (Test-Path -LiteralPath (Join-Path $installDirectory "bin\ParsiNegar.exe")) {
         throw "Application executable remains after uninstall"
-    }
-    $fontsDirectory = Join-Path $env:SystemRoot "Fonts"
-    $fontsRegistry = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts"
-    foreach ($record in $FontRecords) {
-        $parts = $record -split "`t", 2
-        if ((Test-Path -LiteralPath (Join-Path $fontsDirectory $parts[0])) -or
-            ($null -ne (Get-ItemPropertyValue -Path $fontsRegistry -Name $parts[1] -ErrorAction SilentlyContinue))) {
-            throw "System-wide font remains after uninstall: $($parts[0])"
-        }
     }
 }
 
@@ -121,16 +131,12 @@ try {
     Write-Host "Installing with default font and desktop-shortcut tasks"
     Invoke-CheckedProcess $installer @("/SP-", "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/LOG=`"$installLog`"", "/DIR=`"$installDirectory`"") 600
     Test-InstalledApplication
-    $fontManifest = Join-Path $installDirectory "installed-fonts.txt"
-    if (-not (Test-Path -LiteralPath $fontManifest -PathType Leaf) -or (Get-Content -LiteralPath $fontManifest).Count -eq 0) {
-        throw "Default installation did not install the bundled system fonts"
-    }
-    $fontRecords = @(Get-Content -LiteralPath $fontManifest)
-    Assert-SystemFontsInstalled $fontRecords
+    Assert-SystemFontsInstalled
     if (-not (Find-DesktopShortcut)) {
         throw "Default installation did not create a desktop shortcut"
     }
-    Uninstall-Application $fontRecords
+    Uninstall-Application
+    Assert-SystemFontsAbsent
     if (Find-DesktopShortcut) {
         throw "Desktop shortcut remains after uninstall"
     }
@@ -138,9 +144,7 @@ try {
     Write-Host "Installing with optional font and desktop-shortcut tasks disabled"
     Invoke-CheckedProcess $installer @("/SP-", "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/TASKS=", "/LOG=`"$optOutLog`"", "/DIR=`"$installDirectory`"") 600
     Test-InstalledApplication
-    if (Test-Path -LiteralPath (Join-Path $installDirectory "installed-fonts.txt")) {
-        throw "Font manifest exists after opting out of system fonts"
-    }
+    Assert-SystemFontsAbsent
     if (Find-DesktopShortcut) {
         throw "Desktop shortcut exists after opting out"
     }

@@ -37,18 +37,8 @@ Name: "desktopshortcut"; Description: "Create a desktop shortcut"; GroupDescript
 
 [Files]
 Source: "{#StageDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "{#SourceDir}\assets\fonts\system\*.ttf"; DestDir: "{app}\system-fonts"; Flags: ignoreversion; Tasks: systemfonts
-Source: "{#SourceDir}\assets\fonts\system\*.otf"; DestDir: "{app}\system-fonts"; Flags: ignoreversion skipifsourcedoesntexist; Tasks: systemfonts
-Source: "{#SourceDir}\assets\fonts\system\*.ttc"; DestDir: "{app}\system-fonts"; Flags: ignoreversion skipifsourcedoesntexist; Tasks: systemfonts
-Source: "{#SourceDir}\packaging\windows\install-fonts.ps1"; DestDir: "{app}\helpers"; Flags: ignoreversion; Tasks: systemfonts
-Source: "{#SourceDir}\packaging\windows\uninstall-fonts.ps1"; DestDir: "{app}\helpers"; Flags: ignoreversion; Tasks: systemfonts
+@PARSINEGAR_WINDOWS_FONT_FILE_ENTRIES@
 
 [Icons]
 Name: "{group}\ParsiNegar Desktop"; Filename: "{app}\bin\{#AppExeName}"
 Name: "{autodesktop}\ParsiNegar Desktop"; Filename: "{app}\bin\{#AppExeName}"; Tasks: desktopshortcut
-
-[Run]
-Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\helpers\install-fonts.ps1"" -SourceDirectory ""{app}\system-fonts"" -ManifestPath ""{app}\installed-fonts.txt"""; Flags: runhidden waituntilterminated; Tasks: systemfonts
-
-[UninstallRun]
-Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\helpers\uninstall-fonts.ps1"" -ManifestPath ""{app}\installed-fonts.txt"""; Flags: runhidden waituntilterminated; RunOnceId: "RemoveParsiNegarFonts"

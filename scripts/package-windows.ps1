@@ -32,6 +32,16 @@ if (-not (Test-Path -LiteralPath $IsccPath -PathType Leaf)) {
     throw "Inno Setup compiler was not found at $IsccPath"
 }
 
+$sourceFontCount = @(
+    Get-ChildItem -LiteralPath (Join-Path $repoDirectory "assets\fonts\system") -File |
+        Where-Object { $_.Extension -in ".ttf", ".otf", ".ttc" }
+).Count
+$installerFontCount = @(Select-String -LiteralPath $installerScript -SimpleMatch "FontInstall:").Count
+if ($installerFontCount -ne $sourceFontCount) {
+    throw "Generated installer contains $installerFontCount native font entries, expected $sourceFontCount"
+}
+Write-Host "Verified $installerFontCount native Inno Setup font entries"
+
 $certificatePath = $env:PARSINEGAR_WINDOWS_CERTIFICATE_PATH
 $certificatePassword = $env:PARSINEGAR_WINDOWS_CERTIFICATE_PASSWORD
 $timestampUrl = $env:PARSINEGAR_WINDOWS_TIMESTAMP_URL

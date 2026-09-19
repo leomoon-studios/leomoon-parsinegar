@@ -15,8 +15,6 @@ set(required_files
     packaging/windows/ParsiNegar.iss.in
     packaging/windows/app-icon.ico
     packaging/windows/deploy.cmake
-    packaging/windows/install-fonts.ps1
-    packaging/windows/uninstall-fonts.ps1
     docs/WINDOWS_SIGNING.md
     scripts/package-windows.ps1
     scripts/smoke-windows-installer.ps1
@@ -36,6 +34,18 @@ foreach(relative_path IN LISTS required_files)
     file(SIZE "${absolute_path}" file_size)
     if(file_size EQUAL 0)
         message(FATAL_ERROR "Required packaging file is empty: ${relative_path}")
+    endif()
+endforeach()
+
+file(READ "${SOURCE_DIR}/cmake/Packaging.cmake" packaging_cmake)
+foreach(expected IN ITEMS
+    "DestDir: \\\"{commonfonts}\\\""
+    "FontInstall:"
+    "Tasks: systemfonts"
+)
+    string(FIND "${packaging_cmake}" "${expected}" position)
+    if(position EQUAL -1)
+        message(FATAL_ERROR "Windows native font packaging is missing: ${expected}")
     endif()
 endforeach()
 
