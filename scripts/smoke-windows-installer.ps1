@@ -28,6 +28,7 @@ $env:APPDATA = Join-Path $testRoot "appdata"
 $env:LOCALAPPDATA = Join-Path $testRoot "localappdata"
 $installLog = Join-Path $env:RUNNER_TEMP "parsinegar-install.log"
 $optOutLog = Join-Path $env:RUNNER_TEMP "parsinegar-install-optout.log"
+$uninstallLog = Join-Path $env:RUNNER_TEMP "parsinegar-uninstall.log"
 $desktopLocations = @(
     [Environment]::GetFolderPath("Desktop"),
     [Environment]::GetFolderPath("CommonDesktopDirectory")
@@ -96,7 +97,7 @@ function Uninstall-Application([string[]]$FontRecords = @()) {
         throw "Windows uninstaller is missing"
     }
     Write-Host "Uninstalling application"
-    Invoke-CheckedProcess $uninstaller @("/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART") 600
+    Invoke-CheckedProcess $uninstaller @("/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/LOG=`"$uninstallLog`"") 600
     if (Test-Path -LiteralPath (Join-Path $installDirectory "bin\ParsiNegar.exe")) {
         throw "Application executable remains after uninstall"
     }
