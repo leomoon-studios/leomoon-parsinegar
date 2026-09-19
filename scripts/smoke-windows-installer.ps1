@@ -73,7 +73,24 @@ function Find-DesktopShortcut {
     return $null
 }
 
-function Uninstall-Application {
+function Assert-SystemFontsInstalled([string[]]$FontRecords) {
+    $fontsDirectory = Join-Path $env:SystemRoot "Fonts"
+    $fontsRegistry = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts"
+    foreach ($record in $FontRecords) {
+        $parts = $record -split "`t", 2
+        if ($parts.Count -ne 2) {
+            throw "Invalid installed-font manifest entry: $record"
+        }
+        if (-not (Test-Path -LiteralPath (Join-Path $fontsDirectory $parts[0]) -PathType Leaf)) {
+            throw "System-wide font file is missing: $($parts[0])"
+        }
+        if ((Get-ItemPropertyValue -Path $fontsRegistry -Name $parts[1]) -ne $parts[0]) {
+            throw "System-wide font registration is missing: $($parts[0])"
+        }
+    }
+}
+
+function Uninstall-Application([string[]]$FontRecords = @()) {
     $uninstaller = Join-Path $installDirectory "unins000.exe"
     if (-not (Test-Path -LiteralPath $uninstaller -PathType Leaf)) {
         throw "Windows uninstaller is missing"
@@ -82,6 +99,15 @@ function Uninstall-Application {
     Invoke-CheckedProcess $uninstaller @("/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART") 600
     if (Test-Path -LiteralPath (Join-Path $installDirectory "bin\ParsiNegar.exe")) {
         throw "Application executable remains after uninstall"
+    }
+    $fontsDirectory = Join-Path $env:SystemRoot "Fonts"
+    $fontsRegistry = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts"
+    foreach ($record in $FontRecords) {
+        $parts = $record -split "`t", 2
+        if ((Test-Path -LiteralPath (Join-Path $fontsDirectory $parts[0])) -or
+            ($null -ne (Get-ItemPropertyValue -Path $fontsRegistry -Name $parts[1] -ErrorAction SilentlyContinue))) {
+            throw "System-wide font remains after uninstall: $($parts[0])"
+        }
     }
 }
 
@@ -98,10 +124,12 @@ try {
     if (-not (Test-Path -LiteralPath $fontManifest -PathType Leaf) -or (Get-Content -LiteralPath $fontManifest).Count -eq 0) {
         throw "Default installation did not install the bundled system fonts"
     }
+    $fontRecords = @(Get-Content -LiteralPath $fontManifest)
+    Assert-SystemFontsInstalled $fontRecords
     if (-not (Find-DesktopShortcut)) {
         throw "Default installation did not create a desktop shortcut"
     }
-    Uninstall-Application
+    Uninstall-Application $fontRecords
     if (Find-DesktopShortcut) {
         throw "Desktop shortcut remains after uninstall"
     }
