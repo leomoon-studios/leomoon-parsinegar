@@ -22,7 +22,7 @@ ApplicationWindow {
 
     width: 900
     height: 720
-    minimumWidth: 640
+    minimumWidth: 740
     minimumHeight: 450
     visible: true
     title: controller.windowTitle
