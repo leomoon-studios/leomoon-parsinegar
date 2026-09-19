@@ -22,7 +22,6 @@ function Require-File([string]$Path) {
 
 $requiredFiles = @(
     $application,
-    (Join-Path $binaryDirectory "Qt6Concurrent.dll"),
     (Join-Path $binaryDirectory "Qt6Core.dll"),
     (Join-Path $binaryDirectory "Qt6Gui.dll"),
     (Join-Path $binaryDirectory "Qt6Qml.dll"),
