@@ -51,6 +51,8 @@ The bundled compatibility fonts are in `assets/fonts/system/`. Vazirmatn and Mat
 
 The Windows workflow builds with Qt 6.8.3 and MSVC 2022, runs the same tests and QML linting, deploys the Qt runtime with `windeployqt`, and produces a versioned Inno Setup installer with checksums. A fresh Windows job tests the default font and desktop-shortcut selections, both opt-out choices, application launch, and uninstall. Tagged builds support optional Authenticode signing through protected repository secrets as described in [Windows release signing](docs/WINDOWS_SIGNING.md).
 
+The macOS workflow creates a universal Intel and Apple Silicon bundle with Qt 6.8.3, deploys its private Qt frameworks and QML modules with `macdeployqt`, and produces versioned DMG and component-PKG artifacts with checksums. A fresh macOS job tests the disk image, default font and desktop-shortcut selections, both opt-out choices, application launch, and cleanup. Tagged builds support optional Developer ID signing and notarization through protected repository secrets as described in [macOS release signing and notarization](docs/MACOS_SIGNING.md).
+
 ## Settings and privacy
 
 Language, editor size, shaping choices, text-tool settings, conversion preferences, selected fonts, and SVG export options persist between launches. Draft text, converted output, clipboard contents, status messages, and undo history are never written to the settings file.

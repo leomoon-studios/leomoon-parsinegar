@@ -8,12 +8,24 @@ package_dir="$build_dir/package/macos"
 component_dir="$package_dir/components"
 resource_dir="$package_dir/resources"
 font_root="$package_dir/font-root"
-shortcut_root="$package_dir/shortcut-root"
 
 rm -rf "$package_dir"
-mkdir -p "$component_dir" "$resource_dir" "$font_root/Library/Fonts" "$shortcut_root"
+mkdir -p "$component_dir" "$resource_dir" "$font_root/Library/Fonts"
 cp "$source_dir/LICENSE" "$resource_dir/LICENSE"
-cp "$source_dir"/assets/fonts/system/*.ttf "$font_root/Library/Fonts/"
+font_count=0
+for font in "$source_dir"/assets/fonts/system/*; do
+    [ -f "$font" ] || continue
+    case "$font" in
+        *.ttf|*.otf|*.ttc)
+            cp "$font" "$font_root/Library/Fonts/"
+            font_count=$((font_count + 1))
+            ;;
+    esac
+done
+if [ "$font_count" -eq 0 ]; then
+    echo "No bundled system fonts were found" >&2
+    exit 1
+fi
 mkdir -p "$build_dir/ParsiNegar.app/Contents/Resources/licenses"
 cp "$source_dir/LICENSE" "$build_dir/ParsiNegar.app/Contents/Resources/licenses/"
 cp "$source_dir/THIRD_PARTY_NOTICES.md" "$build_dir/ParsiNegar.app/Contents/Resources/licenses/"
@@ -32,7 +44,7 @@ pkgbuild --component "$build_dir/ParsiNegar.app" --install-location /Application
     "$component_dir/ParsiNegar-app.pkg"
 pkgbuild --root "$font_root" --identifier com.leomoon.ParsiNegarDesktop.fonts \
     --version "$version" "$component_dir/ParsiNegar-fonts.pkg"
-pkgbuild --root "$shortcut_root" --scripts "$source_dir/packaging/macos/shortcut-scripts" \
+pkgbuild --nopayload --scripts "$source_dir/packaging/macos/shortcut-scripts" \
     --identifier com.leomoon.ParsiNegarDesktop.shortcut --version "$version" \
     "$component_dir/ParsiNegar-shortcut.pkg"
 
@@ -51,10 +63,17 @@ hdiutil create -volname "ParsiNegar Desktop" -srcfolder "$build_dir/ParsiNegar.a
     -ov -format UDZO "$package_dir/ParsiNegar-Desktop-$version.dmg"
 
 if [ -n "${PARSINEGAR_NOTARY_PROFILE:-}" ]; then
-    xcrun notarytool submit "$package_dir/ParsiNegar-Desktop-$version.pkg" \
-        --keychain-profile "$PARSINEGAR_NOTARY_PROFILE" --wait
+    submit_for_notarization() {
+        artifact=$1
+        if [ -n "${PARSINEGAR_NOTARY_KEYCHAIN:-}" ]; then
+            xcrun notarytool submit "$artifact" --keychain-profile "$PARSINEGAR_NOTARY_PROFILE" \
+                --keychain "$PARSINEGAR_NOTARY_KEYCHAIN" --wait
+        else
+            xcrun notarytool submit "$artifact" --keychain-profile "$PARSINEGAR_NOTARY_PROFILE" --wait
+        fi
+    }
+    submit_for_notarization "$package_dir/ParsiNegar-Desktop-$version.pkg"
     xcrun stapler staple "$package_dir/ParsiNegar-Desktop-$version.pkg"
-    xcrun notarytool submit "$package_dir/ParsiNegar-Desktop-$version.dmg" \
-        --keychain-profile "$PARSINEGAR_NOTARY_PROFILE" --wait
+    submit_for_notarization "$package_dir/ParsiNegar-Desktop-$version.dmg"
     xcrun stapler staple "$package_dir/ParsiNegar-Desktop-$version.dmg"
 fi

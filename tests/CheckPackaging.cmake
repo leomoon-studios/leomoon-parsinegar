@@ -24,6 +24,11 @@ set(required_files
     packaging/macos/generate-icon.sh
     packaging/macos/package.sh.in
     packaging/macos/shortcut-scripts/postinstall
+    docs/MACOS_SIGNING.md
+    scripts/package-macos.sh
+    scripts/smoke-macos-packages.sh
+    scripts/verify-macos-package.sh
+    .github/workflows/macos.yml
 )
 
 foreach(relative_path IN LISTS required_files)
@@ -80,6 +85,19 @@ foreach(expected IN ITEMS
     string(FIND "${macos_installer}" "${expected}" position)
     if(position EQUAL -1)
         message(FATAL_ERROR "macOS installer is missing: ${expected}")
+    endif()
+endforeach()
+
+file(READ "${SOURCE_DIR}/packaging/macos/package.sh.in" macos_packaging)
+foreach(expected IN ITEMS
+    "*.ttf|*.otf|*.ttc"
+    "Library/Fonts"
+    "PARSINEGAR_CODESIGN_IDENTITY"
+    "PARSINEGAR_NOTARY_PROFILE"
+)
+    string(FIND "${macos_packaging}" "${expected}" position)
+    if(position EQUAL -1)
+        message(FATAL_ERROR "macOS packaging is missing: ${expected}")
     endif()
 endforeach()
 
