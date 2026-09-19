@@ -92,6 +92,9 @@ void ServiceTests::clipboardRoundTrip()
 
 void ServiceTests::clipboardKeeperHandoff()
 {
+#if !defined(Q_OS_LINUX)
+    QSKIP("The detached clipboard keeper is only used on Linux ownership-based clipboards.");
+#else
     QString errorMessage;
     const QString sample = QStringLiteral("پارسی نگار\nשלום 123");
     bool hasCustomLifetime = false;
@@ -114,6 +117,7 @@ void ServiceTests::clipboardKeeperHandoff()
     QVERIFY(!ClipboardKeeper::startDetached(
         sample, &errorMessage, -1, QString::fromUtf8(PARSINEGAR_TEST_APP_PATH)));
     QVERIFY(!errorMessage.isEmpty());
+#endif
 }
 
 void ServiceTests::settingsUsePlatformLocation()
