@@ -178,7 +178,7 @@ elseif(APPLE)
         add_custom_target(deploy_macos
             COMMAND "${PARSINEGAR_MACDEPLOYQT_EXECUTABLE}"
                 "$<TARGET_BUNDLE_DIR:parsinegar_desktop>"
-                -qmldir="${CMAKE_CURRENT_SOURCE_DIR}/qml"
+                "-qmldir=${CMAKE_CURRENT_SOURCE_DIR}/qml"
                 -always-overwrite
             DEPENDS parsinegar_desktop
             VERBATIM
