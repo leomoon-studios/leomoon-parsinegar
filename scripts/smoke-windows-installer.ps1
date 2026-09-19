@@ -33,8 +33,12 @@ $desktopLocations = @(
     [Environment]::GetFolderPath("CommonDesktopDirectory")
 ) | Select-Object -Unique
 
-function Invoke-CheckedProcess([string]$FilePath, [string[]]$Arguments) {
-    $process = Start-Process -FilePath $FilePath -ArgumentList $Arguments -Wait -PassThru
+function Invoke-CheckedProcess([string]$FilePath, [string[]]$Arguments, [int]$TimeoutSeconds = 600) {
+    $process = Start-Process -FilePath $FilePath -ArgumentList $Arguments -PassThru
+    if (-not $process.WaitForExit($TimeoutSeconds * 1000)) {
+        $process.Kill($true)
+        throw "$FilePath did not finish within $TimeoutSeconds seconds"
+    }
     if ($process.ExitCode -ne 0) {
         throw "$FilePath failed with exit code $($process.ExitCode)"
     }
@@ -52,7 +56,8 @@ function Test-InstalledApplication {
     $originalPath = $env:PATH
     try {
         $env:PATH = "$env:SystemRoot\System32;$env:SystemRoot"
-        Invoke-CheckedProcess $application @("--smoke-test")
+        Write-Host "Launching installed application with only Windows system paths"
+        Invoke-CheckedProcess $application @("--smoke-test") 30
     } finally {
         $env:PATH = $originalPath
     }
@@ -73,7 +78,8 @@ function Uninstall-Application {
     if (-not (Test-Path -LiteralPath $uninstaller -PathType Leaf)) {
         throw "Windows uninstaller is missing"
     }
-    Invoke-CheckedProcess $uninstaller @("/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART")
+    Write-Host "Uninstalling application"
+    Invoke-CheckedProcess $uninstaller @("/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART") 600
     if (Test-Path -LiteralPath (Join-Path $installDirectory "bin\ParsiNegar.exe")) {
         throw "Application executable remains after uninstall"
     }
@@ -85,7 +91,8 @@ try {
     }
     New-Item -ItemType Directory -Path $testRoot | Out-Null
 
-    Invoke-CheckedProcess $installer @("/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/LOG=`"$installLog`"", "/DIR=`"$installDirectory`"")
+    Write-Host "Installing with default font and desktop-shortcut tasks"
+    Invoke-CheckedProcess $installer @("/SP-", "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/LOG=`"$installLog`"", "/DIR=`"$installDirectory`"") 600
     Test-InstalledApplication
     $fontManifest = Join-Path $installDirectory "installed-fonts.txt"
     if (-not (Test-Path -LiteralPath $fontManifest -PathType Leaf) -or (Get-Content -LiteralPath $fontManifest).Count -eq 0) {
@@ -99,7 +106,8 @@ try {
         throw "Desktop shortcut remains after uninstall"
     }
 
-    Invoke-CheckedProcess $installer @("/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/TASKS=", "/LOG=`"$optOutLog`"", "/DIR=`"$installDirectory`"")
+    Write-Host "Installing with optional font and desktop-shortcut tasks disabled"
+    Invoke-CheckedProcess $installer @("/SP-", "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/TASKS=", "/LOG=`"$optOutLog`"", "/DIR=`"$installDirectory`"") 600
     Test-InstalledApplication
     if (Test-Path -LiteralPath (Join-Path $installDirectory "installed-fonts.txt")) {
         throw "Font manifest exists after opting out of system fonts"
