@@ -124,7 +124,6 @@ var values = Object.freeze({
   "export.fill": "رنگ پُرکننده",
   "export.axes": "محورهای فونت متغیر",
   "export.axesHint": "مقادیر جداشده با ویرگول، مانند 400",
-  "export.inspectedFont": "فونت: %1 %2",
   "export.success": "منحنی‌های SVG ذخیره شدند.",
   "export.processing": "در حال ساخت منحنی‌های SVG…",
   "export.cancelled": "گرفتن خروجی SVG لغو شد.",

@@ -8,6 +8,6 @@ fi
 
 desktop_dir="/Users/$console_user/Desktop"
 if [ -d "$desktop_dir" ]; then
-    ln -sfn "/Applications/leomoon-parsinegar.app" "$desktop_dir/LeoMoon ParsiNegar.app"
+    ln -sfn "/Applications/LeoMoon ParsiNegar.app" "$desktop_dir/LeoMoon ParsiNegar.app"
     chown -h "$console_user":staff "$desktop_dir/LeoMoon ParsiNegar.app"
 fi

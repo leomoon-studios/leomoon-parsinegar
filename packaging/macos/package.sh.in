@@ -26,20 +26,21 @@ if [ "$font_count" -eq 0 ]; then
     echo "No bundled system fonts were found" >&2
     exit 1
 fi
-mkdir -p "$build_dir/leomoon-parsinegar.app/Contents/Resources/licenses"
-cp "$source_dir/LICENSE" "$build_dir/leomoon-parsinegar.app/Contents/Resources/licenses/"
-cp "$source_dir/THIRD_PARTY_NOTICES.md" "$build_dir/leomoon-parsinegar.app/Contents/Resources/licenses/"
-cp "$source_dir/SOURCES.md" "$build_dir/leomoon-parsinegar.app/Contents/Resources/licenses/"
-cp "$source_dir/packaging/Qt-LGPL-NOTICE.md" "$build_dir/leomoon-parsinegar.app/Contents/Resources/licenses/"
+app="$build_dir/LeoMoon ParsiNegar.app"
+mkdir -p "$app/Contents/Resources/licenses"
+cp "$source_dir/LICENSE" "$app/Contents/Resources/licenses/"
+cp "$source_dir/THIRD_PARTY_NOTICES.md" "$app/Contents/Resources/licenses/"
+cp "$source_dir/SOURCES.md" "$app/Contents/Resources/licenses/"
+cp "$source_dir/packaging/Qt-LGPL-NOTICE.md" "$app/Contents/Resources/licenses/"
 if [ -f "@PARSINEGAR_QT_LGPL3_FILE@" ]; then
-    cp "@PARSINEGAR_QT_LGPL3_FILE@" "$build_dir/leomoon-parsinegar.app/Contents/Resources/licenses/Qt-LGPL-3.0-only.txt"
+    cp "@PARSINEGAR_QT_LGPL3_FILE@" "$app/Contents/Resources/licenses/Qt-LGPL-3.0-only.txt"
 fi
 
 if [ -n "${PARSINEGAR_CODESIGN_IDENTITY:-}" ]; then
-    codesign --force --deep --options runtime --timestamp --sign "$PARSINEGAR_CODESIGN_IDENTITY" "$build_dir/leomoon-parsinegar.app"
+    codesign --force --deep --options runtime --timestamp --sign "$PARSINEGAR_CODESIGN_IDENTITY" "$app"
 fi
 
-pkgbuild --component "$build_dir/leomoon-parsinegar.app" --install-location /Applications \
+pkgbuild --component "$app" --install-location /Applications \
     --identifier com.leomoon.ParsiNegar.app --version "$version" \
     "$component_dir/leomoon-parsinegar-app.pkg"
 pkgbuild --root "$font_root" --identifier com.leomoon.ParsiNegar.fonts \
@@ -59,7 +60,7 @@ else
         --package-path "$component_dir" "$package_dir/leomoon-parsinegar-$version-macos-universal.pkg"
 fi
 
-hdiutil create -volname "LeoMoon ParsiNegar" -srcfolder "$build_dir/leomoon-parsinegar.app" \
+hdiutil create -volname "LeoMoon ParsiNegar" -srcfolder "$app" \
     -ov -format UDZO "$package_dir/leomoon-parsinegar-$version-macos-universal.dmg"
 
 if [ -n "${PARSINEGAR_NOTARY_PROFILE:-}" ]; then

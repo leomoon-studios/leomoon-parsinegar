@@ -124,7 +124,6 @@ var values = Object.freeze({
   "export.fill": "Fill color",
   "export.axes": "Variable axes",
   "export.axesHint": "Comma-separated values, such as 400",
-  "export.inspectedFont": "Font: %1 %2",
   "export.success": "SVG curves saved.",
   "export.processing": "Creating SVG curves…",
   "export.cancelled": "SVG export cancelled.",

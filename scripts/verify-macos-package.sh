@@ -10,7 +10,7 @@ app=$1
 pkg=$2
 dmg=$3
 version=$4
-executable="$app/Contents/MacOS/leomoon-parsinegar"
+executable="$app/Contents/MacOS/LeoMoon ParsiNegar"
 
 require_file() {
     if [[ ! -s "$1" ]]; then

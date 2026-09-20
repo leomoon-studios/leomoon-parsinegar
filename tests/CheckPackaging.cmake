@@ -74,7 +74,7 @@ file(READ "${SOURCE_DIR}/packaging/windows/leomoon-parsinegar.iss.in" windows_in
 foreach(expected IN ITEMS
     "Name: \"systemfonts\""
     "Name: \"desktopshortcut\""
-    "Flags: checkedonce"
+    "UsePreviousTasks=no"
     "OutputBaseFilename=leomoon-parsinegar-{#AppVersion}-windows-@PARSINEGAR_WINDOWS_RELEASE_ARCH@-setup"
     "ArchitecturesAllowed=@PARSINEGAR_WINDOWS_INNO_ARCHITECTURE@"
 )
@@ -165,6 +165,7 @@ endforeach()
 
 file(READ "${SOURCE_DIR}/packaging/macos/package.sh.in" macos_packaging)
 foreach(expected IN ITEMS
+    "LeoMoon ParsiNegar.app"
     "*.ttf|*.otf|*.ttc"
     "Library/Fonts"
     "PARSINEGAR_CODESIGN_IDENTITY"
@@ -175,6 +176,34 @@ foreach(expected IN ITEMS
         message(FATAL_ERROR "macOS packaging is missing: ${expected}")
     endif()
 endforeach()
+
+file(READ "${SOURCE_DIR}/packaging/macos/Info.plist.in" macos_info_plist)
+foreach(expected IN ITEMS
+    "<key>CFBundleDisplayName</key><string>LeoMoon ParsiNegar</string>"
+    "<key>CFBundleExecutable</key><string>LeoMoon ParsiNegar</string>"
+    "<key>CFBundleName</key><string>LeoMoon ParsiNegar</string>"
+)
+    string(FIND "${macos_info_plist}" "${expected}" position)
+    if(position EQUAL -1)
+        message(FATAL_ERROR "macOS application identity is missing: ${expected}")
+    endif()
+endforeach()
+
+file(READ "${SOURCE_DIR}/CMakeLists.txt" root_cmake)
+string(FIND "${root_cmake}" "OUTPUT_NAME \"LeoMoon ParsiNegar\"" macos_output_name_position)
+if(macos_output_name_position EQUAL -1)
+    message(FATAL_ERROR "The macOS bundle filename is not LeoMoon ParsiNegar.app")
+endif()
+
+string(FIND "${windows_installer}" "SetupIconFile=" setup_icon_position)
+if(NOT setup_icon_position EQUAL -1)
+    message(FATAL_ERROR "Windows installer must use the default Inno Setup installer icon")
+endif()
+
+string(FIND "${windows_installer}" "Flags: checkedonce" checked_once_position)
+if(NOT checked_once_position EQUAL -1)
+    message(FATAL_ERROR "Windows installer tasks must be selected by default on every run")
+endif()
 
 file(READ "${SOURCE_DIR}/.github/workflows/release.yml" release_workflow)
 foreach(expected IN ITEMS

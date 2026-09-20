@@ -4,7 +4,7 @@
 <dict>
     <key>CFBundleDevelopmentRegion</key><string>en</string>
     <key>CFBundleDisplayName</key><string>LeoMoon ParsiNegar</string>
-    <key>CFBundleExecutable</key><string>leomoon-parsinegar</string>
+    <key>CFBundleExecutable</key><string>LeoMoon ParsiNegar</string>
     <key>CFBundleIconFile</key><string>app-icon.icns</string>
     <key>CFBundleIdentifier</key><string>com.leomoon.ParsiNegar</string>
     <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>

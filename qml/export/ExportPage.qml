@@ -642,17 +642,6 @@ FocusScope {
                     }
                 }
 
-                Label {
-                    objectName: "exportFontIdentity"
-                    width: parent.width
-                    visible: Boolean(root.exportController.fontIdentity.family)
-                    text: root.uiText("export.inspectedFont").arg(root.exportController.fontIdentity.family || "").arg(root.exportController.fontIdentity.style || "")
-                    font.family: AppTheme.fontFamily
-                    font.pixelSize: AppTheme.fontCaption
-                    color: AppTheme.muted
-                    elide: Text.ElideRight
-                }
-
                 AppButton {
                     objectName: "saveSvgButton"
                     width: parent.width

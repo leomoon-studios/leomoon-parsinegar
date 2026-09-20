@@ -39,7 +39,7 @@ ctest --test-dir build --output-on-failure
 cmake --build build --target parsinegar_ui_qmllint
 ```
 
-Run the application with `./build/leomoon-parsinegar` on Linux, `open build/leomoon-parsinegar.app` on macOS, or `.\build\leomoon-parsinegar.exe` on Windows. If CMake cannot find Qt, set `CMAKE_PREFIX_PATH` to the installed Qt directory. On Windows, configure from a Developer PowerShell matching the Qt compiler kit.
+Run the application with `./build/leomoon-parsinegar` on Linux, `open "build/LeoMoon ParsiNegar.app"` on macOS, or `.\build\leomoon-parsinegar.exe` on Windows. If CMake cannot find Qt, set `CMAKE_PREFIX_PATH` to the installed Qt directory. On Windows, configure from a Developer PowerShell matching the Qt compiler kit.
 
 ## Packaging
 

@@ -23,7 +23,7 @@ mkdir -p "$dist_dir"
 
 cmake --build "$build_dir" --target package_macos --parallel 2
 
-app="$build_dir/leomoon-parsinegar.app"
+app="$build_dir/LeoMoon ParsiNegar.app"
 package_dir="$build_dir/package/macos"
 pkg="$package_dir/leomoon-parsinegar-$version-macos-universal.pkg"
 dmg="$package_dir/leomoon-parsinegar-$version-macos-universal.dmg"
@@ -31,7 +31,7 @@ dmg="$package_dir/leomoon-parsinegar-$version-macos-universal.dmg"
 "$repo_dir/scripts/verify-macos-package.sh" "$app" "$pkg" "$dmg" "$version"
 
 cp "$pkg" "$dmg" "$dist_dir/"
-architectures="$(lipo -archs "$app/Contents/MacOS/leomoon-parsinegar")"
+architectures="$(lipo -archs "$app/Contents/MacOS/LeoMoon ParsiNegar")"
 commit="${GITHUB_SHA:-unknown}"
 printf '{\n  "application": "LeoMoon ParsiNegar",\n  "version": "%s",\n  "releaseDate": "%s",\n  "commit": "%s",\n  "platform": "macos",\n  "architectures": "%s",\n  "formats": ["dmg", "pkg"],\n  "signed": %s\n}\n' \
     "$version" "$release_date" "$commit" "$architectures" \

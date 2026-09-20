@@ -124,7 +124,6 @@ var values = Object.freeze({
   "export.fill": "التعبئة",
   "export.axes": "محاور الخط المتغير",
   "export.axesHint": "قيم مفصولة بفواصل",
-  "export.inspectedFont": "الخط: %1 %2",
   "export.success": "تم حفظ منحنيات SVG.",
   "export.processing": "جارٍ إنشاء منحنيات SVG…",
   "export.cancelled": "أُلغي تصدير SVG.",

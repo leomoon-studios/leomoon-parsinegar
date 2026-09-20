@@ -229,6 +229,12 @@ set_target_properties(leomoon_parsinegar PROPERTIES
     MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/packaging/macos/Info.plist.in"
 )
 
+if(APPLE)
+    set_target_properties(leomoon_parsinegar PROPERTIES
+        OUTPUT_NAME "LeoMoon ParsiNegar"
+    )
+endif()
+
 include(cmake/Packaging.cmake)
 
 include(CTest)

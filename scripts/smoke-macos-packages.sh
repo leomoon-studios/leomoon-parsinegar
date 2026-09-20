@@ -11,7 +11,7 @@ repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 version="$($repo_dir/scripts/check-release-version.sh)"
 pkg="$artifact_dir/leomoon-parsinegar-$version-macos-universal.pkg"
 dmg="$artifact_dir/leomoon-parsinegar-$version-macos-universal.dmg"
-application=/Applications/leomoon-parsinegar.app
+application="/Applications/LeoMoon ParsiNegar.app"
 shortcut="$HOME/Desktop/LeoMoon ParsiNegar.app"
 receipt_ids=(
     com.leomoon.ParsiNegar.app
@@ -75,8 +75,8 @@ trap cleanup EXIT
 
 hdiutil attach "$dmg" -nobrowse -readonly -mountpoint "$mount_point" -quiet
 mounted=true
-"$repo_dir/scripts/verify-macos-package.sh" "$mount_point/leomoon-parsinegar.app" "$pkg" "$dmg" "$version"
-"$mount_point/leomoon-parsinegar.app/Contents/MacOS/leomoon-parsinegar" --smoke-test
+"$repo_dir/scripts/verify-macos-package.sh" "$mount_point/LeoMoon ParsiNegar.app" "$pkg" "$dmg" "$version"
+"$mount_point/LeoMoon ParsiNegar.app/Contents/MacOS/LeoMoon ParsiNegar" --smoke-test
 hdiutil detach "$mount_point" -quiet
 mounted=false
 
@@ -85,8 +85,8 @@ assert_fonts_absent
 
 echo "Installing the default application, system-font, and desktop-shortcut choices"
 sudo installer -pkg "$pkg" -target /
-[[ -x "$application/Contents/MacOS/leomoon-parsinegar" ]]
-"$application/Contents/MacOS/leomoon-parsinegar" --smoke-test
+[[ -x "$application/Contents/MacOS/LeoMoon ParsiNegar" ]]
+"$application/Contents/MacOS/LeoMoon ParsiNegar" --smoke-test
 assert_fonts_installed
 [[ -L "$shortcut" ]]
 
@@ -121,8 +121,8 @@ installer -showChoicesAfterApplyingChangesXML "$choices_file" -pkg "$pkg" -targe
 cat "$effective_choices_file"
 sudo installer -dumplog -applyChoiceChangesXML "$choices_file" -pkg "$pkg" -target /
 rm -f "$choices_file"
-[[ -x "$application/Contents/MacOS/leomoon-parsinegar" ]]
-"$application/Contents/MacOS/leomoon-parsinegar" --smoke-test
+[[ -x "$application/Contents/MacOS/LeoMoon ParsiNegar" ]]
+"$application/Contents/MacOS/LeoMoon ParsiNegar" --smoke-test
 assert_fonts_absent
 [[ ! -e "$shortcut" ]]
 

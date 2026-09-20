@@ -15,7 +15,6 @@ DefaultDirName={autopf}\LeoMoon ParsiNegar
 DefaultGroupName=LeoMoon ParsiNegar
 OutputDir=@CMAKE_CURRENT_BINARY_DIR@\package\windows
 OutputBaseFilename=leomoon-parsinegar-{#AppVersion}-windows-@PARSINEGAR_WINDOWS_RELEASE_ARCH@-setup
-SetupIconFile={#SourceDir}\packaging\windows\app-icon.ico
 UninstallDisplayIcon={app}\bin\{#AppExeName}
 UninstallDisplayName={#AppName}
 ArchitecturesAllowed=@PARSINEGAR_WINDOWS_INNO_ARCHITECTURE@
@@ -24,6 +23,7 @@ PrivilegesRequired=admin
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
+UsePreviousTasks=no
 LicenseFile={#SourceDir}\LICENSE
 VersionInfoCompany={#AppPublisher}
 VersionInfoDescription={#AppName} installer
@@ -32,8 +32,8 @@ VersionInfoProductVersion={#AppVersion}
 VersionInfoVersion={#AppVersion}
 
 [Tasks]
-Name: "systemfonts"; Description: "Install bundled LMN and LMU fonts system-wide"; GroupDescription: "Additional options:"; Flags: checkedonce
-Name: "desktopshortcut"; Description: "Create a desktop shortcut"; GroupDescription: "Additional options:"; Flags: checkedonce
+Name: "systemfonts"; Description: "Install bundled LMN and LMU fonts system-wide"; GroupDescription: "Additional options:"
+Name: "desktopshortcut"; Description: "Create a desktop shortcut"; GroupDescription: "Additional options:"
 
 [Files]
 Source: "{#StageDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
