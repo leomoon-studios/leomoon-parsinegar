@@ -133,9 +133,6 @@ jobs:
           - version: "24.04"
             release_arch: amd64
             runner: ubuntu-24.04
-          - version: "22.04"
-            release_arch: arm64
-            runner: ubuntu-24.04-arm
           - version: "24.04"
             release_arch: arm64
             runner: ubuntu-24.04-arm

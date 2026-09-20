@@ -52,6 +52,7 @@ foreach(expected IN ITEMS
     "Tasks: systemfonts"
     "CPACK_DEBIAN_SYSTEMFONTS_PACKAGE_ARCHITECTURE all"
     "PARSINEGAR_WINDOWS_RELEASE_ARCH"
+    "set(PARSINEGAR_WINDOWS_INNO_ARCHITECTURE arm64)"
 )
     string(FIND "${packaging_cmake}" "${expected}" position)
     if(position EQUAL -1)
