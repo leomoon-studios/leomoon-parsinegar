@@ -123,6 +123,9 @@ foreach(expected IN ITEMS
     "inputs.target == 'windows'"
     "inputs.target == 'macos'"
     "github.event_name == 'push' && 'all' || inputs.arch"
+    "gh api \"repos/$GITHUB_REPOSITORY/commits/$commit_hash\""
+    "https://github.com/%s"
+    "by [%s]"
 )
     string(FIND "${release_workflow}" "${expected}" position)
     if(position EQUAL -1)

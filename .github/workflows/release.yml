@@ -130,6 +130,8 @@ jobs:
         run: scripts/collect-release-assets.sh release-input/linux release-input/windows release-input/macos release-assets
 
       - name: Generate release notes with commit list
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           previous_tag="$(git describe --tags --abbrev=0 "$GITHUB_REF_NAME^" 2>/dev/null || true)"
           if [[ -n "$previous_tag" ]]; then
@@ -141,7 +143,16 @@ jobs:
             echo "Released: $(tr -d '[:space:]' < metadata/RELEASE_DATE)"
             echo
             echo "## Commits"
-            git log --pretty=format:'- %s (`%h`)' "$commit_range"
+            while IFS= read -r commit_hash; do
+              subject="$(git show -s --format=%s "$commit_hash")"
+              author_name="$(git show -s --format=%an "$commit_hash")"
+              author_login="$(gh api "repos/$GITHUB_REPOSITORY/commits/$commit_hash" --jq '.author.login // empty' 2>/dev/null || true)"
+              if [[ -n "$author_login" ]]; then
+                printf -- '- %s (`%s` by [%s](https://github.com/%s))\n' "$subject" "${commit_hash:0:7}" "$author_name" "$author_login"
+              else
+                printf -- '- %s (`%s` by %s)\n' "$subject" "${commit_hash:0:7}" "$author_name"
+              fi
+            done < <(git rev-list "$commit_range")
             echo
             echo
             echo "## Downloads"
