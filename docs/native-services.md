@@ -8,7 +8,7 @@ The desktop host exposes three narrow QObject singletons under the `LeoMoon.Pars
 
 ## SettingsStore
 
-`SettingsStore` stores `settings.json` in a stable application directory named `leomoon-studios.parsinegar-desktop` below `QStandardPaths::GenericConfigLocation`, which resolves to `~/.config/leomoon-studios.parsinegar-desktop/settings.json` on Linux. Writes use `QSaveFile`. `load()` returns bounded UTF-8 text for `ReshaperSettings.js` to parse and recover, so C++ does not duplicate the JavaScript schema. `save(json)` accepts a valid JSON object without interpreting schema fields, but rejects payloads over 1 MiB and recursively rejects `draftText`, `sourceText`, `convertedText`, and `clipboardText` keys. Missing files are successful reads with `exists: false`.
+`SettingsStore` stores `settings.json` in a stable application directory named `leomoon-parsinegar` below `QStandardPaths::GenericConfigLocation`, which resolves to `~/.config/leomoon-parsinegar/settings.json` on Linux. Writes use `QSaveFile`. `load()` returns bounded UTF-8 text for `ReshaperSettings.js` to parse and recover, so C++ does not duplicate the JavaScript schema. `save(json)` accepts a valid JSON object without interpreting schema fields, but rejects payloads over 1 MiB and recursively rejects `draftText`, `sourceText`, `convertedText`, and `clipboardText` keys. Missing files are successful reads with `exists: false`.
 
 ## FileBridge
 

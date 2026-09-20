@@ -70,19 +70,19 @@ jobs:
       - name: Download verified Linux artifacts
         uses: actions/download-artifact@v7
         with:
-          name: parsinegar-linux-${{ github.sha }}
+          name: leomoon-parsinegar-linux-${{ github.sha }}
           path: release-input/linux
 
       - name: Download verified Windows artifacts
         uses: actions/download-artifact@v7
         with:
-          name: parsinegar-windows-${{ github.sha }}
+          name: leomoon-parsinegar-windows-${{ github.sha }}
           path: release-input/windows
 
       - name: Download verified macOS artifacts
         uses: actions/download-artifact@v7
         with:
-          name: parsinegar-macos-${{ github.sha }}
+          name: leomoon-parsinegar-macos-${{ github.sha }}
           path: release-input/macos
 
       - name: Collect individual release assets
@@ -112,7 +112,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          title="ParsiNegar Desktop $GITHUB_REF_NAME"
+          title="LeoMoon ParsiNegar $GITHUB_REF_NAME"
           if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
             gh release edit "$GITHUB_REF_NAME" --title "$title" --notes-file release-notes.md
           else

@@ -23,7 +23,7 @@ FocusScope {
     readonly property var englishSections: [
         {
             heading: "What ParsiNegar does",
-            body: "ParsiNegar Desktop prepares Persian, Arabic, Kurdish, Urdu, and Hebrew text for applications with incomplete shaping or bidirectional-text support. Enter or paste source text, choose a shaping profile and conversion mode, then select Convert. The converted result is copied to the clipboard for use in another application.\n\nParsiNegar prepares character forms and visual order. The font selected in the destination application still determines how the pasted text looks."
+            body: "LeoMoon ParsiNegar prepares Persian, Arabic, Kurdish, Urdu, and Hebrew text for applications with incomplete shaping or bidirectional-text support. Enter or paste source text, choose a shaping profile and conversion mode, then select Convert. The converted result is copied to the clipboard for use in another application.\n\nParsiNegar prepares character forms and visual order. The font selected in the destination application still determines how the pasted text looks."
         },
         {
             heading: "Quick start",
@@ -67,8 +67,8 @@ FocusScope {
 
     readonly property var persianSections: [
         {
-            heading: "پارسی‌نگار دسکتاپ چه کاری انجام می‌دهد؟",
-            body: "پارسی‌نگار دسکتاپ متن پارسی، عربی، کردی، اردو و عبری را برای برنامه‌هایی آماده می‌کند که شکل‌دهی متن یا نمایش متن دوجهته را کامل پشتیبانی نمی‌کنند. متن مبدأ را وارد یا بچسبانید، نمایهٔ شکل‌دهی و حالت تبدیل را انتخاب کنید و تبدیل را بزنید. نتیجه در کلیپ‌بورد کپی می‌شود تا در برنامهٔ دیگر استفاده کنید.\n\nپارسی‌نگار صورت نویسه‌ها و ترتیب دیداری را آماده می‌کند، اما ظاهر نهایی متن به فونت انتخاب‌شده در برنامهٔ مقصد بستگی دارد."
+            heading: "پارسی‌نگار لیومون چه کاری انجام می‌دهد؟",
+            body: "پارسی‌نگار لیومون متن پارسی، عربی، کردی، اردو و عبری را برای برنامه‌هایی آماده می‌کند که شکل‌دهی متن یا نمایش متن دوجهته را کامل پشتیبانی نمی‌کنند. متن مبدأ را وارد یا بچسبانید، نمایهٔ شکل‌دهی و حالت تبدیل را انتخاب کنید و تبدیل را بزنید. نتیجه در کلیپ‌بورد کپی می‌شود تا در برنامهٔ دیگر استفاده کنید.\n\nپارسی‌نگار صورت نویسه‌ها و ترتیب دیداری را آماده می‌کند، اما ظاهر نهایی متن به فونت انتخاب‌شده در برنامهٔ مقصد بستگی دارد."
         },
         {
             heading: "شروع سریع",
@@ -92,7 +92,7 @@ FocusScope {
         },
         {
             heading: "پرونده‌ها و ویرایش",
-            body: "منوی پرونده گزینه‌های پروندهٔ نو، باز کردن، ذخیره و ذخیره با نام را برای پرونده‌های متنی UTF-8 فراهم می‌کند. دسکتاپ تا حد امکان سبک اصلی شکست خط را نگه می‌دارد و پیش از کنارگذاشتن تغییرات ذخیره‌نشده هشدار می‌دهد.\n\nواگردانی و انجام دوباره، ویرایش متن، انتخاب، جایگاه نشانگر و شکست پاراگراف را بازمی‌گردانند."
+            body: "منوی پرونده گزینه‌های پروندهٔ نو، باز کردن، ذخیره و ذخیره با نام را برای پرونده‌های متنی UTF-8 فراهم می‌کند. برنامه تا حد امکان سبک اصلی شکست خط را نگه می‌دارد و پیش از کنارگذاشتن تغییرات ذخیره‌نشده هشدار می‌دهد.\n\nواگردانی و انجام دوباره، ویرایش متن، انتخاب، جایگاه نشانگر و شکست پاراگراف را بازمی‌گردانند."
         },
         {
             heading: "میان‌برهای صفحه‌کلید",
@@ -104,7 +104,7 @@ FocusScope {
         },
         {
             heading: "تنظیمات و حریم خصوصی",
-            body: "دسکتاپ زبان رابط، اندازهٔ فونت ویرایشگر، گزینه‌های شکل‌دهی، کلیدهای ابزار متن و انتخاب‌های SVG را در پروندهٔ تنظیمات ویژهٔ این سیستم ذخیره می‌کند:",
+            body: "برنامه زبان رابط، اندازهٔ فونت ویرایشگر، گزینه‌های شکل‌دهی، کلیدهای ابزار متن و انتخاب‌های SVG را در پروندهٔ تنظیمات ویژهٔ این سیستم ذخیره می‌کند:",
             path: root.displayedSettingsFilePath,
             footer: "متن مبدأ، خروجی تبدیل‌شده، کلیپ‌بورد، پیام‌های وضعیت و تاریخچهٔ واگردانی در این پرونده ذخیره نمی‌شوند."
         }
@@ -112,8 +112,8 @@ FocusScope {
 
     readonly property var arabicSections: [
         {
-            heading: "ما الذي يفعله پارسی‌نگار دسكتاپ؟",
-            body: "يُعدّ پارسی‌نگار دسكتاپ النصوص الفارسية والعربية والكردية والأردية والعبرية للتطبيقات التي لا تدعم التشكيل أو النص ثنائي الاتجاه دعمًا كاملًا. أدخل النص المصدر أو الصقه، واختر ملف التشكيل ووضع التحويل، ثم اختر تحويل. تُنسخ النتيجة إلى الحافظة لاستخدامها في تطبيق آخر.\n\nيُعدّ پارسی‌نگار أشكال الحروف وترتيبها المرئي، بينما يظل مظهر النص النهائي معتمدًا على الخط المحدد في التطبيق الهدف."
+            heading: "ما الذي يفعله LeoMoon ParsiNegar؟",
+            body: "يُعدّ LeoMoon ParsiNegar النصوص الفارسية والعربية والكردية والأردية والعبرية للتطبيقات التي لا تدعم التشكيل أو النص ثنائي الاتجاه دعمًا كاملًا. أدخل النص المصدر أو الصقه، واختر ملف التشكيل ووضع التحويل، ثم اختر تحويل. تُنسخ النتيجة إلى الحافظة لاستخدامها في تطبيق آخر.\n\nيُعدّ پارسی‌نگار أشكال الحروف وترتيبها المرئي، بينما يظل مظهر النص النهائي معتمدًا على الخط المحدد في التطبيق الهدف."
         },
         {
             heading: "البدء السريع",

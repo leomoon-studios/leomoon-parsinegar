@@ -24,4 +24,4 @@ printf '%s\n' "$version" > "$repo_dir/metadata/VERSION"
 printf '%s\n' "$release_date" > "$repo_dir/metadata/RELEASE_DATE"
 "$repo_dir/scripts/check-release-version.sh" "$tag" >/dev/null
 
-echo "Prepared ParsiNegar Desktop $version for $release_date"
+echo "Prepared LeoMoon ParsiNegar $version for $release_date"

@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
-  <id>com.leomoon.ParsiNegarDesktop</id>
-  <name>ParsiNegar Desktop</name>
+  <id>com.leomoon.ParsiNegar</id>
+  <name>LeoMoon ParsiNegar</name>
   <summary>Prepare Persian and other right-to-left text</summary>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>MIT</project_license>
   <developer id="com.leomoon">
     <name>LeoMoon Studios</name>
   </developer>
-  <url type="homepage">https://github.com/leomoon-studios/parsinegar-desktop</url>
+  <url type="homepage">https://github.com/leomoon-studios/leomoon-parsinegar</url>
   <description>
-    <p>ParsiNegar Desktop prepares Persian, Arabic, Urdu, Kurdish, and Hebrew text for applications with incomplete shaping or bidirectional-text support.</p>
+    <p>LeoMoon ParsiNegar prepares Persian, Arabic, Urdu, Kurdish, and Hebrew text for applications with incomplete shaping or bidirectional-text support.</p>
   </description>
-  <launchable type="desktop-id">com.leomoon.ParsiNegarDesktop.desktop</launchable>
+  <launchable type="desktop-id">com.leomoon.ParsiNegar.desktop</launchable>
   <provides>
-    <binary>ParsiNegar</binary>
+    <binary>leomoon-parsinegar</binary>
   </provides>
   <releases>
     <release version="@PROJECT_VERSION@" date="@PARSINEGAR_RELEASE_DATE@"/>

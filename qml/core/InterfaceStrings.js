@@ -5,7 +5,7 @@ var InterfaceStrings = (function () {
 
   var values = {
     en: {
-      "app.title": "ParsiNegar Desktop", "app.subtitle": "Text tools for Persian, Arabic, Urdu, Kurdish, and Hebrew.", "theme.light": "Light theme", "theme.dark": "Dark theme",
+      "app.title": "LeoMoon ParsiNegar", "app.subtitle": "Text tools for Persian, Arabic, Urdu, Kurdish, and Hebrew.", "theme.light": "Light theme", "theme.dark": "Dark theme",
       "help.title": "Help",
       "editor.source": "Source text", "editor.characterCount": "%1 of %2 characters",
       "toggle.reverse": "Apply bidi visual ordering", "toggle.reverseDescription": "For applications that do not handle right-to-left layout",
@@ -66,7 +66,7 @@ var InterfaceStrings = (function () {
       "settings.rialDescription": "Convert ریال or ريال to ﷼"
     },
     fa: {
-      "app.title": "پارسی‌نگار دسکتاپ", "app.subtitle": "ابزارهای متن پارسی، عربی، اردو، کردی و عبری", "theme.light": "پوستهٔ روشن", "theme.dark": "پوستهٔ تیره",
+      "app.title": "پارسی‌نگار لیومون", "app.subtitle": "ابزارهای متن پارسی، عربی، اردو، کردی و عبری", "theme.light": "پوستهٔ روشن", "theme.dark": "پوستهٔ تیره",
       "help.title": "راهنما",
       "editor.source": "متن مبدأ", "editor.characterCount": "%1 از %2 نویسه",
       "toggle.reverse": "اعمال ترتیب نمایشی دوجهته", "toggle.reverseDescription": "برای برنامه‌هایی که چیدمان راست‌به‌چپ را پشتیبانی نمی‌کنند",
@@ -127,7 +127,7 @@ var InterfaceStrings = (function () {
       "settings.rialDescription": "تبدیل ریال یا ريال به ﷼"
     },
     ar: {
-      "app.title": "پارسی‌نگار دسکتاپ", "app.subtitle": "أدوات النص للفارسية والعربية والأردية والكردية والعبرية.", "theme.light": "السمة الفاتحة", "theme.dark": "السمة الداكنة",
+      "app.title": "LeoMoon ParsiNegar", "app.subtitle": "أدوات النص للفارسية والعربية والأردية والكردية والعبرية.", "theme.light": "السمة الفاتحة", "theme.dark": "السمة الداكنة",
       "help.title": "المساعدة", "editor.source": "النص المصدر", "editor.characterCount": "%1 من %2 حرفًا",
       "toggle.reverse": "تطبيق الترتيب المرئي ثنائي الاتجاه", "toggle.reverseDescription": "للتطبيقات التي لا تتعامل مع التخطيط من اليمين إلى اليسار", "toggle.video": "تحويل خاص لـ VideoStudio Pro", "toggle.videoDescription": "متاح في وضع التوافق",
       "placeholder": "أدخل النص…", "mode.unicode": "وضع Unicode", "mode.compatibility": "وضع التوافق", "mode.unicodeDescription": "يهيّئ نص Unicode للتطبيقات ذات تشكيل النص غير المكتمل.", "mode.compatibilityDescription": "يستخدم خطوط Maryam/LMN القديمة المتوافقة للتطبيقات القديمة التي لا تدعم نص Unicode.",

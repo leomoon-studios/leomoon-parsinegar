@@ -19,7 +19,7 @@ execute_process(
         --qmldir "${CMAKE_CURRENT_LIST_DIR}/../../qml"
         --compiler-runtime
         --no-translations
-        "${STAGE_DIR}/bin/ParsiNegar.exe"
+        "${STAGE_DIR}/bin/leomoon-parsinegar.exe"
     RESULT_VARIABLE deploy_result
 )
 if(NOT deploy_result EQUAL 0)

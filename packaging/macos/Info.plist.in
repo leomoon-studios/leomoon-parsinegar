@@ -3,12 +3,12 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleDevelopmentRegion</key><string>en</string>
-    <key>CFBundleDisplayName</key><string>ParsiNegar Desktop</string>
-    <key>CFBundleExecutable</key><string>ParsiNegar</string>
+    <key>CFBundleDisplayName</key><string>LeoMoon ParsiNegar</string>
+    <key>CFBundleExecutable</key><string>leomoon-parsinegar</string>
     <key>CFBundleIconFile</key><string>app-icon.icns</string>
-    <key>CFBundleIdentifier</key><string>com.leomoon.ParsiNegarDesktop</string>
+    <key>CFBundleIdentifier</key><string>com.leomoon.ParsiNegar</string>
     <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
-    <key>CFBundleName</key><string>ParsiNegar Desktop</string>
+    <key>CFBundleName</key><string>LeoMoon ParsiNegar</string>
     <key>CFBundlePackageType</key><string>APPL</string>
     <key>CFBundleShortVersionString</key><string>@PROJECT_VERSION@</string>
     <key>CFBundleVersion</key><string>@PROJECT_VERSION@</string>

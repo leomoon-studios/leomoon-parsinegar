@@ -15,7 +15,7 @@ version="$($repo_dir/scripts/check-release-version.sh)"
     sha256sum --check SHA256SUMS
 )
 
-mapfile -t appimages < <(find "$artifact_dir" -maxdepth 1 -type f -name "ParsiNegar-$version-*.AppImage" -print)
+mapfile -t appimages < <(find "$artifact_dir" -maxdepth 1 -type f -name "leomoon-parsinegar-$version-*.AppImage" -print)
 mapfile -t debs < <(find "$artifact_dir" -maxdepth 1 -type f -name '*.deb' -print | sort)
 if (( ${#appimages[@]} != 1 || ${#debs[@]} < 2 )); then
     echo "Linux release set is incomplete" >&2
@@ -59,8 +59,8 @@ fonts_deb=""
 for deb in "${debs[@]}"; do
     package_name="$(dpkg-deb --field "$deb" Package)"
     case "$package_name" in
-        parsinegar-desktop) application_deb="$deb" ;;
-        parsinegar-desktop-fonts) fonts_deb="$deb" ;;
+        leomoon-parsinegar) application_deb="$deb" ;;
+        leomoon-parsinegar-fonts) fonts_deb="$deb" ;;
     esac
 done
 if [[ -z "$application_deb" || -z "$fonts_deb" ]]; then
@@ -79,12 +79,12 @@ if (( font_count < 1 )); then
 fi
 
 dpkg --force-depends --install "$application_deb"
-test -x /usr/bin/ParsiNegar
-test -s /usr/share/applications/com.leomoon.ParsiNegarDesktop.desktop
-test -s /usr/share/icons/hicolor/scalable/apps/com.leomoon.ParsiNegarDesktop.svg
+test -x /usr/bin/leomoon-parsinegar
+test -s /usr/share/applications/com.leomoon.ParsiNegar.desktop
+test -s /usr/share/icons/hicolor/scalable/apps/com.leomoon.ParsiNegar.svg
 dpkg --force-depends --install "$fonts_deb"
 test -d /usr/share/fonts/truetype/parsinegar
-dpkg --remove parsinegar-desktop-fonts parsinegar-desktop
-test ! -e /usr/bin/ParsiNegar
+dpkg --remove leomoon-parsinegar-fonts leomoon-parsinegar
+test ! -e /usr/bin/leomoon-parsinegar
 
 echo "Linux AppImage and Debian package smoke checks passed"

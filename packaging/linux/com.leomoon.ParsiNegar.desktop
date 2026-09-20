@@ -1,11 +1,11 @@
 [Desktop Entry]
 Type=Application
-Name=ParsiNegar Desktop
-Name[fa]=پارسی‌نگار دسکتاپ
+Name=LeoMoon ParsiNegar
+Name[fa]=پارسی‌نگار لیومون
 Comment=Persian and right-to-left text tools
 Comment[fa]=ابزارهای متن فارسی و راست‌به‌چپ
-Exec=ParsiNegar
-Icon=com.leomoon.ParsiNegarDesktop
+Exec=leomoon-parsinegar
+Icon=com.leomoon.ParsiNegar
 Terminal=false
 Categories=Utility;TextTools;
 Keywords=Persian;Arabic;Urdu;Kurdish;Hebrew;RTL;Text;

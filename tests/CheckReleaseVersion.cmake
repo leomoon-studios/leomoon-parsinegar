@@ -12,7 +12,7 @@ execute_process(
 if(NOT version_result EQUAL 0)
     message(FATAL_ERROR "The application version command failed: ${version_error}")
 endif()
-if(NOT version_output STREQUAL "ParsiNegar Desktop ${EXPECTED_VERSION}")
+if(NOT version_output STREQUAL "LeoMoon ParsiNegar ${EXPECTED_VERSION}")
     message(FATAL_ERROR "Application version mismatch: ${version_output}")
 endif()
 

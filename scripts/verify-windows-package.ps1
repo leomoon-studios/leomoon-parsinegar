@@ -9,7 +9,7 @@ $ErrorActionPreference = "Stop"
 $stage = (Resolve-Path -LiteralPath $StageDirectory).Path
 $installer = (Resolve-Path -LiteralPath $InstallerPath).Path
 $binaryDirectory = Join-Path $stage "bin"
-$application = Join-Path $binaryDirectory "ParsiNegar.exe"
+$application = Join-Path $binaryDirectory "leomoon-parsinegar.exe"
 
 function Require-File([string]$Path) {
     if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
@@ -28,18 +28,18 @@ $requiredFiles = @(
     (Join-Path $binaryDirectory "Qt6Quick.dll"),
     (Join-Path $binaryDirectory "Qt6QuickControls2.dll"),
     (Join-Path $binaryDirectory "platforms\qwindows.dll"),
-    (Join-Path $stage "share\doc\parsinegar-desktop\LICENSE"),
-    (Join-Path $stage "share\doc\parsinegar-desktop\THIRD_PARTY_NOTICES.md"),
-    (Join-Path $stage "share\doc\parsinegar-desktop\SOURCES.md"),
-    (Join-Path $stage "share\doc\parsinegar-desktop\Qt-LGPL-NOTICE.md"),
-    (Join-Path $stage "share\doc\parsinegar-desktop\Qt-LGPL-3.0-only.txt"),
+    (Join-Path $stage "share\doc\leomoon-parsinegar\LICENSE"),
+    (Join-Path $stage "share\doc\leomoon-parsinegar\THIRD_PARTY_NOTICES.md"),
+    (Join-Path $stage "share\doc\leomoon-parsinegar\SOURCES.md"),
+    (Join-Path $stage "share\doc\leomoon-parsinegar\Qt-LGPL-NOTICE.md"),
+    (Join-Path $stage "share\doc\leomoon-parsinegar\Qt-LGPL-3.0-only.txt"),
     $installer
 )
 foreach ($path in $requiredFiles) {
     Require-File $path
 }
 
-if ((Split-Path -Leaf $installer) -ne "ParsiNegar-Desktop-$Version-Setup.exe") {
+if ((Split-Path -Leaf $installer) -ne "leomoon-parsinegar-$Version-Setup.exe") {
     throw "Windows installer filename does not match version $Version"
 }
 

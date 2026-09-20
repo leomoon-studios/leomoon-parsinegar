@@ -78,7 +78,7 @@ function Sign-Artifact([string]$Path, [string]$SignTool) {
 }
 
 $signTool = $null
-$application = Join-Path $stage "bin\ParsiNegar.exe"
+$application = Join-Path $stage "bin\leomoon-parsinegar.exe"
 if ($signed) {
     if (-not (Test-Path -LiteralPath $certificatePath -PathType Leaf)) {
         throw "The configured Windows signing certificate does not exist"
@@ -92,7 +92,7 @@ if ($LASTEXITCODE -ne 0) {
     throw "Inno Setup failed with exit code $LASTEXITCODE"
 }
 
-$installer = Join-Path $build "package\windows\ParsiNegar-Desktop-$Version-Setup.exe"
+$installer = Join-Path $build "package\windows\leomoon-parsinegar-$Version-Setup.exe"
 if ($signed) {
     Sign-Artifact $installer $signTool
 }
@@ -111,7 +111,7 @@ $distInstaller = Join-Path $dist (Split-Path -Leaf $installer)
 Copy-Item -LiteralPath $installer -Destination $distInstaller
 
 $manifest = [ordered]@{
-    application = "ParsiNegar Desktop"
+    application = "LeoMoon ParsiNegar"
     version = $version
     releaseDate = $releaseDate
     commit = $Commit

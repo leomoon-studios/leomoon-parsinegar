@@ -26,41 +26,41 @@ if [ "$font_count" -eq 0 ]; then
     echo "No bundled system fonts were found" >&2
     exit 1
 fi
-mkdir -p "$build_dir/ParsiNegar.app/Contents/Resources/licenses"
-cp "$source_dir/LICENSE" "$build_dir/ParsiNegar.app/Contents/Resources/licenses/"
-cp "$source_dir/THIRD_PARTY_NOTICES.md" "$build_dir/ParsiNegar.app/Contents/Resources/licenses/"
-cp "$source_dir/SOURCES.md" "$build_dir/ParsiNegar.app/Contents/Resources/licenses/"
-cp "$source_dir/packaging/Qt-LGPL-NOTICE.md" "$build_dir/ParsiNegar.app/Contents/Resources/licenses/"
+mkdir -p "$build_dir/leomoon-parsinegar.app/Contents/Resources/licenses"
+cp "$source_dir/LICENSE" "$build_dir/leomoon-parsinegar.app/Contents/Resources/licenses/"
+cp "$source_dir/THIRD_PARTY_NOTICES.md" "$build_dir/leomoon-parsinegar.app/Contents/Resources/licenses/"
+cp "$source_dir/SOURCES.md" "$build_dir/leomoon-parsinegar.app/Contents/Resources/licenses/"
+cp "$source_dir/packaging/Qt-LGPL-NOTICE.md" "$build_dir/leomoon-parsinegar.app/Contents/Resources/licenses/"
 if [ -f "@PARSINEGAR_QT_LGPL3_FILE@" ]; then
-    cp "@PARSINEGAR_QT_LGPL3_FILE@" "$build_dir/ParsiNegar.app/Contents/Resources/licenses/Qt-LGPL-3.0-only.txt"
+    cp "@PARSINEGAR_QT_LGPL3_FILE@" "$build_dir/leomoon-parsinegar.app/Contents/Resources/licenses/Qt-LGPL-3.0-only.txt"
 fi
 
 if [ -n "${PARSINEGAR_CODESIGN_IDENTITY:-}" ]; then
-    codesign --force --deep --options runtime --timestamp --sign "$PARSINEGAR_CODESIGN_IDENTITY" "$build_dir/ParsiNegar.app"
+    codesign --force --deep --options runtime --timestamp --sign "$PARSINEGAR_CODESIGN_IDENTITY" "$build_dir/leomoon-parsinegar.app"
 fi
 
-pkgbuild --component "$build_dir/ParsiNegar.app" --install-location /Applications \
-    --identifier com.leomoon.ParsiNegarDesktop.app --version "$version" \
-    "$component_dir/ParsiNegar-app.pkg"
-pkgbuild --root "$font_root" --identifier com.leomoon.ParsiNegarDesktop.fonts \
-    --version "$version" "$component_dir/ParsiNegar-fonts.pkg"
+pkgbuild --component "$build_dir/leomoon-parsinegar.app" --install-location /Applications \
+    --identifier com.leomoon.ParsiNegar.app --version "$version" \
+    "$component_dir/leomoon-parsinegar-app.pkg"
+pkgbuild --root "$font_root" --identifier com.leomoon.ParsiNegar.fonts \
+    --version "$version" "$component_dir/leomoon-parsinegar-fonts.pkg"
 pkgbuild --nopayload --scripts "$source_dir/packaging/macos/shortcut-scripts" \
-    --identifier com.leomoon.ParsiNegarDesktop.shortcut --version "$version" \
-    "$component_dir/ParsiNegar-shortcut.pkg"
+    --identifier com.leomoon.ParsiNegar.shortcut --version "$version" \
+    "$component_dir/leomoon-parsinegar-shortcut.pkg"
 
 sed "s/@PROJECT_VERSION@/$version/g" "$source_dir/packaging/macos/distribution.xml.in" > "$package_dir/distribution.xml"
 
 if [ -n "${PARSINEGAR_INSTALLER_IDENTITY:-}" ]; then
     productbuild --distribution "$package_dir/distribution.xml" --resources "$resource_dir" \
         --package-path "$component_dir" --sign "$PARSINEGAR_INSTALLER_IDENTITY" \
-        "$package_dir/ParsiNegar-Desktop-$version.pkg"
+        "$package_dir/leomoon-parsinegar-$version.pkg"
 else
     productbuild --distribution "$package_dir/distribution.xml" --resources "$resource_dir" \
-        --package-path "$component_dir" "$package_dir/ParsiNegar-Desktop-$version.pkg"
+        --package-path "$component_dir" "$package_dir/leomoon-parsinegar-$version.pkg"
 fi
 
-hdiutil create -volname "ParsiNegar Desktop" -srcfolder "$build_dir/ParsiNegar.app" \
-    -ov -format UDZO "$package_dir/ParsiNegar-Desktop-$version.dmg"
+hdiutil create -volname "LeoMoon ParsiNegar" -srcfolder "$build_dir/leomoon-parsinegar.app" \
+    -ov -format UDZO "$package_dir/leomoon-parsinegar-$version.dmg"
 
 if [ -n "${PARSINEGAR_NOTARY_PROFILE:-}" ]; then
     submit_for_notarization() {
@@ -72,8 +72,8 @@ if [ -n "${PARSINEGAR_NOTARY_PROFILE:-}" ]; then
             xcrun notarytool submit "$artifact" --keychain-profile "$PARSINEGAR_NOTARY_PROFILE" --wait
         fi
     }
-    submit_for_notarization "$package_dir/ParsiNegar-Desktop-$version.pkg"
-    xcrun stapler staple "$package_dir/ParsiNegar-Desktop-$version.pkg"
-    submit_for_notarization "$package_dir/ParsiNegar-Desktop-$version.dmg"
-    xcrun stapler staple "$package_dir/ParsiNegar-Desktop-$version.dmg"
+    submit_for_notarization "$package_dir/leomoon-parsinegar-$version.pkg"
+    xcrun stapler staple "$package_dir/leomoon-parsinegar-$version.pkg"
+    submit_for_notarization "$package_dir/leomoon-parsinegar-$version.dmg"
+    xcrun stapler staple "$package_dir/leomoon-parsinegar-$version.dmg"
 fi

@@ -1,7 +1,7 @@
-#define AppName "ParsiNegar Desktop"
+#define AppName "LeoMoon ParsiNegar"
 #define AppVersion "@PROJECT_VERSION@"
 #define AppPublisher "LeoMoon Studios"
-#define AppExeName "ParsiNegar.exe"
+#define AppExeName "leomoon-parsinegar.exe"
 #define StageDir "@PARSINEGAR_WINDOWS_STAGE_DIR@"
 #define SourceDir "@CMAKE_CURRENT_SOURCE_DIR@"
 
@@ -11,10 +11,10 @@ AppName={#AppName}
 AppVersion={#AppVersion}
 AppVerName={#AppName} {#AppVersion}
 AppPublisher={#AppPublisher}
-DefaultDirName={autopf}\ParsiNegar Desktop
-DefaultGroupName=ParsiNegar Desktop
+DefaultDirName={autopf}\LeoMoon ParsiNegar
+DefaultGroupName=LeoMoon ParsiNegar
 OutputDir=@CMAKE_CURRENT_BINARY_DIR@\package\windows
-OutputBaseFilename=ParsiNegar-Desktop-{#AppVersion}-Setup
+OutputBaseFilename=leomoon-parsinegar-{#AppVersion}-Setup
 SetupIconFile={#SourceDir}\packaging\windows\app-icon.ico
 UninstallDisplayIcon={app}\bin\{#AppExeName}
 UninstallDisplayName={#AppName}
@@ -40,5 +40,5 @@ Source: "{#StageDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs c
 @PARSINEGAR_WINDOWS_FONT_FILE_ENTRIES@
 
 [Icons]
-Name: "{group}\ParsiNegar Desktop"; Filename: "{app}\bin\{#AppExeName}"
-Name: "{autodesktop}\ParsiNegar Desktop"; Filename: "{app}\bin\{#AppExeName}"; Tasks: desktopshortcut
+Name: "{group}\LeoMoon ParsiNegar"; Filename: "{app}\bin\{#AppExeName}"
+Name: "{autodesktop}\LeoMoon ParsiNegar"; Filename: "{app}\bin\{#AppExeName}"; Tasks: desktopshortcut

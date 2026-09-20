@@ -23,17 +23,17 @@ mkdir -p "$dist_dir"
 
 cmake --build "$build_dir" --target package_macos --parallel 2
 
-app="$build_dir/ParsiNegar.app"
+app="$build_dir/leomoon-parsinegar.app"
 package_dir="$build_dir/package/macos"
-pkg="$package_dir/ParsiNegar-Desktop-$version.pkg"
-dmg="$package_dir/ParsiNegar-Desktop-$version.dmg"
+pkg="$package_dir/leomoon-parsinegar-$version.pkg"
+dmg="$package_dir/leomoon-parsinegar-$version.dmg"
 
 "$repo_dir/scripts/verify-macos-package.sh" "$app" "$pkg" "$dmg" "$version"
 
 cp "$pkg" "$dmg" "$dist_dir/"
-architectures="$(lipo -archs "$app/Contents/MacOS/ParsiNegar")"
+architectures="$(lipo -archs "$app/Contents/MacOS/leomoon-parsinegar")"
 commit="${GITHUB_SHA:-unknown}"
-printf '{\n  "application": "ParsiNegar Desktop",\n  "version": "%s",\n  "releaseDate": "%s",\n  "commit": "%s",\n  "platform": "macos",\n  "architectures": "%s",\n  "formats": ["dmg", "pkg"],\n  "signed": %s\n}\n' \
+printf '{\n  "application": "LeoMoon ParsiNegar",\n  "version": "%s",\n  "releaseDate": "%s",\n  "commit": "%s",\n  "platform": "macos",\n  "architectures": "%s",\n  "formats": ["dmg", "pkg"],\n  "signed": %s\n}\n' \
     "$version" "$release_date" "$commit" "$architectures" \
     "$([ -n "${PARSINEGAR_CODESIGN_IDENTITY:-}" ] && printf true || printf false)" \
     > "$dist_dir/release-manifest.json"

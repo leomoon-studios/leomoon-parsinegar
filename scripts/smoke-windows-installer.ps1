@@ -5,7 +5,7 @@ $ErrorActionPreference = "Stop"
 $repoDirectory = Split-Path -Parent $PSScriptRoot
 $version = (Get-Content -LiteralPath (Join-Path $repoDirectory "metadata\VERSION") -Raw).Trim()
 $artifacts = (Resolve-Path -LiteralPath $ArtifactDirectory).Path
-$installer = Join-Path $artifacts "ParsiNegar-Desktop-$Version-Setup.exe"
+$installer = Join-Path $artifacts "leomoon-parsinegar-$Version-Setup.exe"
 $checksums = Join-Path $artifacts "SHA256SUMS"
 if (-not (Test-Path -LiteralPath $installer -PathType Leaf)) {
     throw "Windows installer is missing"
@@ -22,13 +22,13 @@ foreach ($line in Get-Content -LiteralPath $checksums) {
     }
 }
 
-$testRoot = Join-Path $env:RUNNER_TEMP "parsinegar-windows-smoke"
+$testRoot = Join-Path $env:RUNNER_TEMP "leomoon-parsinegar-windows-smoke"
 $installDirectory = Join-Path $testRoot "application"
 $env:APPDATA = Join-Path $testRoot "appdata"
 $env:LOCALAPPDATA = Join-Path $testRoot "localappdata"
-$installLog = Join-Path $env:RUNNER_TEMP "parsinegar-install.log"
-$optOutLog = Join-Path $env:RUNNER_TEMP "parsinegar-install-optout.log"
-$uninstallLog = Join-Path $env:RUNNER_TEMP "parsinegar-uninstall.log"
+$installLog = Join-Path $env:RUNNER_TEMP "leomoon-parsinegar-install.log"
+$optOutLog = Join-Path $env:RUNNER_TEMP "leomoon-parsinegar-install-optout.log"
+$uninstallLog = Join-Path $env:RUNNER_TEMP "leomoon-parsinegar-uninstall.log"
 $desktopLocations = @(
     [Environment]::GetFolderPath("Desktop"),
     [Environment]::GetFolderPath("CommonDesktopDirectory")
@@ -62,7 +62,7 @@ function Wait-PathAbsent([string]$Path, [int]$TimeoutSeconds = 60) {
 }
 
 function Test-InstalledApplication {
-    $application = Join-Path $installDirectory "bin\ParsiNegar.exe"
+    $application = Join-Path $installDirectory "bin\leomoon-parsinegar.exe"
     if (-not (Test-Path -LiteralPath $application -PathType Leaf)) {
         throw "Installed application executable is missing"
     }
@@ -82,7 +82,7 @@ function Test-InstalledApplication {
 
 function Find-DesktopShortcut {
     foreach ($desktop in $desktopLocations) {
-        $shortcut = Join-Path $desktop "ParsiNegar Desktop.lnk"
+        $shortcut = Join-Path $desktop "LeoMoon ParsiNegar.lnk"
         if (Test-Path -LiteralPath $shortcut -PathType Leaf) {
             return $shortcut
         }

@@ -14,11 +14,11 @@ BEGIN
         BLOCK "040904b0"
         BEGIN
             VALUE "CompanyName", "LeoMoon Studios\0"
-            VALUE "FileDescription", "ParsiNegar Desktop\0"
+            VALUE "FileDescription", "LeoMoon ParsiNegar\0"
             VALUE "FileVersion", "@PROJECT_VERSION@\0"
             VALUE "InternalName", "ParsiNegar\0"
-            VALUE "OriginalFilename", "ParsiNegar.exe\0"
-            VALUE "ProductName", "ParsiNegar Desktop\0"
+            VALUE "OriginalFilename", "leomoon-parsinegar.exe\0"
+            VALUE "ProductName", "LeoMoon ParsiNegar\0"
             VALUE "ProductVersion", "@PROJECT_VERSION@\0"
         END
     END

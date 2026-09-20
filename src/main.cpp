@@ -98,14 +98,14 @@ int main(int argc, char *argv[])
 {
     for (int index = 1; index < argc; ++index) {
         if (std::strcmp(argv[index], "--version") == 0) {
-            std::printf("ParsiNegar Desktop %s\n", PARSINEGAR_VERSION);
+            std::printf("LeoMoon ParsiNegar %s\n", PARSINEGAR_VERSION);
             return EXIT_SUCCESS;
         }
     }
 
     QCoreApplication::setOrganizationName(QStringLiteral("LeoMoon Studios"));
     QCoreApplication::setOrganizationDomain(QStringLiteral("leomoon-studios.com"));
-    QCoreApplication::setApplicationName(QStringLiteral("ParsiNegar Desktop"));
+    QCoreApplication::setApplicationName(QStringLiteral("LeoMoon ParsiNegar"));
     QCoreApplication::setApplicationVersion(QStringLiteral(PARSINEGAR_VERSION));
     qInstallMessageHandler(applicationMessageHandler);
 

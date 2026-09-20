@@ -98,7 +98,7 @@ jobs:
             Write-Host "No protected Windows signing certificate is configured; producing an unsigned installer."
             exit 0
           }
-          $certificatePath = Join-Path $env:RUNNER_TEMP "parsinegar-signing.pfx"
+          $certificatePath = Join-Path $env:RUNNER_TEMP "leomoon-parsinegar-signing.pfx"
           [System.IO.File]::WriteAllBytes($certificatePath, [Convert]::FromBase64String($env:CERTIFICATE_BASE64))
           "PARSINEGAR_WINDOWS_CERTIFICATE_PATH=$certificatePath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           "PARSINEGAR_WINDOWS_CERTIFICATE_PASSWORD=$env:CERTIFICATE_PASSWORD" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
@@ -113,7 +113,7 @@ jobs:
       - name: Remove temporary signing certificate
         if: always()
         shell: pwsh
-        run: Remove-Item -LiteralPath "$env:RUNNER_TEMP\parsinegar-signing.pfx" -Force -ErrorAction SilentlyContinue
+        run: Remove-Item -LiteralPath "$env:RUNNER_TEMP\leomoon-parsinegar-signing.pfx" -Force -ErrorAction SilentlyContinue
 
       - name: Retain failure logs
         if: failure()
@@ -123,14 +123,14 @@ jobs:
           path: |
             build-windows/CMakeFiles/CMakeConfigureLog.yaml
             build-windows/Testing/Temporary/*.log
-            ${{ runner.temp }}/parsinegar-*.log
+            ${{ runner.temp }}/leomoon-parsinegar-*.log
           if-no-files-found: ignore
           retention-days: 14
 
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v6
         with:
-          name: parsinegar-windows-${{ github.sha }}
+          name: leomoon-parsinegar-windows-${{ github.sha }}
           path: dist/
           if-no-files-found: error
           retention-days: 14
@@ -152,7 +152,7 @@ jobs:
       - name: Download Windows artifacts
         uses: actions/download-artifact@v7
         with:
-          name: parsinegar-windows-${{ github.sha }}
+          name: leomoon-parsinegar-windows-${{ github.sha }}
           path: dist
 
       - name: Verify default install, opt-out install, launch, and uninstall
@@ -164,6 +164,6 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: windows-installer-failure-logs
-          path: ${{ runner.temp }}/parsinegar-*.log
+          path: ${{ runner.temp }}/leomoon-parsinegar-*.log
           if-no-files-found: ignore
           retention-days: 14

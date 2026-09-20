@@ -1,7 +1,7 @@
 include(CPackComponent)
 
-set(PARSINEGAR_APP_ID "com.leomoon.ParsiNegarDesktop")
-set(PARSINEGAR_PACKAGE_NAME "ParsiNegar Desktop")
+set(PARSINEGAR_APP_ID "com.leomoon.ParsiNegar")
+set(PARSINEGAR_PACKAGE_NAME "LeoMoon ParsiNegar")
 set(PARSINEGAR_LINUX_METADATA_DIR "${CMAKE_CURRENT_BINARY_DIR}/packaging/linux")
 file(MAKE_DIRECTORY "${PARSINEGAR_LINUX_METADATA_DIR}")
 configure_file(
@@ -18,7 +18,7 @@ file(GLOB PARSINEGAR_SYSTEM_FONT_FILES CONFIGURE_DEPENDS
 
 set(PARSINEGAR_QT_LGPL3_FILE "${CMAKE_CURRENT_SOURCE_DIR}/packaging/licenses/Qt-LGPL-3.0-only.txt")
 
-install(TARGETS parsinegar_desktop
+install(TARGETS leomoon_parsinegar
     BUNDLE DESTINATION . COMPONENT Application
     RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT Application
 )
@@ -28,11 +28,11 @@ install(FILES
     "${CMAKE_CURRENT_SOURCE_DIR}/THIRD_PARTY_NOTICES.md"
     "${CMAKE_CURRENT_SOURCE_DIR}/SOURCES.md"
     "${CMAKE_CURRENT_SOURCE_DIR}/packaging/Qt-LGPL-NOTICE.md"
-    DESTINATION "${CMAKE_INSTALL_DATADIR}/doc/parsinegar-desktop"
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/doc/leomoon-parsinegar"
     COMPONENT Application
 )
 install(FILES "${PARSINEGAR_QT_LGPL3_FILE}"
-    DESTINATION "${CMAKE_INSTALL_DATADIR}/doc/parsinegar-desktop"
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/doc/leomoon-parsinegar"
     RENAME Qt-LGPL-3.0-only.txt
     COMPONENT Application
 )
@@ -58,7 +58,7 @@ if(PARSINEGAR_SYSTEM_FONT_FILES)
     if(UNIX AND NOT APPLE)
         set(parsinegar_system_font_destination "${CMAKE_INSTALL_DATADIR}/fonts/truetype/parsinegar")
     else()
-        set(parsinegar_system_font_destination "${CMAKE_INSTALL_DATADIR}/parsinegar-desktop/system-fonts")
+        set(parsinegar_system_font_destination "${CMAKE_INSTALL_DATADIR}/leomoon-parsinegar/system-fonts")
     endif()
     install(FILES ${PARSINEGAR_SYSTEM_FONT_FILES}
         DESTINATION "${parsinegar_system_font_destination}"
@@ -67,7 +67,7 @@ if(PARSINEGAR_SYSTEM_FONT_FILES)
 endif()
 
 cpack_add_component(Application
-    DISPLAY_NAME "ParsiNegar Desktop"
+    DISPLAY_NAME "LeoMoon ParsiNegar"
     DESCRIPTION "Required application files and Qt runtime"
     REQUIRED
 )
@@ -85,7 +85,7 @@ set(CPACK_PACKAGE_VENDOR "LeoMoon Studios")
 set(CPACK_PACKAGE_CONTACT "LeoMoon Studios")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Persian, Arabic, Urdu, Kurdish, and Hebrew text tools")
 set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
-set(CPACK_PACKAGE_INSTALL_DIRECTORY "ParsiNegar Desktop")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "LeoMoon ParsiNegar")
 set(CPACK_PACKAGE_CHECKSUM SHA256)
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
 set(CPACK_COMPONENTS_ALL Application SystemFonts)
@@ -107,10 +107,10 @@ else()
         set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "${CMAKE_SYSTEM_PROCESSOR}")
     endif()
     set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
-    set(CPACK_DEBIAN_APPLICATION_PACKAGE_NAME parsinegar-desktop)
+    set(CPACK_DEBIAN_APPLICATION_PACKAGE_NAME leomoon-parsinegar)
     set(CPACK_DEBIAN_APPLICATION_PACKAGE_SECTION utils)
     set(CPACK_DEBIAN_APPLICATION_PACKAGE_DEPENDS "libc6, libstdc++6, libqt6concurrent6, libqt6core6, libqt6gui6, libqt6qml6, libqt6quick6, libqt6quickcontrols2-6")
-    set(CPACK_DEBIAN_SYSTEMFONTS_PACKAGE_NAME parsinegar-desktop-fonts)
+    set(CPACK_DEBIAN_SYSTEMFONTS_PACKAGE_NAME leomoon-parsinegar-fonts)
     set(CPACK_DEBIAN_SYSTEMFONTS_PACKAGE_SECTION fonts)
     set(CPACK_DEBIAN_SYSTEMFONTS_PACKAGE_DEPENDS "fontconfig")
     set(CPACK_DEBIAN_SYSTEMFONTS_PACKAGE_CONTROL_EXTRA
@@ -145,8 +145,8 @@ if(WIN32)
         )
     endforeach()
     configure_file(
-        "${CMAKE_CURRENT_SOURCE_DIR}/packaging/windows/ParsiNegar.iss.in"
-        "${CMAKE_CURRENT_BINARY_DIR}/packaging/windows/ParsiNegar.iss"
+        "${CMAKE_CURRENT_SOURCE_DIR}/packaging/windows/leomoon-parsinegar.iss.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/packaging/windows/leomoon-parsinegar.iss"
         @ONLY
     )
 
@@ -158,13 +158,13 @@ if(WIN32)
                 "-DWINDEPLOYQT=${PARSINEGAR_WINDEPLOYQT_EXECUTABLE}"
                 "-DCONFIG=$<CONFIG>"
                 -P "${CMAKE_CURRENT_SOURCE_DIR}/packaging/windows/deploy.cmake"
-            DEPENDS parsinegar_desktop
+            DEPENDS leomoon_parsinegar
             VERBATIM
         )
         if(PARSINEGAR_INNO_SETUP_EXECUTABLE)
             add_custom_target(package_windows
                 COMMAND "${PARSINEGAR_INNO_SETUP_EXECUTABLE}"
-                    "${CMAKE_CURRENT_BINARY_DIR}/packaging/windows/ParsiNegar.iss"
+                    "${CMAKE_CURRENT_BINARY_DIR}/packaging/windows/leomoon-parsinegar.iss"
                 DEPENDS deploy_windows
                 VERBATIM
             )
@@ -177,12 +177,12 @@ elseif(APPLE)
     if(PARSINEGAR_MACDEPLOYQT_EXECUTABLE)
         add_custom_target(deploy_macos
             COMMAND "${PARSINEGAR_MACDEPLOYQT_EXECUTABLE}"
-                "$<TARGET_BUNDLE_DIR:parsinegar_desktop>"
+                "$<TARGET_BUNDLE_DIR:leomoon_parsinegar>"
                 "-qmldir=${CMAKE_CURRENT_SOURCE_DIR}/qml"
                 -always-overwrite
             COMMAND "${CMAKE_COMMAND}" -E remove_directory
-                "$<TARGET_BUNDLE_DIR:parsinegar_desktop>/Contents/PlugIns/sqldrivers"
-            DEPENDS parsinegar_desktop
+                "$<TARGET_BUNDLE_DIR:leomoon_parsinegar>/Contents/PlugIns/sqldrivers"
+            DEPENDS leomoon_parsinegar
             VERBATIM
         )
         configure_file(
@@ -209,7 +209,7 @@ elseif(UNIX)
                 "-DQMAKE=${parsinegar_qmake_executable}"
                 "-DVERSION=${PROJECT_VERSION}"
                 -P "${CMAKE_CURRENT_SOURCE_DIR}/packaging/linux/build-appimage.cmake"
-            DEPENDS parsinegar_desktop
+            DEPENDS leomoon_parsinegar
             VERBATIM
         )
     endif()

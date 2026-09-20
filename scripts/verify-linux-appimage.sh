@@ -11,7 +11,7 @@ version="$2"
 work_dir="$(mktemp -d)"
 trap 'rm -rf "$work_dir"' EXIT
 
-if [[ "$(basename "$appimage")" != "ParsiNegar-$version-"*.AppImage ]]; then
+if [[ "$(basename "$appimage")" != "leomoon-parsinegar-$version-"*.AppImage ]]; then
     echo "AppImage filename does not contain version $version" >&2
     exit 1
 fi
@@ -23,15 +23,15 @@ fi
 app_dir="$work_dir/squashfs-root"
 
 required_paths=(
-    "usr/bin/ParsiNegar"
-    "usr/share/applications/com.leomoon.ParsiNegarDesktop.desktop"
-    "usr/share/icons/hicolor/scalable/apps/com.leomoon.ParsiNegarDesktop.svg"
-    "usr/share/metainfo/com.leomoon.ParsiNegarDesktop.appdata.xml"
-    "usr/share/doc/parsinegar-desktop/LICENSE"
-    "usr/share/doc/parsinegar-desktop/THIRD_PARTY_NOTICES.md"
-    "usr/share/doc/parsinegar-desktop/SOURCES.md"
-    "usr/share/doc/parsinegar-desktop/Qt-LGPL-NOTICE.md"
-    "usr/share/doc/parsinegar-desktop/Qt-LGPL-3.0-only.txt"
+    "usr/bin/leomoon-parsinegar"
+    "usr/share/applications/com.leomoon.ParsiNegar.desktop"
+    "usr/share/icons/hicolor/scalable/apps/com.leomoon.ParsiNegar.svg"
+    "usr/share/metainfo/com.leomoon.ParsiNegar.appdata.xml"
+    "usr/share/doc/leomoon-parsinegar/LICENSE"
+    "usr/share/doc/leomoon-parsinegar/THIRD_PARTY_NOTICES.md"
+    "usr/share/doc/leomoon-parsinegar/SOURCES.md"
+    "usr/share/doc/leomoon-parsinegar/Qt-LGPL-NOTICE.md"
+    "usr/share/doc/leomoon-parsinegar/Qt-LGPL-3.0-only.txt"
 )
 for relative_path in "${required_paths[@]}"; do
     if [[ ! -s "$app_dir/$relative_path" ]]; then
@@ -70,7 +70,7 @@ if find "$app_dir/usr/bin" -maxdepth 1 -type f -printf '%f\n' | grep -Eiq '^(pyt
 fi
 
 version_output="$(APPIMAGE_EXTRACT_AND_RUN=1 "$appimage" --version)"
-if [[ "$version_output" != "ParsiNegar Desktop $version" ]]; then
+if [[ "$version_output" != "LeoMoon ParsiNegar $version" ]]; then
     echo "AppImage version mismatch: $version_output" >&2
     exit 1
 fi

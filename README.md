@@ -1,6 +1,6 @@
-# ParsiNegar Desktop
+# LeoMoon ParsiNegar
 
-ParsiNegar Desktop is a standalone Qt 6 application for preparing Persian, Arabic, Kurdish, Urdu, and Hebrew text for applications with incomplete right-to-left shaping or bidirectional-text support. It converts text in Unicode or Maryam/LMN compatibility mode, copies the result to the clipboard, and can export font-specific SVG curves.
+LeoMoon ParsiNegar is a standalone Qt 6 application for preparing Persian, Arabic, Kurdish, Urdu, and Hebrew text for applications with incomplete right-to-left shaping or bidirectional-text support. It converts text in Unicode or Maryam/LMN compatibility mode, copies the result to the clipboard, and can export font-specific SVG curves.
 
 The application includes Persian and Arabic, Kurdish and Urdu, and Hebrew shaping profiles, bidi visual ordering, VideoStudio output, text tools, source-text undo and redo, and a bilingual English and Persian interface. It works offline and does not require Python, Node.js, npm, Omarchy, or Quickshell.
 
@@ -39,7 +39,7 @@ ctest --test-dir build --output-on-failure
 cmake --build build --target parsinegar_ui_qmllint
 ```
 
-Run the application with `./build/ParsiNegar` on Linux, `open build/ParsiNegar.app` on macOS, or `.\build\ParsiNegar.exe` on Windows. If CMake cannot find Qt, set `CMAKE_PREFIX_PATH` to the installed Qt directory. On Windows, configure from a Developer PowerShell matching the Qt compiler kit.
+Run the application with `./build/leomoon-parsinegar` on Linux, `open build/leomoon-parsinegar.app` on macOS, or `.\build\leomoon-parsinegar.exe` on Windows. If CMake cannot find Qt, set `CMAKE_PREFIX_PATH` to the installed Qt directory. On Windows, configure from a Developer PowerShell matching the Qt compiler kit.
 
 ## Packaging
 
@@ -64,16 +64,16 @@ The macOS workflow creates a universal Intel and Apple Silicon bundle with Qt 6.
 
 Language, editor size, shaping choices, text-tool settings, conversion preferences, selected fonts, and SVG export options persist between launches. Draft text, converted output, clipboard contents, status messages, and undo history are never written to the settings file.
 
-Settings are stored below the platform's generic configuration directory in `leomoon-studios.parsinegar-desktop/settings.json`. On Linux this is `~/.config/leomoon-studios.parsinegar-desktop/settings.json`.
+Settings are stored below the platform's generic configuration directory in `leomoon-parsinegar/settings.json`. On Linux this is `~/.config/leomoon-parsinegar/settings.json`.
 
 ## Remove
 
-Delete the application using the normal uninstall method for the package you installed. To remove saved preferences as well, delete the `leomoon-studios.parsinegar-desktop` directory from the platform's generic configuration directory. On Linux:
+Delete the application using the normal uninstall method for the package you installed. To remove saved preferences as well, delete the `leomoon-parsinegar` directory from the platform's generic configuration directory. On Linux:
 
 ```sh
-rm -rf ~/.config/leomoon-studios.parsinegar-desktop
+rm -rf ~/.config/leomoon-parsinegar
 ```
 
 ## Licensing
 
-Original ParsiNegar Desktop code is available under the [MIT license](LICENSE). Vendored components retain their own licenses and notices. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [SOURCES.md](SOURCES.md).
+Original LeoMoon ParsiNegar code is available under the [MIT license](LICENSE). Vendored components retain their own licenses and notices. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [SOURCES.md](SOURCES.md).

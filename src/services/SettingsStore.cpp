@@ -14,7 +14,7 @@
 namespace {
 
 constexpr auto settingsFileName = "settings.json";
-constexpr auto configDirectoryName = "leomoon-studios.parsinegar-desktop";
+constexpr auto configDirectoryName = "leomoon-parsinegar";
 
 bool isProhibitedKey(const QString &key)
 {

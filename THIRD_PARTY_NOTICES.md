@@ -1,6 +1,6 @@
 # Third-party notices
 
-ParsiNegar Desktop embeds independently replaceable JavaScript libraries, a UI font, and an icon font. It performs no runtime downloads. The root [MIT license](LICENSE) covers original LeoMoon Studios desktop code, while the components below retain their own terms.
+LeoMoon ParsiNegar embeds independently replaceable JavaScript libraries, a UI font, and an icon font. It performs no runtime downloads. The root [MIT license](LICENSE) covers original LeoMoon Studios desktop code, while the components below retain their own terms.
 
 ## JsBidi
 

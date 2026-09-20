@@ -51,13 +51,13 @@ jobs:
 
       - name: Install pinned Linux deployment tools
         run: |
-          mkdir -p "$RUNNER_TEMP/parsinegar-tools"
-          curl --fail --location --retry 3 --output "$RUNNER_TEMP/parsinegar-tools/linuxdeploy" "https://github.com/linuxdeploy/linuxdeploy/releases/download/$LINUXDEPLOY_VERSION/linuxdeploy-x86_64.AppImage"
-          curl --fail --location --retry 3 --output "$RUNNER_TEMP/parsinegar-tools/linuxdeploy-plugin-qt" "https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/$LINUXDEPLOY_QT_VERSION/linuxdeploy-plugin-qt-x86_64.AppImage"
-          curl --fail --location --retry 3 --output "$RUNNER_TEMP/parsinegar-tools/runtime-x86_64" "https://github.com/AppImage/type2-runtime/releases/download/continuous/runtime-x86_64"
-          chmod +x "$RUNNER_TEMP/parsinegar-tools/linuxdeploy" "$RUNNER_TEMP/parsinegar-tools/linuxdeploy-plugin-qt"
-          echo "$RUNNER_TEMP/parsinegar-tools" >> "$GITHUB_PATH"
-          echo "LDAI_RUNTIME_FILE=$RUNNER_TEMP/parsinegar-tools/runtime-x86_64" >> "$GITHUB_ENV"
+          mkdir -p "$RUNNER_TEMP/leomoon-parsinegar-tools"
+          curl --fail --location --retry 3 --output "$RUNNER_TEMP/leomoon-parsinegar-tools/linuxdeploy" "https://github.com/linuxdeploy/linuxdeploy/releases/download/$LINUXDEPLOY_VERSION/linuxdeploy-x86_64.AppImage"
+          curl --fail --location --retry 3 --output "$RUNNER_TEMP/leomoon-parsinegar-tools/linuxdeploy-plugin-qt" "https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/$LINUXDEPLOY_QT_VERSION/linuxdeploy-plugin-qt-x86_64.AppImage"
+          curl --fail --location --retry 3 --output "$RUNNER_TEMP/leomoon-parsinegar-tools/runtime-x86_64" "https://github.com/AppImage/type2-runtime/releases/download/continuous/runtime-x86_64"
+          chmod +x "$RUNNER_TEMP/leomoon-parsinegar-tools/linuxdeploy" "$RUNNER_TEMP/leomoon-parsinegar-tools/linuxdeploy-plugin-qt"
+          echo "$RUNNER_TEMP/leomoon-parsinegar-tools" >> "$GITHUB_PATH"
+          echo "LDAI_RUNTIME_FILE=$RUNNER_TEMP/leomoon-parsinegar-tools/runtime-x86_64" >> "$GITHUB_ENV"
 
       - name: Configure release build
         run: cmake -S . -B build-linux -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON
@@ -89,7 +89,7 @@ jobs:
       - name: Upload Linux artifacts
         uses: actions/upload-artifact@v6
         with:
-          name: parsinegar-linux-${{ github.sha }}
+          name: leomoon-parsinegar-linux-${{ github.sha }}
           path: dist/
           if-no-files-found: error
           retention-days: 14
@@ -124,7 +124,7 @@ jobs:
       - name: Download Linux artifacts
         uses: actions/download-artifact@v7
         with:
-          name: parsinegar-linux-${{ github.sha }}
+          name: leomoon-parsinegar-linux-${{ github.sha }}
           path: dist
 
       - name: Verify install, runtimes, launch, and uninstall

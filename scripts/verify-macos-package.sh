@@ -10,7 +10,7 @@ app=$1
 pkg=$2
 dmg=$3
 version=$4
-executable="$app/Contents/MacOS/ParsiNegar"
+executable="$app/Contents/MacOS/leomoon-parsinegar"
 
 require_file() {
     if [[ ! -s "$1" ]]; then
@@ -48,7 +48,7 @@ if [[ "$bundle_version" != "$version" ]]; then
     echo "macOS bundle version $bundle_version does not match $version" >&2
     exit 1
 fi
-if [[ "$bundle_identifier" != "com.leomoon.ParsiNegarDesktop" ]]; then
+if [[ "$bundle_identifier" != "com.leomoon.ParsiNegar" ]]; then
     echo "Unexpected macOS bundle identifier: $bundle_identifier" >&2
     exit 1
 fi
@@ -91,7 +91,7 @@ cleanup() {
 trap cleanup EXIT
 
 pkgutil --expand "$pkg" "$expanded_pkg"
-for component in ParsiNegar-app.pkg ParsiNegar-fonts.pkg ParsiNegar-shortcut.pkg; do
+for component in leomoon-parsinegar-app.pkg leomoon-parsinegar-fonts.pkg leomoon-parsinegar-shortcut.pkg; do
     if [[ ! -e "$expanded_pkg/$component" ]]; then
         echo "Required macOS installer component is missing: $component" >&2
         exit 1
@@ -100,7 +100,7 @@ done
 require_file "$expanded_pkg/Distribution"
 
 source_font_count="$(find "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/assets/fonts/system" -type f \( -name '*.ttf' -o -name '*.otf' -o -name '*.ttc' \) | wc -l | tr -d ' ')"
-font_component="$expanded_pkg/ParsiNegar-fonts.pkg"
+font_component="$expanded_pkg/leomoon-parsinegar-fonts.pkg"
 if [[ -d "$font_component" ]]; then
     require_file "$font_component/Bom"
     packaged_font_count="$(lsbom -s "$font_component/Bom" | grep -Ec '\.(ttf|otf|ttc)$' || true)"

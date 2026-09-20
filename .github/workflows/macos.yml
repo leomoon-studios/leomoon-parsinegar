@@ -85,8 +85,8 @@ jobs:
             echo "Both macOS application and installer signing identities are required when a certificate is configured." >&2
             exit 1
           fi
-          certificate_path="$RUNNER_TEMP/parsinegar-signing.p12"
-          keychain_path="$RUNNER_TEMP/parsinegar-signing.keychain-db"
+          certificate_path="$RUNNER_TEMP/leomoon-parsinegar-signing.p12"
+          keychain_path="$RUNNER_TEMP/leomoon-parsinegar-signing.keychain-db"
           keychain_password="$(uuidgen)"
           printf '%s' "$CERTIFICATE_BASE64" | base64 --decode > "$certificate_path"
           security create-keychain -p "$keychain_password" "$keychain_path"
@@ -99,8 +99,8 @@ jobs:
           echo "PARSINEGAR_INSTALLER_IDENTITY=$INSTALLER_IDENTITY" >> "$GITHUB_ENV"
           echo "PARSINEGAR_SIGNING_KEYCHAIN=$keychain_path" >> "$GITHUB_ENV"
           if [[ -n "$NOTARY_APPLE_ID" && -n "$NOTARY_TEAM_ID" && -n "$NOTARY_PASSWORD" ]]; then
-            xcrun notarytool store-credentials parsinegar-notary --apple-id "$NOTARY_APPLE_ID" --team-id "$NOTARY_TEAM_ID" --password "$NOTARY_PASSWORD" --keychain "$keychain_path"
-            echo "PARSINEGAR_NOTARY_PROFILE=parsinegar-notary" >> "$GITHUB_ENV"
+            xcrun notarytool store-credentials leomoon-parsinegar-notary --apple-id "$NOTARY_APPLE_ID" --team-id "$NOTARY_TEAM_ID" --password "$NOTARY_PASSWORD" --keychain "$keychain_path"
+            echo "PARSINEGAR_NOTARY_PROFILE=leomoon-parsinegar-notary" >> "$GITHUB_ENV"
             echo "PARSINEGAR_NOTARY_KEYCHAIN=$keychain_path" >> "$GITHUB_ENV"
           fi
 
@@ -114,7 +114,7 @@ jobs:
             security delete-keychain "$PARSINEGAR_SIGNING_KEYCHAIN" || true
             security list-keychains -d user -s "$HOME/Library/Keychains/login.keychain-db" || true
           fi
-          rm -f "$RUNNER_TEMP/parsinegar-signing.p12"
+          rm -f "$RUNNER_TEMP/leomoon-parsinegar-signing.p12"
 
       - name: Retain failure logs
         if: failure()
@@ -131,7 +131,7 @@ jobs:
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v6
         with:
-          name: parsinegar-macos-${{ github.sha }}
+          name: leomoon-parsinegar-macos-${{ github.sha }}
           path: dist/
           if-no-files-found: error
           retention-days: 14
@@ -152,7 +152,7 @@ jobs:
       - name: Download macOS artifacts
         uses: actions/download-artifact@v7
         with:
-          name: parsinegar-macos-${{ github.sha }}
+          name: leomoon-parsinegar-macos-${{ github.sha }}
           path: dist
 
       - name: Verify DMG, default install, opt-out install, launch, and cleanup
@@ -161,14 +161,14 @@ jobs:
       - name: Retain installer diagnostics
         if: failure()
         run: |
-          installer -showChoicesXML -pkg "dist/ParsiNegar-Desktop-$(tr -d '[:space:]' < metadata/VERSION).pkg" > "$RUNNER_TEMP/parsinegar-installer-choices.xml" || true
-          pkgutil --pkgs | grep -i parsinegar > "$RUNNER_TEMP/parsinegar-receipts.txt" || true
+          installer -showChoicesXML -pkg "dist/leomoon-parsinegar-$(tr -d '[:space:]' < metadata/VERSION).pkg" > "$RUNNER_TEMP/leomoon-parsinegar-installer-choices.xml" || true
+          pkgutil --pkgs | grep -i parsinegar > "$RUNNER_TEMP/leomoon-parsinegar-receipts.txt" || true
 
       - name: Upload installer diagnostics
         if: failure()
         uses: actions/upload-artifact@v6
         with:
           name: macos-installer-failure-logs
-          path: ${{ runner.temp }}/parsinegar-*
+          path: ${{ runner.temp }}/leomoon-parsinegar-*
           if-no-files-found: ignore
           retention-days: 14

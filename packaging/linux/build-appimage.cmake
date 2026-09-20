@@ -57,14 +57,14 @@ set(ENV{EXTRA_PLATFORM_PLUGINS} "${extra_platform_plugins}")
 set(ENV{NO_STRIP} 1)
 set(ENV{QMAKE} "${QMAKE}")
 set(ENV{QML_SOURCES_PATHS} "${SOURCE_DIR}/qml")
-set(ENV{LDAI_OUTPUT} "${BUILD_DIR}/package/linux/ParsiNegar-${VERSION}-${ARCH}.AppImage")
+set(ENV{LDAI_OUTPUT} "${BUILD_DIR}/package/linux/leomoon-parsinegar-${VERSION}-${ARCH}.AppImage")
 
 execute_process(
     COMMAND "${LINUXDEPLOY}"
         --appdir "${app_dir}"
-        --executable "${app_dir}/usr/bin/ParsiNegar"
+        --executable "${app_dir}/usr/bin/leomoon-parsinegar"
         --library "${qt_concurrent_library}"
-        --desktop-file "${SOURCE_DIR}/packaging/linux/com.leomoon.ParsiNegarDesktop.desktop"
+        --desktop-file "${SOURCE_DIR}/packaging/linux/com.leomoon.ParsiNegar.desktop"
         --icon-file "${SOURCE_DIR}/assets/app-icon.svg"
         --plugin qt
         --output appimage

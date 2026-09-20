@@ -6,13 +6,13 @@ set(required_files
     cmake/Packaging.cmake
     packaging/Qt-LGPL-NOTICE.md
     packaging/licenses/Qt-LGPL-3.0-only.txt
-    packaging/linux/com.leomoon.ParsiNegarDesktop.desktop
-    packaging/linux/com.leomoon.ParsiNegarDesktop.metainfo.xml.in
+    packaging/linux/com.leomoon.ParsiNegar.desktop
+    packaging/linux/com.leomoon.ParsiNegar.metainfo.xml.in
     packaging/linux/build-appimage.cmake
     packaging/linux/fonts-postinst
     packaging/linux/fonts-postrm
-    packaging/windows/ParsiNegar.rc.in
-    packaging/windows/ParsiNegar.iss.in
+    packaging/windows/leomoon-parsinegar.rc.in
+    packaging/windows/leomoon-parsinegar.iss.in
     packaging/windows/app-icon.ico
     packaging/windows/deploy.cmake
     docs/WINDOWS_SIGNING.md
@@ -67,7 +67,7 @@ if(system_font_count EQUAL 0)
     message(FATAL_ERROR "The optional system-font component has no font files")
 endif()
 
-file(READ "${SOURCE_DIR}/packaging/windows/ParsiNegar.iss.in" windows_installer)
+file(READ "${SOURCE_DIR}/packaging/windows/leomoon-parsinegar.iss.in" windows_installer)
 foreach(expected IN ITEMS
     "Name: \"systemfonts\""
     "Name: \"desktopshortcut\""
@@ -81,7 +81,7 @@ endforeach()
 
 file(READ "${SOURCE_DIR}/packaging/macos/distribution.xml.in" macos_installer)
 foreach(expected IN ITEMS
-    "id=\"application\" title=\"ParsiNegar Desktop\" start_visible=\"false\" start_enabled=\"false\" start_selected=\"true\""
+    "id=\"application\" title=\"LeoMoon ParsiNegar\" start_visible=\"false\" start_enabled=\"false\" start_selected=\"true\""
     "id=\"systemfonts\" title=\"Install bundled LMN and LMU fonts system-wide\" start_selected=\"true\""
     "id=\"desktopshortcut\" title=\"Create a desktop shortcut\" start_selected=\"true\""
 )
@@ -129,11 +129,11 @@ foreach(platform IN ITEMS linux windows macos)
     endif()
 endforeach()
 
-file(READ "${SOURCE_DIR}/packaging/linux/com.leomoon.ParsiNegarDesktop.desktop" desktop_entry)
+file(READ "${SOURCE_DIR}/packaging/linux/com.leomoon.ParsiNegar.desktop" desktop_entry)
 foreach(expected IN ITEMS
     "Type=Application"
-    "Exec=ParsiNegar"
-    "Icon=com.leomoon.ParsiNegarDesktop"
+    "Exec=leomoon-parsinegar"
+    "Icon=com.leomoon.ParsiNegar"
 )
     string(FIND "${desktop_entry}" "${expected}" position)
     if(position EQUAL -1)

@@ -24,7 +24,7 @@ mkdir -p "$dist_dir"
 cmake --build "$build_dir" --target package_appimage --parallel
 cpack --config "$build_dir/CPackConfig.cmake" -G DEB -B "$build_dir/packages"
 
-mapfile -t appimages < <(find "$build_dir/package/linux" -maxdepth 1 -type f -name "ParsiNegar-$version-*.AppImage" -print)
+mapfile -t appimages < <(find "$build_dir/package/linux" -maxdepth 1 -type f -name "leomoon-parsinegar-$version-*.AppImage" -print)
 mapfile -t debs < <(find "$build_dir/packages" -maxdepth 1 -type f -name '*.deb' -print | sort)
 
 if (( ${#appimages[@]} != 1 )); then
@@ -43,7 +43,7 @@ chmod +x "$dist_dir/$(basename "${appimages[0]}")"
 "$repo_dir/scripts/verify-linux-appimage.sh" "$dist_dir/$(basename "${appimages[0]}")" "$version"
 
 commit="${GITHUB_SHA:-unknown}"
-printf '{\n  "application": "ParsiNegar Desktop",\n  "version": "%s",\n  "releaseDate": "%s",\n  "commit": "%s",\n  "platform": "linux",\n  "formats": ["AppImage", "deb"]\n}\n' "$version" "$release_date" "$commit" > "$dist_dir/release-manifest.json"
+printf '{\n  "application": "LeoMoon ParsiNegar",\n  "version": "%s",\n  "releaseDate": "%s",\n  "commit": "%s",\n  "platform": "linux",\n  "formats": ["AppImage", "deb"]\n}\n' "$version" "$release_date" "$commit" > "$dist_dir/release-manifest.json"
 
 (
     cd "$dist_dir"

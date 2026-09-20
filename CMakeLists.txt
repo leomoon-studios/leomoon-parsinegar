@@ -17,9 +17,9 @@ if(NOT PARSINEGAR_RELEASE_DATE MATCHES "^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0
 endif()
 
 project(
-    ParsiNegarDesktop
+    LeoMoonParsiNegar
     VERSION "${PARSINEGAR_VERSION}"
-    DESCRIPTION "Standalone ParsiNegar desktop application"
+    DESCRIPTION "Standalone LeoMoon ParsiNegar application"
     LANGUAGES CXX
 )
 
@@ -160,19 +160,19 @@ target_link_libraries(parsinegar_ui PUBLIC
     Qt6::QuickControls2
 )
 
-qt_add_executable(parsinegar_desktop
+qt_add_executable(leomoon_parsinegar
     src/main.cpp
 )
 
 if(WIN32)
     enable_language(RC)
     configure_file(
-        packaging/windows/ParsiNegar.rc.in
-        "${CMAKE_CURRENT_BINARY_DIR}/packaging/windows/ParsiNegar.rc"
+        packaging/windows/leomoon-parsinegar.rc.in
+        "${CMAKE_CURRENT_BINARY_DIR}/packaging/windows/leomoon-parsinegar.rc"
         @ONLY
     )
-    target_sources(parsinegar_desktop PRIVATE
-        "${CMAKE_CURRENT_BINARY_DIR}/packaging/windows/ParsiNegar.rc"
+    target_sources(leomoon_parsinegar PRIVATE
+        "${CMAKE_CURRENT_BINARY_DIR}/packaging/windows/leomoon-parsinegar.rc"
     )
 endif()
 
@@ -193,10 +193,10 @@ if(APPLE)
         GENERATED TRUE
         MACOSX_PACKAGE_LOCATION Resources
     )
-    target_sources(parsinegar_desktop PRIVATE "${parsinegar_macos_icon}")
+    target_sources(leomoon_parsinegar PRIVATE "${parsinegar_macos_icon}")
 endif()
 
-target_link_libraries(parsinegar_desktop PRIVATE
+target_link_libraries(leomoon_parsinegar PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Qml
@@ -206,16 +206,16 @@ target_link_libraries(parsinegar_desktop PRIVATE
     parsinegar_uiplugin
 )
 
-target_compile_definitions(parsinegar_desktop PRIVATE
+target_compile_definitions(leomoon_parsinegar PRIVATE
     PARSINEGAR_VERSION="${PROJECT_VERSION}"
 )
 
-set_target_properties(parsinegar_desktop PROPERTIES
-    OUTPUT_NAME ParsiNegar
+set_target_properties(leomoon_parsinegar PROPERTIES
+    OUTPUT_NAME leomoon-parsinegar
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
-    MACOSX_BUNDLE_BUNDLE_NAME "ParsiNegar Desktop"
-    MACOSX_BUNDLE_GUI_IDENTIFIER "com.leomoon.ParsiNegarDesktop"
+    MACOSX_BUNDLE_BUNDLE_NAME "LeoMoon ParsiNegar"
+    MACOSX_BUNDLE_GUI_IDENTIFIER "com.leomoon.ParsiNegar"
     MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION}"
     MACOSX_BUNDLE_BUNDLE_VERSION "${PROJECT_VERSION}"
     MACOSX_BUNDLE_ICON_FILE "app-icon.icns"
@@ -236,7 +236,7 @@ if(BUILD_TESTING)
 
     add_test(
         NAME resource_smoke
-        COMMAND parsinegar_desktop --smoke-test
+        COMMAND leomoon_parsinegar --smoke-test
     )
 
     set_tests_properties(resource_smoke PROPERTIES
@@ -285,10 +285,10 @@ if(BUILD_TESTING)
 
     target_compile_definitions(parsinegar_service_tests PRIVATE
         PARSINEGAR_TEST_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
-        PARSINEGAR_TEST_APP_PATH="$<TARGET_FILE:parsinegar_desktop>"
+        PARSINEGAR_TEST_APP_PATH="$<TARGET_FILE:leomoon_parsinegar>"
     )
 
-    add_dependencies(parsinegar_service_tests parsinegar_desktop)
+    add_dependencies(parsinegar_service_tests leomoon_parsinegar)
 
     target_link_libraries(parsinegar_service_tests PRIVATE
         Qt6::Core
@@ -356,8 +356,8 @@ if(BUILD_TESTING)
         COMMAND "${CMAKE_COMMAND}"
             "-DEXPECTED_VERSION=${PROJECT_VERSION}"
             "-DEXPECTED_RELEASE_DATE=${PARSINEGAR_RELEASE_DATE}"
-            "-DAPP_PATH=$<TARGET_FILE:parsinegar_desktop>"
-            "-DMETADATA_PATH=${CMAKE_CURRENT_BINARY_DIR}/packaging/linux/com.leomoon.ParsiNegarDesktop.metainfo.xml"
+            "-DAPP_PATH=$<TARGET_FILE:leomoon_parsinegar>"
+            "-DMETADATA_PATH=${CMAKE_CURRENT_BINARY_DIR}/packaging/linux/com.leomoon.ParsiNegar.metainfo.xml"
             -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/CheckReleaseVersion.cmake"
     )
 endif()

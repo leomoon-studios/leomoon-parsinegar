@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <installer-gui-script minSpecVersion="2">
-    <title>ParsiNegar Desktop</title>
+    <title>LeoMoon ParsiNegar</title>
     <license file="LICENSE"/>
     <options customize="always" require-scripts="false"/>
     <choices-outline>
@@ -8,16 +8,16 @@
         <line choice="systemfonts"/>
         <line choice="desktopshortcut"/>
     </choices-outline>
-    <choice id="application" title="ParsiNegar Desktop" start_visible="false" start_enabled="false" start_selected="true">
-        <pkg-ref id="com.leomoon.ParsiNegarDesktop.app"/>
+    <choice id="application" title="LeoMoon ParsiNegar" start_visible="false" start_enabled="false" start_selected="true">
+        <pkg-ref id="com.leomoon.ParsiNegar.app"/>
     </choice>
     <choice id="systemfonts" title="Install bundled LMN and LMU fonts system-wide" start_selected="true">
-        <pkg-ref id="com.leomoon.ParsiNegarDesktop.fonts"/>
+        <pkg-ref id="com.leomoon.ParsiNegar.fonts"/>
     </choice>
     <choice id="desktopshortcut" title="Create a desktop shortcut" start_selected="true">
-        <pkg-ref id="com.leomoon.ParsiNegarDesktop.shortcut"/>
+        <pkg-ref id="com.leomoon.ParsiNegar.shortcut"/>
     </choice>
-    <pkg-ref id="com.leomoon.ParsiNegarDesktop.app" version="@PROJECT_VERSION@">ParsiNegar-app.pkg</pkg-ref>
-    <pkg-ref id="com.leomoon.ParsiNegarDesktop.fonts" version="@PROJECT_VERSION@">ParsiNegar-fonts.pkg</pkg-ref>
-    <pkg-ref id="com.leomoon.ParsiNegarDesktop.shortcut" version="@PROJECT_VERSION@">ParsiNegar-shortcut.pkg</pkg-ref>
+    <pkg-ref id="com.leomoon.ParsiNegar.app" version="@PROJECT_VERSION@">leomoon-parsinegar-app.pkg</pkg-ref>
+    <pkg-ref id="com.leomoon.ParsiNegar.fonts" version="@PROJECT_VERSION@">leomoon-parsinegar-fonts.pkg</pkg-ref>
+    <pkg-ref id="com.leomoon.ParsiNegar.shortcut" version="@PROJECT_VERSION@">leomoon-parsinegar-shortcut.pkg</pkg-ref>
 </installer-gui-script>

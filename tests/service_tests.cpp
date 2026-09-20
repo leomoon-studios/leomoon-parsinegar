@@ -73,7 +73,7 @@ void ServiceTests::initTestCase()
     QStandardPaths::setTestModeEnabled(true);
     QCoreApplication::setOrganizationName(QStringLiteral("LeoMoon Studios"));
     QCoreApplication::setOrganizationDomain(QStringLiteral("leomoon-studios.com"));
-    QCoreApplication::setApplicationName(QStringLiteral("ParsiNegar Desktop Tests"));
+    QCoreApplication::setApplicationName(QStringLiteral("LeoMoon ParsiNegar Tests"));
 }
 
 void ServiceTests::clipboardRoundTrip()
@@ -124,7 +124,7 @@ void ServiceTests::settingsUsePlatformLocation()
 {
     SettingsStore store;
     const QString expectedDirectory = QDir(QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation))
-                                          .filePath(QStringLiteral("leomoon-studios.parsinegar-desktop"));
+                                          .filePath(QStringLiteral("leomoon-parsinegar"));
 
     QCOMPARE(store.configDirectory(), expectedDirectory);
     QCOMPARE(store.settingsFilePath(), QDir(expectedDirectory).filePath(QStringLiteral("settings.json")));
