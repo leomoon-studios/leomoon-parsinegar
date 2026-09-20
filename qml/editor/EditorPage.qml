@@ -293,6 +293,17 @@ FocusScope {
                     }
                 }
 
+                OnScreenKeyboard {
+                    id: onScreenKeyboard
+                    objectName: "onScreenKeyboard"
+                    Layout.fillWidth: true
+                    visible: root.controller.keyboardDrawerOpen
+                    controller: root.controller
+                    onTextRequested: function(text) { root.insertOnScreenText(text) }
+                    onBackspaceRequested: root.deleteOnScreenBackward()
+                    onNewlineRequested: root.insertOnScreenNewline()
+                }
+
                 RowLayout {
                     id: conversionActions
                     objectName: "conversionActions"

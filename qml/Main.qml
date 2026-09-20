@@ -19,11 +19,13 @@ ApplicationWindow {
     property var textDirectionService: null
     property bool allowApplicationClose: false
     readonly property bool rightToLeft: controller.uiLanguage === "fa" || controller.uiLanguage === "ar"
+    readonly property int standardMinimumHeight: 450
+    readonly property int keyboardMinimumHeight: 735
 
     width: 900
     height: 720
     minimumWidth: 740
-    minimumHeight: 450
+    minimumHeight: controller.keyboardDrawerOpen ? keyboardMinimumHeight : standardMinimumHeight
     visible: true
     title: controller.windowTitle
     color: AppTheme.background
@@ -176,6 +178,18 @@ ApplicationWindow {
         onActivated: root.togglePage("help")
     }
 
+    Shortcut {
+        objectName: "keyboardShortcut"
+        sequence: "Ctrl+K"
+        context: Qt.WindowShortcut
+        enabled: controller.page === "editor" && controller.settingsReady
+            && !controller.busy && !exportController.busy
+        onActivated: {
+            controller.setKeyboardDrawerOpen(!controller.keyboardDrawerOpen)
+            Qt.callLater(editorPage.focusEditor)
+        }
+    }
+
     Component.onCompleted: {
         AppTheme.fontFamily = typography.family
         if (controller.page === "editor")
@@ -303,6 +317,20 @@ ApplicationWindow {
                     toolTip: controller.uiText("export.title") + " (Ctrl+E)"
                     enabled: controller.settingsReady && !controller.busy && !exportController.busy
                     onClicked: controller.openExport()
+                }
+
+                IconButton {
+                    id: keyboardButton
+                    objectName: "keyboardButton"
+                    visible: controller.page === "editor"
+                    glyph: AppTheme.iconKeyboard
+                    toolTip: controller.uiText("keyboard.toggle") + " (Ctrl+K)"
+                    selected: controller.keyboardDrawerOpen
+                    enabled: controller.settingsReady && !controller.busy && !exportController.busy
+                    onClicked: {
+                        controller.setKeyboardDrawerOpen(!controller.keyboardDrawerOpen)
+                        Qt.callLater(editorPage.focusEditor)
+                    }
                 }
 
                 IconButton {

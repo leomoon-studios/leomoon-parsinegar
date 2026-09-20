@@ -137,6 +137,7 @@ TestCase {
         verify(findChild(applicationWindow, "textToolsShortcut") !== null)
         verify(findChild(applicationWindow, "exportShortcut") !== null)
         verify(findChild(applicationWindow, "helpShortcut") !== null)
+        verify(findChild(applicationWindow, "keyboardShortcut") !== null)
 
         applicationWindow.requestActivate()
         tryCompare(applicationWindow, "active", true, 2000)
@@ -160,6 +161,11 @@ TestCase {
         compare(controller.page, "settings")
         keyClick(Qt.Key_Comma, Qt.ControlModifier)
         compare(controller.page, "editor")
+
+        keyClick(Qt.Key_K, Qt.ControlModifier)
+        compare(controller.keyboardDrawerOpen, true)
+        keyClick(Qt.Key_K, Qt.ControlModifier)
+        compare(controller.keyboardDrawerOpen, false)
 
         controller.sourceText = "shortcut test"
         keyClick(Qt.Key_Return, Qt.ControlModifier)
@@ -317,6 +323,92 @@ TestCase {
         tryCompare(documentMenu, "visible", false)
         compare(controller.sourceText, "")
         verify(!controller.documentDirty)
+    }
+
+    function test_onScreenKeyboardDrawerTogglesLayersAndInsertsText() {
+        var applicationWindow = createMainWindow()
+        var controller = applicationWindow.editorController
+        var keyboardButton = findChild(applicationWindow, "keyboardButton")
+        var keyboard = findChild(applicationWindow, "onScreenKeyboard")
+        var editor = findChild(applicationWindow, "sourceEditor")
+        var primaryLayer = findChild(applicationWindow, "keyboardPrimaryLayer")
+        var symbolsLayer = findChild(applicationWindow, "keyboardSymbolsAdvancedLayer")
+        var backspace = findChild(applicationWindow, "keyboardBackspaceButton")
+        var space = findChild(applicationWindow, "keyboardSpaceButton")
+        var enter = findChild(applicationWindow, "keyboardEnterButton")
+        verify(keyboardButton !== null)
+        verify(keyboard !== null)
+        verify(!keyboard.visible)
+        compare(applicationWindow.minimumHeight, applicationWindow.standardMinimumHeight)
+        compare(keyboardButton.glyph, AppTheme.iconKeyboard)
+
+        controller.sourceText = "a"
+        editor.cursorPosition = controller.sourceText.length
+        applicationWindow.height = applicationWindow.standardMinimumHeight
+        tryCompare(applicationWindow, "height", applicationWindow.standardMinimumHeight)
+        keyboardButton.click()
+        tryCompare(keyboard, "visible", true)
+        compare(controller.keyboardDrawerOpen, true)
+        compare(applicationWindow.minimumHeight, applicationWindow.keyboardMinimumHeight)
+        verify(applicationWindow.height >= applicationWindow.keyboardMinimumHeight)
+        verify(keyboardButton.selected)
+        tryCompare(editor, "activeFocus", true)
+        compare(keyboard.primaryRows.length, 4)
+
+        var pe = findChild(keyboard, "keyboardKey_پ")
+        var zaad = findChild(keyboard, "keyboardKey_ض")
+        var che = findChild(keyboard, "keyboardKey_چ")
+        verify(pe !== null)
+        verify(zaad !== null)
+        verify(che !== null)
+        verify(zaad.mapToItem(keyboard, 0, 0).x < che.mapToItem(keyboard, 0, 0).x)
+        pe.click()
+        compare(controller.sourceText, "aپ")
+
+        symbolsLayer.click()
+        compare(keyboard.activeLayer, "symbols")
+        compare(keyboard.symbolsRows.length, 4)
+        var quote = findChild(keyboard, "keyboardKey_«")
+        verify(quote !== null)
+        quote.click()
+        compare(controller.sourceText, "aپ«")
+
+        var zwnj = findChild(keyboard, "keyboardKey_ZWNJ")
+        verify(zwnj !== null)
+        compare(zwnj.toolTipText, "Zero-width non-joiner (U+200C)")
+        zwnj.click()
+        compare(controller.sourceText, "aپ«‌")
+        backspace.click()
+        compare(controller.sourceText, "aپ«")
+        space.click()
+        enter.click()
+        compare(controller.sourceText, "aپ« \n")
+
+        primaryLayer.click()
+        zaad = findChild(keyboard, "keyboardKey_ض")
+        che = findChild(keyboard, "keyboardKey_چ")
+        verify(zaad !== null)
+        verify(che !== null)
+        controller.setUiLanguage("fa")
+        wait(0)
+        verify(zaad.mapToItem(keyboard, 0, 0).x < che.mapToItem(keyboard, 0, 0).x)
+        symbolsLayer.click()
+        zwnj = findChild(keyboard, "keyboardKey_ZWNJ")
+        compare(zwnj.toolTipText, "نویسهٔ نامرئیِ فاصلهٔ مجازی (U+200C)")
+        controller.setUiLanguage("en")
+        applicationWindow.width = applicationWindow.minimumWidth
+        applicationWindow.height = applicationWindow.minimumHeight
+        wait(0)
+        verify(keyboard.width > 0)
+        verify(keyboard.height > 0)
+        verify(keyboard.height <= applicationWindow.contentItem.height)
+        verify(keyboard.mapToItem(applicationWindow.contentItem, 0, 0).x >= 0)
+        verify(keyboard.mapToItem(applicationWindow.contentItem, 0, 0).y >= 0)
+
+        keyboardButton.click()
+        tryCompare(keyboard, "visible", false)
+        compare(controller.keyboardDrawerOpen, false)
+        compare(applicationWindow.minimumHeight, applicationWindow.standardMinimumHeight)
     }
 
     function test_editorContextMenuUsesTheMousePositionAndAppStyle() {

@@ -95,6 +95,7 @@ set_source_files_properties(qml/controls/SettingsToggle.qml PROPERTIES QT_RESOUR
 set_source_files_properties(qml/controls/SectionHeading.qml PROPERTIES QT_RESOURCE_ALIAS SectionHeading.qml)
 set_source_files_properties(qml/editor/EditorController.qml PROPERTIES QT_RESOURCE_ALIAS EditorController.qml)
 set_source_files_properties(qml/editor/EditorPage.qml PROPERTIES QT_RESOURCE_ALIAS EditorPage.qml)
+set_source_files_properties(qml/editor/OnScreenKeyboard.qml PROPERTIES QT_RESOURCE_ALIAS OnScreenKeyboard.qml)
 set_source_files_properties(qml/settings/SettingsPage.qml PROPERTIES QT_RESOURCE_ALIAS SettingsPage.qml)
 set_source_files_properties(qml/help/HelpPage.qml PROPERTIES QT_RESOURCE_ALIAS HelpPage.qml)
 set_source_files_properties(qml/texttools/TextToolsPage.qml PROPERTIES QT_RESOURCE_ALIAS TextToolsPage.qml)
@@ -131,6 +132,7 @@ qt_add_qml_module(parsinegar_ui
         qml/controls/StatusMessage.qml
         qml/editor/EditorController.qml
         qml/editor/EditorPage.qml
+        qml/editor/OnScreenKeyboard.qml
         qml/settings/SettingsPage.qml
         qml/help/HelpPage.qml
         qml/texttools/TextToolsPage.qml
