@@ -19,7 +19,7 @@ if ($releaseDate -notmatch '^\d{4}-\d{2}-\d{2}$') {
 
 $build = (Resolve-Path -LiteralPath $BuildDirectory).Path
 $stage = Join-Path $build "package\windows\stage"
-$installerScript = Join-Path $build "packaging\windows\ParsiNegar.iss"
+$installerScript = Join-Path $build "packaging\windows\leomoon-parsinegar.iss"
 if (-not $IsccPath) {
     $command = Get-Command ISCC.exe -ErrorAction SilentlyContinue
     if ($command) {
