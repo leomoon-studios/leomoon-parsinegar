@@ -26,6 +26,22 @@ FocusScope {
         editor.forceActiveFocus()
     }
 
+    function insertOnScreenText(text) {
+        var changed = controller.insertSourceText(text, editor.selectionStart, editor.selectionEnd)
+        editor.forceActiveFocus()
+        return changed
+    }
+
+    function deleteOnScreenBackward() {
+        var changed = controller.deleteSourceBackward(editor.selectionStart, editor.selectionEnd)
+        editor.forceActiveFocus()
+        return changed
+    }
+
+    function insertOnScreenNewline() {
+        return insertOnScreenText("\n")
+    }
+
     function pastePlainText() {
         if (controller.clipboardBridge === null
                 || typeof controller.clipboardBridge.readText !== "function")

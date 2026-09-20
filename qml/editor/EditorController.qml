@@ -19,6 +19,7 @@ Item {
     property bool reverseWords: true
     property bool videoStudioPro: false
     property int editorFontSize: Settings.ReshaperSettings.desktopDefaults().editorFontSize
+    property bool keyboardDrawerOpen: Settings.ReshaperSettings.desktopDefaults().keyboardDrawerOpen
     property string uiLanguage: "en"
     property string unicodeFontPath: ""
     property string compatibilityFontPath: ""
@@ -313,6 +314,28 @@ Item {
         return true
     }
 
+    function insertSourceText(text, selectionStart, selectionEnd) {
+        var insertedText = String(text === undefined || text === null ? "" : text)
+        var start = Math.max(0, Math.min(sourceText.length, Math.min(selectionStart, selectionEnd)))
+        var end = Math.max(start, Math.min(sourceText.length, Math.max(selectionStart, selectionEnd)))
+        var nextText = sourceText.slice(0, start) + insertedText + sourceText.slice(end)
+        if (nextText.length > maximumTextLength) {
+            state.statusText = uiText("status.textTooLarge")
+            state.statusLevel = "error"
+            return false
+        }
+        var cursor = start + insertedText.length
+        return replaceSourceText(nextText, cursor, cursor)
+    }
+
+    function deleteSourceBackward(selectionStart, selectionEnd) {
+        var start = Math.max(0, Math.min(sourceText.length, Math.min(selectionStart, selectionEnd)))
+        var end = Math.max(start, Math.min(sourceText.length, Math.max(selectionStart, selectionEnd)))
+        if (start === end && start > 0)
+            start--
+        return replaceSourceText(sourceText.slice(0, start) + sourceText.slice(end), start, start)
+    }
+
     function restoreSourceHistory(result) {
         if (!result.changed)
             return false
@@ -464,12 +487,22 @@ Item {
         return setEditorFontSize(editorFontSize + (delta < 0 ? -1 : 1))
     }
 
+    function setKeyboardDrawerOpen(open) {
+        var next = open === true
+        if (keyboardDrawerOpen === next)
+            return false
+        keyboardDrawerOpen = next
+        saveSettings()
+        return true
+    }
+
     function desktopSettings() {
         return {
             conversionMode: conversionMode,
             reverseWords: reverseWords,
             videoStudioPro: videoStudioPro,
             editorFontSize: editorFontSize,
+            keyboardDrawerOpen: keyboardDrawerOpen,
             fontPaths: {
                 unicode: unicodeFontPath,
                 compatibility: compatibilityFontPath
@@ -514,6 +547,7 @@ Item {
             ? desktop.videoStudioPro
             : false
         editorFontSize = desktop.editorFontSize
+        keyboardDrawerOpen = desktop.keyboardDrawerOpen
         exportSettings = Settings.ReshaperSettings.sanitizeExportSettings(desktop.exportSettings)
         unicodeFontPath = validFontPath(desktop.fontPaths.unicode) ? desktop.fontPaths.unicode : ""
         compatibilityFontPath = validFontPath(desktop.fontPaths.compatibility) ? desktop.fontPaths.compatibility : ""

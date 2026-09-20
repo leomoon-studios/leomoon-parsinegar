@@ -236,6 +236,53 @@ TestCase {
         verify(!controller.canRedo)
     }
 
+    function test_onScreenEditorHelpersReplaceSelectionAndRespectLimits() {
+        var applicationWindow = createMainWindow()
+        var controller = applicationWindow.editorController
+        var editorPage = findChild(applicationWindow, "editorPage")
+        var editor = findChild(applicationWindow, "sourceEditor")
+
+        verify(editorPage !== null)
+        controller.resetDocument("alpha", "")
+        editor.cursorPosition = 1
+        editor.moveCursorSelection(4, TextEdit.SelectCharacters)
+        verify(editorPage.insertOnScreenText("X"))
+        compare(controller.sourceText, "aXa")
+        compare(editor.selectionStart, 2)
+        compare(editor.selectionEnd, 2)
+        verify(controller.documentDirty)
+        verify(controller.canUndo)
+        verify(controller.undoSourceEdit())
+        compare(controller.sourceText, "alpha")
+        verify(controller.redoSourceEdit())
+        compare(controller.sourceText, "aXa")
+
+        editor.cursorPosition = editor.length
+        verify(editorPage.insertOnScreenText(" پ"))
+        compare(controller.sourceText, "aXa پ")
+        verify(editorPage.insertOnScreenText(" latin"))
+        compare(controller.sourceText, "aXa پ latin")
+        verify(editorPage.deleteOnScreenBackward())
+        compare(controller.sourceText, "aXa پ lati")
+        verify(editorPage.insertOnScreenNewline())
+        compare(controller.sourceText, "aXa پ lati\n")
+
+        editor.cursorPosition = 2
+        verify(editorPage.deleteOnScreenBackward())
+        compare(controller.sourceText, "aa پ lati\n")
+        compare(editor.cursorPosition, 1)
+        editor.cursorPosition = 0
+        verify(!editorPage.deleteOnScreenBackward())
+        compare(controller.sourceText, "aa پ lati\n")
+
+        controller.resetDocument(repeated("x", controller.maximumTextLength), "")
+        editor.cursorPosition = editor.length
+        verify(!editorPage.insertOnScreenText("پ"))
+        compare(controller.sourceText.length, controller.maximumTextLength)
+        compare(controller.statusLevel, "error")
+        compare(controller.statusText, controller.uiText("status.textTooLarge"))
+    }
+
     function test_editorShortcutsPreserveConsecutiveBlankLines() {
         var applicationWindow = createMainWindow()
         var controller = applicationWindow.editorController
