@@ -9,6 +9,10 @@ on:
       release_tag:
         required: true
         type: string
+      arch:
+        required: false
+        default: all
+        type: string
     secrets:
       WINDOWS_SIGNING_CERTIFICATE_BASE64:
         required: false
@@ -29,24 +33,12 @@ env:
 jobs:
   build-test-package:
     name: Build, test, and package (${{ matrix.release_arch }})
-    runs-on: ${{ matrix.runner }}
+    runs-on: ${{ matrix.release_arch == 'arm64' && 'windows-11-vs2026-arm' || 'windows-2022' }}
     timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - runner: windows-2022
-            qt_host: windows
-            qt_arch: win64_msvc2022_64
-            compiler_arch: x64
-            vc_component: Microsoft.VisualStudio.Component.VC.Tools.x86.x64
-            release_arch: x64
-          - runner: windows-11-vs2026-arm
-            qt_host: windows_arm64
-            qt_arch: win64_msvc2022_arm64
-            compiler_arch: arm64
-            vc_component: Microsoft.VisualStudio.Component.VC.Tools.ARM64
-            release_arch: arm64
+        release_arch: ${{ fromJSON(inputs.arch == 'x64' && '["x64"]' || inputs.arch == 'arm64' && '["arm64"]' || '["x64","arm64"]') }}
 
     steps:
       - name: Check out source
@@ -60,12 +52,13 @@ jobs:
         shell: pwsh
         run: |
           $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
-          $installationPath = (& $vswhere -latest -products * -requires ${{ matrix.vc_component }} -property installationPath).Trim()
+          $component = "${{ matrix.release_arch == 'arm64' && 'Microsoft.VisualStudio.Component.VC.Tools.ARM64' || 'Microsoft.VisualStudio.Component.VC.Tools.x86.x64' }}"
+          $installationPath = (& $vswhere -latest -products * -requires $component -property installationPath).Trim()
           if ([string]::IsNullOrWhiteSpace($installationPath)) {
-            throw "Visual Studio with the ${{ matrix.compiler_arch }} C++ toolchain was not found"
+            throw "Visual Studio with the ${{ matrix.release_arch }} C++ toolchain was not found"
           }
           $devCommand = Join-Path $installationPath "Common7\Tools\VsDevCmd.bat"
-          & cmd.exe /s /c "`"$devCommand`" -no_logo -arch=${{ matrix.compiler_arch }} -host_arch=${{ matrix.compiler_arch }} && set" |
+          & cmd.exe /s /c "`"$devCommand`" -no_logo -arch=${{ matrix.release_arch }} -host_arch=${{ matrix.release_arch }} && set" |
             ForEach-Object {
               $separator = $_.IndexOf("=")
               if ($separator -gt 0) {
@@ -81,9 +74,9 @@ jobs:
         uses: jurplel/install-qt-action@v4
         with:
           version: ${{ env.QT_VERSION }}
-          host: ${{ matrix.qt_host }}
+          host: ${{ matrix.release_arch == 'arm64' && 'windows_arm64' || 'windows' }}
           target: desktop
-          arch: ${{ matrix.qt_arch }}
+          arch: ${{ matrix.release_arch == 'arm64' && 'win64_msvc2022_arm64' || 'win64_msvc2022_64' }}
           cache: true
           setup-python: true
 
@@ -157,16 +150,12 @@ jobs:
   clean-installer-smoke:
     name: Clean Windows installer smoke test (${{ matrix.release_arch }})
     needs: build-test-package
-    runs-on: ${{ matrix.runner }}
+    runs-on: ${{ matrix.release_arch == 'arm64' && 'windows-11-vs2026-arm' || 'windows-2022' }}
     timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - runner: windows-2022
-            release_arch: x64
-          - runner: windows-11-vs2026-arm
-            release_arch: arm64
+        release_arch: ${{ fromJSON(inputs.arch == 'x64' && '["x64"]' || inputs.arch == 'arm64' && '["arm64"]' || '["x64","arm64"]') }}
 
     steps:
       - name: Check out verification scripts

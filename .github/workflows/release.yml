@@ -8,6 +8,25 @@ on:
         required: true
         default: 3.0.0
         type: string
+      target:
+        description: Platform to build and test
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - linux
+          - windows
+          - macos
+      arch:
+        description: Architecture for Linux and Windows; macOS is always universal
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - x64
+          - arm64
   push:
     tags:
       - "v*.*.*"
@@ -43,23 +62,28 @@ jobs:
 
   linux:
     name: Linux
+    if: github.event_name == 'push' || inputs.target == 'all' || inputs.target == 'linux'
     needs: validate
     uses: ./.github/workflows/linux.yml
     with:
       release_date: ${{ needs.validate.outputs.release_date }}
       release_tag: ${{ needs.validate.outputs.release_tag }}
+      arch: ${{ github.event_name == 'push' && 'all' || inputs.arch }}
 
   windows:
     name: Windows
+    if: github.event_name == 'push' || inputs.target == 'all' || inputs.target == 'windows'
     needs: validate
     uses: ./.github/workflows/windows.yml
     with:
       release_date: ${{ needs.validate.outputs.release_date }}
       release_tag: ${{ needs.validate.outputs.release_tag }}
+      arch: ${{ github.event_name == 'push' && 'all' || inputs.arch }}
     secrets: inherit
 
   macos:
     name: macOS
+    if: github.event_name == 'push' || inputs.target == 'all' || inputs.target == 'macos'
     needs: validate
     uses: ./.github/workflows/macos.yml
     with:

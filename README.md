@@ -54,6 +54,30 @@ git tag v3.0.0
 git push origin v3.0.0
 ```
 
+### Manual test builds
+
+The release workflow can also be started manually to build and test packages without creating a tag or publishing a GitHub Release. Specify the test version, target platform, and architecture with the GitHub CLI:
+
+```sh
+gh workflow run release.yml --ref master \
+  -f version=3.0.0 \
+  -f target=all \
+  -f arch=all
+```
+
+The `target` input accepts `all`, `linux`, `windows`, or `macos`. The `arch` input accepts `all`, `x64`, or `arm64`; Linux maps `x64` to `amd64`, while macOS always produces a universal Intel and Apple Silicon build and ignores the architecture selection.
+
+For example, build and test only the Windows ARM64 installer:
+
+```sh
+gh workflow run release.yml --ref master \
+  -f version=3.0.0 \
+  -f target=windows \
+  -f arch=arm64
+```
+
+Monitor the latest run from the terminal with `gh run watch --exit-status`, or open the run under the repository's **Actions** tab. Successful packages can be downloaded from the run's **Artifacts** section. Manual runs never execute the publishing job.
+
 Ordinary branch pushes do not build release packages. The Linux workflow builds native x86_64 and ARM64 packages with Qt 6.8.3, runs the complete test and QML lint suites, produces self-contained AppImages plus separate application and architecture-independent optional-font Ubuntu packages, and verifies X11 and Wayland startup without a Qt SDK.
 
 The Windows workflow builds native x64 and ARM64 installers with Qt 6.8.3 and MSVC, runs the same tests and QML linting, and deploys the Qt runtime with `windeployqt`. Fresh Windows jobs test the default font and desktop-shortcut selections, both opt-out choices, application launch, and uninstall for each architecture. Tagged builds support optional Authenticode signing through protected repository secrets as described in [Windows release signing](docs/WINDOWS_SIGNING.md).

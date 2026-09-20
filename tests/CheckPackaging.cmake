@@ -86,10 +86,12 @@ endforeach()
 
 file(READ "${SOURCE_DIR}/.github/workflows/linux.yml" linux_workflow)
 foreach(expected IN ITEMS
-    "runner: ubuntu-24.04-arm"
-    "qt_host: linux_arm64"
-    "qt_arch: linux_gcc_arm64"
-    "appimage_arch: aarch64"
+    "inputs.arch == 'x64'"
+    "inputs.arch == 'arm64'"
+    "ubuntu-24.04-arm"
+    "linux_arm64"
+    "linux_gcc_arm64"
+    "aarch64"
     "leomoon-parsinegar-linux-"
 )
     string(FIND "${linux_workflow}" "${expected}" position)
@@ -100,15 +102,31 @@ endforeach()
 
 file(READ "${SOURCE_DIR}/.github/workflows/windows.yml" windows_workflow)
 foreach(expected IN ITEMS
-    "runner: windows-11-vs2026-arm"
-    "qt_host: windows_arm64"
-    "qt_arch: win64_msvc2022_arm64"
-    "release_arch: arm64"
+    "inputs.arch == 'x64'"
+    "inputs.arch == 'arm64'"
+    "windows-11-vs2026-arm"
+    "windows_arm64"
+    "win64_msvc2022_arm64"
     "leomoon-parsinegar-windows-"
 )
     string(FIND "${windows_workflow}" "${expected}" position)
     if(position EQUAL -1)
         message(FATAL_ERROR "Windows multi-architecture workflow is missing: ${expected}")
+    endif()
+endforeach()
+
+file(READ "${SOURCE_DIR}/.github/workflows/release.yml" release_workflow)
+foreach(expected IN ITEMS
+    "target:"
+    "arch:"
+    "inputs.target == 'linux'"
+    "inputs.target == 'windows'"
+    "inputs.target == 'macos'"
+    "github.event_name == 'push' && 'all' || inputs.arch"
+)
+    string(FIND "${release_workflow}" "${expected}" position)
+    if(position EQUAL -1)
+        message(FATAL_ERROR "Release workflow filtering is missing: ${expected}")
     endif()
 endforeach()
 

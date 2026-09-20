@@ -9,6 +9,10 @@ on:
       release_tag:
         required: true
         type: string
+      arch:
+        required: false
+        default: all
+        type: string
 
 permissions:
   contents: read
@@ -27,24 +31,12 @@ env:
 jobs:
   build-test-package:
     name: Build, test, and package (${{ matrix.release_arch }})
-    runs-on: ${{ matrix.runner }}
+    runs-on: ${{ matrix.release_arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-22.04' }}
     timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - runner: ubuntu-22.04
-            qt_host: linux
-            qt_arch: linux_gcc_64
-            appimage_arch: x86_64
-            release_arch: amd64
-            include_fonts: true
-          - runner: ubuntu-24.04-arm
-            qt_host: linux_arm64
-            qt_arch: linux_gcc_arm64
-            appimage_arch: aarch64
-            release_arch: arm64
-            include_fonts: false
+        release_arch: ${{ fromJSON(inputs.arch == 'x64' && '["amd64"]' || inputs.arch == 'arm64' && '["arm64"]' || '["amd64","arm64"]') }}
 
     steps:
       - name: Check out source
@@ -66,21 +58,22 @@ jobs:
         uses: jurplel/install-qt-action@v4
         with:
           version: ${{ env.QT_VERSION }}
-          host: ${{ matrix.qt_host }}
+          host: ${{ matrix.release_arch == 'arm64' && 'linux_arm64' || 'linux' }}
           target: desktop
-          arch: ${{ matrix.qt_arch }}
+          arch: ${{ matrix.release_arch == 'arm64' && 'linux_gcc_arm64' || 'linux_gcc_64' }}
           cache: true
           setup-python: true
 
       - name: Install pinned Linux deployment tools
         run: |
           mkdir -p "$RUNNER_TEMP/leomoon-parsinegar-tools"
-          curl --fail --location --retry 3 --output "$RUNNER_TEMP/leomoon-parsinegar-tools/linuxdeploy" "https://github.com/linuxdeploy/linuxdeploy/releases/download/$LINUXDEPLOY_VERSION/linuxdeploy-${{ matrix.appimage_arch }}.AppImage"
-          curl --fail --location --retry 3 --output "$RUNNER_TEMP/leomoon-parsinegar-tools/linuxdeploy-plugin-qt" "https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/$LINUXDEPLOY_QT_VERSION/linuxdeploy-plugin-qt-${{ matrix.appimage_arch }}.AppImage"
-          curl --fail --location --retry 3 --output "$RUNNER_TEMP/leomoon-parsinegar-tools/runtime-${{ matrix.appimage_arch }}" "https://github.com/AppImage/type2-runtime/releases/download/continuous/runtime-${{ matrix.appimage_arch }}"
+          appimage_arch="${{ matrix.release_arch == 'arm64' && 'aarch64' || 'x86_64' }}"
+          curl --fail --location --retry 3 --output "$RUNNER_TEMP/leomoon-parsinegar-tools/linuxdeploy" "https://github.com/linuxdeploy/linuxdeploy/releases/download/$LINUXDEPLOY_VERSION/linuxdeploy-$appimage_arch.AppImage"
+          curl --fail --location --retry 3 --output "$RUNNER_TEMP/leomoon-parsinegar-tools/linuxdeploy-plugin-qt" "https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/$LINUXDEPLOY_QT_VERSION/linuxdeploy-plugin-qt-$appimage_arch.AppImage"
+          curl --fail --location --retry 3 --output "$RUNNER_TEMP/leomoon-parsinegar-tools/runtime-$appimage_arch" "https://github.com/AppImage/type2-runtime/releases/download/continuous/runtime-$appimage_arch"
           chmod +x "$RUNNER_TEMP/leomoon-parsinegar-tools/linuxdeploy" "$RUNNER_TEMP/leomoon-parsinegar-tools/linuxdeploy-plugin-qt"
           echo "$RUNNER_TEMP/leomoon-parsinegar-tools" >> "$GITHUB_PATH"
-          echo "LDAI_RUNTIME_FILE=$RUNNER_TEMP/leomoon-parsinegar-tools/runtime-${{ matrix.appimage_arch }}" >> "$GITHUB_ENV"
+          echo "LDAI_RUNTIME_FILE=$RUNNER_TEMP/leomoon-parsinegar-tools/runtime-$appimage_arch" >> "$GITHUB_ENV"
 
       - name: Configure release build
         run: cmake -S . -B build-linux -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON
@@ -95,7 +88,7 @@ jobs:
         run: cmake --build build-linux --target parsinegar_ui_qmllint
 
       - name: Package and verify Linux artifacts
-        run: scripts/package-linux.sh "$GITHUB_WORKSPACE/build-linux" "$GITHUB_WORKSPACE/dist" "${{ matrix.include_fonts }}"
+        run: scripts/package-linux.sh "$GITHUB_WORKSPACE/build-linux" "$GITHUB_WORKSPACE/dist" "${{ matrix.release_arch == 'amd64' }}"
 
       - name: Retain failure logs
         if: failure()
@@ -120,22 +113,17 @@ jobs:
   clean-package-smoke:
     name: Clean Ubuntu ${{ matrix.version }} package smoke test (${{ matrix.release_arch }})
     needs: build-test-package
-    runs-on: ${{ matrix.runner }}
+    runs-on: ${{ matrix.release_arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     container: ubuntu:${{ matrix.version }}
     timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - version: "22.04"
-            release_arch: amd64
-            runner: ubuntu-24.04
-          - version: "24.04"
-            release_arch: amd64
-            runner: ubuntu-24.04
-          - version: "24.04"
-            release_arch: arm64
-            runner: ubuntu-24.04-arm
+        release_arch: ${{ fromJSON(inputs.arch == 'x64' && '["amd64"]' || inputs.arch == 'arm64' && '["arm64"]' || '["amd64","arm64"]') }}
+        version: ["22.04", "24.04"]
+        exclude:
+          - release_arch: arm64
+            version: "22.04"
 
     steps:
       - name: Install clean-runtime test dependencies
