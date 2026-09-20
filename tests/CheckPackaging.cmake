@@ -28,6 +28,9 @@ set(required_files
     scripts/package-macos.sh
     scripts/smoke-macos-packages.sh
     scripts/verify-macos-package.sh
+    scripts/prepare-release-metadata.sh
+    scripts/collect-release-assets.sh
+    .github/workflows/release.yml
     .github/workflows/macos.yml
 )
 
@@ -98,6 +101,31 @@ foreach(expected IN ITEMS
     string(FIND "${macos_packaging}" "${expected}" position)
     if(position EQUAL -1)
         message(FATAL_ERROR "macOS packaging is missing: ${expected}")
+    endif()
+endforeach()
+
+file(READ "${SOURCE_DIR}/.github/workflows/release.yml" release_workflow)
+foreach(expected IN ITEMS
+    "tags:"
+    "v*.*.*"
+    "uses: ./.github/workflows/linux.yml"
+    "uses: ./.github/workflows/windows.yml"
+    "uses: ./.github/workflows/macos.yml"
+    "needs: [validate, linux, windows, macos]"
+    "release-assets/*"
+)
+    string(FIND "${release_workflow}" "${expected}" position)
+    if(position EQUAL -1)
+        message(FATAL_ERROR "Tag release workflow is missing: ${expected}")
+    endif()
+endforeach()
+
+foreach(platform IN ITEMS linux windows macos)
+    file(READ "${SOURCE_DIR}/.github/workflows/${platform}.yml" platform_workflow)
+    string(FIND "${platform_workflow}" "workflow_call:" workflow_call_position)
+    string(FIND "${platform_workflow}" "branches:" branch_trigger_position)
+    if(workflow_call_position EQUAL -1 OR NOT branch_trigger_position EQUAL -1)
+        message(FATAL_ERROR "${platform} packaging must be called only by the tag release workflow")
     endif()
 endforeach()
 

@@ -47,11 +47,18 @@ Release packaging is platform-specific. Linux provides AppImage and Debian compo
 
 The bundled compatibility fonts are in `assets/fonts/system/`. Vazirmatn and Material Symbols are embedded for the application interface.
 
-`metadata/VERSION` is the single release-version source, and `metadata/RELEASE_DATE` supplies its AppStream date. A release tag must use the matching `vX.Y.Z` form. The Linux workflow builds with Qt 6.8.3, runs the complete test and QML lint suites, produces a self-contained AppImage plus separate application and optional-font Debian packages, verifies X11 and Wayland startup without a Qt SDK, and publishes checksums with tagged releases.
+Pushing a tag in the exact `vX.Y.Z` form starts the release workflow. The workflow derives `metadata/VERSION` from the tag, writes the current UTC date to `metadata/RELEASE_DATE`, and then starts the separate Linux, Windows, and macOS builds. It publishes one GitHub Release only after every build and clean-install test succeeds. The release page includes a commit list, GitHub source archives, each native package as an individual download, and one combined `SHA256SUMS` file.
 
-The Windows workflow builds with Qt 6.8.3 and MSVC 2022, runs the same tests and QML linting, deploys the Qt runtime with `windeployqt`, and produces a versioned Inno Setup installer with checksums. A fresh Windows job tests the default font and desktop-shortcut selections, both opt-out choices, application launch, and uninstall. Tagged builds support optional Authenticode signing through protected repository secrets as described in [Windows release signing](docs/WINDOWS_SIGNING.md).
+```sh
+git tag v3.0.0
+git push origin v3.0.0
+```
 
-The macOS workflow creates a universal Intel and Apple Silicon bundle with Qt 6.8.3, deploys its private Qt frameworks and QML modules with `macdeployqt`, and produces versioned DMG and component-PKG artifacts with checksums. A fresh macOS job tests the disk image, default font and desktop-shortcut selections, both opt-out choices, application launch, and cleanup. Tagged builds support optional Developer ID signing and notarization through protected repository secrets as described in [macOS release signing and notarization](docs/MACOS_SIGNING.md).
+Ordinary branch pushes do not build release packages. The Linux workflow builds with Qt 6.8.3, runs the complete test and QML lint suites, produces a self-contained AppImage plus separate application and optional-font Debian packages, and verifies X11 and Wayland startup without a Qt SDK.
+
+The Windows workflow builds with Qt 6.8.3 and MSVC 2022, runs the same tests and QML linting, deploys the Qt runtime with `windeployqt`, and produces a versioned Inno Setup installer. A fresh Windows job tests the default font and desktop-shortcut selections, both opt-out choices, application launch, and uninstall. Tagged builds support optional Authenticode signing through protected repository secrets as described in [Windows release signing](docs/WINDOWS_SIGNING.md).
+
+The macOS workflow creates a universal Intel and Apple Silicon bundle with Qt 6.8.3, deploys its private Qt frameworks and QML modules with `macdeployqt`, and produces versioned DMG and component-PKG artifacts. A fresh macOS job tests the disk image, default font and desktop-shortcut selections, both opt-out choices, application launch, and cleanup. Tagged builds support optional Developer ID signing and notarization through protected repository secrets as described in [macOS release signing and notarization](docs/MACOS_SIGNING.md).
 
 ## Settings and privacy
 

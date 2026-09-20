@@ -1,0 +1,121 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: Validate release tag
+    runs-on: ubuntu-24.04
+    outputs:
+      release_date: ${{ steps.metadata.outputs.release_date }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v5
+
+      - name: Generate version and release date
+        id: metadata
+        run: |
+          scripts/prepare-release-metadata.sh "$GITHUB_REF_NAME"
+          echo "release_date=$(tr -d '[:space:]' < metadata/RELEASE_DATE)" >> "$GITHUB_OUTPUT"
+
+  linux:
+    name: Linux
+    needs: validate
+    uses: ./.github/workflows/linux.yml
+    with:
+      release_date: ${{ needs.validate.outputs.release_date }}
+
+  windows:
+    name: Windows
+    needs: validate
+    uses: ./.github/workflows/windows.yml
+    with:
+      release_date: ${{ needs.validate.outputs.release_date }}
+    secrets: inherit
+
+  macos:
+    name: macOS
+    needs: validate
+    uses: ./.github/workflows/macos.yml
+    with:
+      release_date: ${{ needs.validate.outputs.release_date }}
+    secrets: inherit
+
+  publish:
+    name: Publish GitHub release
+    needs: [validate, linux, windows, macos]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+
+    steps:
+      - name: Check out source and tags
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Generate version and release date
+        run: scripts/prepare-release-metadata.sh "$GITHUB_REF_NAME" "${{ needs.validate.outputs.release_date }}"
+
+      - name: Download verified Linux artifacts
+        uses: actions/download-artifact@v7
+        with:
+          name: parsinegar-linux-${{ github.sha }}
+          path: release-input/linux
+
+      - name: Download verified Windows artifacts
+        uses: actions/download-artifact@v7
+        with:
+          name: parsinegar-windows-${{ github.sha }}
+          path: release-input/windows
+
+      - name: Download verified macOS artifacts
+        uses: actions/download-artifact@v7
+        with:
+          name: parsinegar-macos-${{ github.sha }}
+          path: release-input/macos
+
+      - name: Collect individual release assets
+        run: scripts/collect-release-assets.sh release-input/linux release-input/windows release-input/macos release-assets
+
+      - name: Generate release notes with commit list
+        run: |
+          previous_tag="$(git describe --tags --abbrev=0 "$GITHUB_REF_NAME^" 2>/dev/null || true)"
+          if [[ -n "$previous_tag" ]]; then
+            commit_range="$previous_tag..$GITHUB_REF_NAME"
+          else
+            commit_range="$GITHUB_REF_NAME"
+          fi
+          {
+            echo "Released: $(tr -d '[:space:]' < metadata/RELEASE_DATE)"
+            echo
+            echo "## Commits"
+            git log --pretty=format:'- %s (`%h`)' "$commit_range"
+            echo
+            echo
+            echo "## Downloads"
+            echo
+            echo "Linux, Windows, and macOS packages are attached below as individual files. GitHub also provides source code archives for this tag."
+          } > release-notes.md
+
+      - name: Publish release and individual files
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title="ParsiNegar Desktop $GITHUB_REF_NAME"
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release edit "$GITHUB_REF_NAME" --title "$title" --notes-file release-notes.md
+          else
+            gh release create "$GITHUB_REF_NAME" --verify-tag --title "$title" --notes-file release-notes.md
+          fi
+          gh release upload "$GITHUB_REF_NAME" release-assets/* --clobber
