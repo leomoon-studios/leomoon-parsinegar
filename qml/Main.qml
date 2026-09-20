@@ -296,32 +296,6 @@ ApplicationWindow {
                 }
 
                 IconButton {
-                    id: undoButton
-                    objectName: "undoButton"
-                    visible: controller.page === "editor"
-                    glyph: AppTheme.iconUndo
-                    toolTip: controller.uiText("history.undo")
-                    enabled: controller.canUndo && !controller.busy && !exportController.busy
-                    onClicked: {
-                        controller.undoSourceEdit()
-                        editorPage.focusEditor()
-                    }
-                }
-
-                IconButton {
-                    id: redoButton
-                    objectName: "redoButton"
-                    visible: controller.page === "editor"
-                    glyph: AppTheme.iconRedo
-                    toolTip: controller.uiText("history.redo")
-                    enabled: controller.canRedo && !controller.busy && !exportController.busy
-                    onClicked: {
-                        controller.redoSourceEdit()
-                        editorPage.focusEditor()
-                    }
-                }
-
-                IconButton {
                     id: exportButton
                     objectName: "exportButton"
                     visible: controller.page === "editor"
@@ -429,6 +403,8 @@ ApplicationWindow {
     DocumentMenu {
         id: documentMenu
         controller: controller
+        editorPage: editorPage
+        exportBusy: exportController.busy
     }
 
     Dialogs.FileDialog {

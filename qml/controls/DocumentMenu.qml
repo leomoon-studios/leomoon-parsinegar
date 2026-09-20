@@ -5,6 +5,8 @@ Menu {
     id: root
 
     required property var controller
+    required property var editorPage
+    property bool exportBusy: false
     readonly property bool rightToLeft: controller.uiLanguage === "fa" || controller.uiLanguage === "ar"
 
     objectName: "documentMenu"
@@ -60,5 +62,35 @@ Menu {
         rightToLeft: root.rightToLeft
         enabled: !root.controller.busy
         onTriggered: root.controller.saveDocumentAs()
+    }
+
+    MenuSeparator { }
+
+    AppMenuItem {
+        objectName: "undoDocumentMenuItem"
+        text: root.controller.uiText("history.undo")
+        glyph: AppTheme.iconUndo
+        toolTip: root.controller.uiText("history.undo")
+        shortcutText: "Ctrl+Z"
+        rightToLeft: root.rightToLeft
+        enabled: root.controller.canUndo && !root.controller.busy && !root.exportBusy
+        onTriggered: {
+            if (root.controller.undoSourceEdit())
+                Qt.callLater(root.editorPage.focusEditor)
+        }
+    }
+
+    AppMenuItem {
+        objectName: "redoDocumentMenuItem"
+        text: root.controller.uiText("history.redo")
+        glyph: AppTheme.iconRedo
+        toolTip: root.controller.uiText("history.redo")
+        shortcutText: "Ctrl+Y"
+        rightToLeft: root.rightToLeft
+        enabled: root.controller.canRedo && !root.controller.busy && !root.exportBusy
+        onTriggered: {
+            if (root.controller.redoSourceEdit())
+                Qt.callLater(root.editorPage.focusEditor)
+        }
     }
 }

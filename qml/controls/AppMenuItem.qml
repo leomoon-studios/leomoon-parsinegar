@@ -5,6 +5,8 @@ MenuItem {
     id: control
 
     property string shortcutText: ""
+    property string glyph: ""
+    property string toolTip: ""
     property bool rightToLeft: false
     readonly property alias actionLabel: actionLabel
     readonly property alias shortcutLabel: shortcutLabel
@@ -19,17 +21,31 @@ MenuItem {
     contentItem: Item {
         width: control.availableWidth
         height: control.availableHeight
-        implicitWidth: actionLabel.implicitWidth + shortcutLabel.implicitWidth + AppTheme.spacingLarge
-        implicitHeight: Math.max(actionLabel.implicitHeight, shortcutLabel.implicitHeight)
+        implicitWidth: glyphLabel.implicitWidth + actionLabel.implicitWidth + shortcutLabel.implicitWidth + AppTheme.spacingLarge * 2
+        implicitHeight: Math.max(glyphLabel.implicitHeight, actionLabel.implicitHeight, shortcutLabel.implicitHeight)
+
+        Label {
+            id: glyphLabel
+            x: control.rightToLeft ? parent.width - width : 0
+            width: visible ? implicitWidth : 0
+            height: parent.height
+            visible: control.glyph !== ""
+            text: control.glyph
+            font.family: AppTheme.iconFontFamily
+            font.pixelSize: AppTheme.fontControl
+            color: AppTheme.foreground
+            horizontalAlignment: control.rightToLeft ? Text.AlignRight : Text.AlignLeft
+            verticalAlignment: Text.AlignVCenter
+        }
 
         Label {
             id: actionLabel
-            x: control.rightToLeft && shortcutLabel.visible
-                ? shortcutLabel.width + AppTheme.spacingLarge
-                : 0
+            x: control.rightToLeft
+                ? (shortcutLabel.visible ? shortcutLabel.width + AppTheme.spacingLarge : 0)
+                : (glyphLabel.visible ? glyphLabel.width + AppTheme.spacingSmall : 0)
             width: Math.max(0, parent.width - (shortcutLabel.visible
                 ? shortcutLabel.width + AppTheme.spacingLarge
-                : 0))
+                : 0) - (glyphLabel.visible ? glyphLabel.width + AppTheme.spacingSmall : 0))
             height: parent.height
             text: control.text
             font.family: AppTheme.fontFamily
@@ -65,4 +81,9 @@ MenuItem {
         border.width: !control.enabled ? AppTheme.borderWidth : 0
         radius: AppTheme.cornerRadiusSmall
     }
+
+    Accessible.name: control.text
+
+    ToolTip.visible: control.toolTip !== "" && control.hovered
+    ToolTip.text: control.toolTip
 }
