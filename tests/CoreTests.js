@@ -65,6 +65,12 @@ var CoreTestResults;
     var strings = InterfaceStrings;
     var limits = ResourceLimits;
 
+    test("interface languages expose identical translation keys", function () {
+        var englishKeys = Object.keys(EnglishStrings.values).sort();
+        jsonEqual(Object.keys(PersianStrings.values).sort(), englishKeys);
+        jsonEqual(Object.keys(ArabicStrings.values).sort(), englishKeys);
+    });
+
     test("text tools expose the complete shared operation set", function () {
         equal(textTools.operations.length, 15);
         assert(Object.isFrozen(textTools));

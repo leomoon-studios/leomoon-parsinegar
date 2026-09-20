@@ -148,6 +148,9 @@ qt_add_qml_module(parsinegar_ui
         vendor/js-parsi-reshaper.js
         vendor/typr.js
         qml/core/InterfaceStrings.js
+        qml/core/i18n/English.js
+        qml/core/i18n/Persian.js
+        qml/core/i18n/Arabic.js
         qml/core/ConversionWorker.js
         qml/core/SvgCurveExporter.js
         qml/core/SvgCurveWorker.js
@@ -266,6 +269,9 @@ if(BUILD_TESTING)
             vendor/typr.js
             "assets/fonts/Vazirmatn[wght].ttf"
             qml/core/InterfaceStrings.js
+            qml/core/i18n/English.js
+            qml/core/i18n/Persian.js
+            qml/core/i18n/Arabic.js
             qml/core/ParsiNegar.js
             qml/core/ReshaperSettings.js
             qml/core/ResourceLimits.js

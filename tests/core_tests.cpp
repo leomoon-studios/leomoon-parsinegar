@@ -17,6 +17,47 @@ private slots:
 void CoreTests::productionCoreSuite()
 {
     QJSEngine engine;
+    const QList<QPair<QString, QString>> translationModules {
+        { QStringLiteral(":/qml/core/i18n/English.js"), QStringLiteral("EnglishStrings") },
+        { QStringLiteral(":/qml/core/i18n/Persian.js"), QStringLiteral("PersianStrings") },
+        { QStringLiteral(":/qml/core/i18n/Arabic.js"), QStringLiteral("ArabicStrings") },
+    };
+    for (const auto &[path, namespaceName] : translationModules) {
+        QFile file(path);
+        QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text), qPrintable(QStringLiteral("Could not load embedded script: %1").arg(path)));
+        QStringList lines = QString::fromUtf8(file.readAll()).split(QLatin1Char('\n'));
+        lines.removeIf([](const QString &line) { return line.trimmed().startsWith(QLatin1Char('.')); });
+        const QJSValue result = engine.evaluate(lines.join(QLatin1Char('\n')), path);
+        if (result.isError()) {
+            const QString message = QStringLiteral("%1:%2: %3\n%4")
+                                        .arg(path)
+                                        .arg(result.property(QStringLiteral("lineNumber")).toInt())
+                                        .arg(result.toString(), result.property(QStringLiteral("stack")).toString());
+            QFAIL(qPrintable(message));
+        }
+        const QJSValue moduleValues = engine.globalObject().property(QStringLiteral("values"));
+        QVERIFY2(moduleValues.isObject(), qPrintable(QStringLiteral("Translation module did not expose values: %1").arg(path)));
+        QJSValue moduleNamespace = engine.newObject();
+        moduleNamespace.setProperty(QStringLiteral("values"), moduleValues);
+        engine.globalObject().setProperty(namespaceName, moduleNamespace);
+    }
+
+    {
+        const QString path = QStringLiteral(":/qml/core/InterfaceStrings.js");
+        QFile file(path);
+        QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text), qPrintable(QStringLiteral("Could not load embedded script: %1").arg(path)));
+        QStringList lines = QString::fromUtf8(file.readAll()).split(QLatin1Char('\n'));
+        lines.removeIf([](const QString &line) { return line.trimmed().startsWith(QLatin1Char('.')); });
+        const QJSValue result = engine.evaluate(lines.join(QLatin1Char('\n')), path);
+        if (result.isError()) {
+            const QString message = QStringLiteral("%1:%2: %3\n%4")
+                                        .arg(path)
+                                        .arg(result.property(QStringLiteral("lineNumber")).toInt())
+                                        .arg(result.toString(), result.property(QStringLiteral("stack")).toString());
+            QFAIL(qPrintable(message));
+        }
+    }
+
     const QStringList scripts {
         QStringLiteral(":/vendor/js-bidi.js"),
         QStringLiteral(":/vendor/js-parsi-reshaper.js"),
@@ -24,7 +65,6 @@ void CoreTests::productionCoreSuite()
         QStringLiteral(":/qml/core/SourceHistory.js"),
         QStringLiteral(":/qml/core/TextTools.js"),
         QStringLiteral(":/qml/core/ReshaperSettings.js"),
-        QStringLiteral(":/qml/core/InterfaceStrings.js"),
         QStringLiteral(":/qml/core/ResourceLimits.js"),
         QStringLiteral(":/tests/fixtures/ParsiNegarFixtures.js"),
         QStringLiteral(":/tests/fixtures/TextToolsFixtures.js"),
@@ -49,7 +89,7 @@ void CoreTests::productionCoreSuite()
     QVERIFY(passed.isNumber());
     QVERIFY(total.isNumber());
     QCOMPARE(passed.toInt(), total.toInt());
-    QCOMPARE(total.toInt(), 617);
+    QCOMPARE(total.toInt(), 618);
 }
 
 void CoreTests::exactFontSvgSuite()
