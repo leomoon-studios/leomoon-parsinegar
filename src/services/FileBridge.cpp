@@ -297,16 +297,32 @@ bool FileBridge::scanInstalledFontsAsync()
     if (m_fontCatalogScanning || m_fontCatalogReady) {
         return false;
     }
+    return beginFontCatalogScan();
+}
+
+bool FileBridge::refreshInstalledFontsAsync()
+{
+    if (m_fontCatalogScanning) {
+        return false;
+    }
+    return beginFontCatalogScan();
+}
+
+bool FileBridge::beginFontCatalogScan()
+{
     m_fontCatalogScanning = true;
     emit fontCatalogScanningChanged();
     auto *watcher = new QFutureWatcher<QVariantList>(this);
     connect(watcher, &QFutureWatcher<QVariantList>::finished, this, [this, watcher]() {
         m_installedFonts = watcher->result();
         watcher->deleteLater();
+        const bool becameReady = !m_fontCatalogReady;
         m_fontCatalogReady = true;
         m_fontCatalogScanning = false;
         emit fontCatalogChanged();
-        emit fontCatalogReadyChanged();
+        if (becameReady) {
+            emit fontCatalogReadyChanged();
+        }
         emit fontCatalogScanningChanged();
     });
     watcher->setFuture(QtConcurrent::run(buildFontCatalog));

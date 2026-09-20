@@ -22,6 +22,7 @@ QtObject {
     readonly property string iconForward: "\ue5c8"
     readonly property string iconUndo: "\ue166"
     readonly property string iconRedo: "\ue15a"
+    readonly property string iconRefresh: "\ue5d5"
     readonly property string iconDocument: "\ue873"
     readonly property string iconHelp: "\ue8fd"
 

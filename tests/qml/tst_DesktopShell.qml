@@ -38,6 +38,12 @@ TestCase {
                 function localFileUrl(path) { return "file://" + path }
                 function localFilePath(url) { return String(url) }
                 function scanInstalledFontsAsync() { return false }
+                function refreshInstalledFontsAsync() {
+                    if (fontCatalogScanning)
+                        return false
+                    fontCatalogScanning = true
+                    return true
+                }
                 function fontPathExists(path) { return String(path).indexOf("/fonts/") === 0 }
                 function readTextDocument(url) { return { ok: false, code: "DOCUMENT_NOT_FOUND", message: "Missing" } }
                 function writeTextDocument(url, text) { return { ok: true, path: String(url) } }
@@ -437,6 +443,7 @@ TestCase {
         var lineSpacing = findChild(applicationWindow, "exportLineSpacing")
         var moreOptions = findChild(applicationWindow, "exportMoreOptionsButton")
         var fontSelector = findChild(applicationWindow, "exportFontSelector")
+        var refreshFonts = findChild(applicationWindow, "refreshExportFontsButton")
         verify(exportButton !== null)
         verify(exportPage !== null)
         verify(headerBackButton !== null)
@@ -450,6 +457,8 @@ TestCase {
         verify(lineSpacing !== null)
         verify(moreOptions !== null)
         verify(fontSelector !== null)
+        verify(refreshFonts !== null)
+        compare(refreshFonts.glyph, AppTheme.iconRefresh)
 
         controller.sourceText = "draft متن"
         controller.setExportSettings({ fontSize: "64", lineSpacing: "1.4", alignment: "center" })
@@ -506,6 +515,18 @@ TestCase {
         fontSelector.searchField.accepted()
         compare(controller.compatibilityFontPath, "/fonts/lmn-test.ttf")
         verify(exportPage.validateBeforeSave())
+
+        refreshFonts.click()
+        compare(applicationWindow.fileMock.fontCatalogScanning, true)
+        verify(!refreshFonts.enabled)
+        compare(exportPage.statusText, controller.uiText("export.loadingFonts"))
+        applicationWindow.fileMock.fontEntries = applicationWindow.fileMock.fontEntries.concat([
+            { family: "LMN Refreshed", style: "Regular", display: "LMN Refreshed", path: "/fonts/lmn-refreshed.ttf" }
+        ])
+        applicationWindow.fileMock.fontCatalogScanning = false
+        tryCompare(refreshFonts, "enabled", true)
+        compare(exportPage.compatibilityFontEntries.length, 3)
+        compare(exportPage.statusText, "")
 
         applicationWindow.fileMock.fontEntries = [
             { family: "Noto Sans", style: "Regular", display: "Noto Sans", path: "/fonts/noto.ttf" }

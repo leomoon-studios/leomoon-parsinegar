@@ -250,6 +250,16 @@ void ServiceTests::fileBridgeCatalogsInstalledFonts()
         QVERIFY(!font.value(QStringLiteral("display")).toString().isEmpty());
         QVERIFY(bridge.fontPathExists(font.value(QStringLiteral("path")).toString()));
     }
+
+    QVERIFY(bridge.refreshInstalledFontsAsync());
+    QVERIFY(bridge.fontCatalogScanning());
+    QVERIFY(!bridge.refreshInstalledFontsAsync());
+    QTRY_COMPARE_WITH_TIMEOUT(catalogSpy.count(), 2, 10000);
+    QCOMPARE(readySpy.count(), 1);
+    QCOMPARE(scanningSpy.count(), 4);
+    QVERIFY(bridge.fontCatalogReady());
+    QVERIFY(!bridge.fontCatalogScanning());
+    QCOMPARE(bridge.fontCatalog(), fonts);
 }
 
 void ServiceTests::fileBridgeRejectsInvalidAndOversizedFonts()

@@ -34,6 +34,7 @@ public:
     Q_INVOKABLE QUrl localFileUrl(const QString &path) const;
     Q_INVOKABLE bool fontPathExists(const QString &path) const;
     Q_INVOKABLE bool scanInstalledFontsAsync();
+    Q_INVOKABLE bool refreshInstalledFontsAsync();
     Q_INVOKABLE QVariantMap readTextDocument(const QUrl &url);
     Q_INVOKABLE QVariantMap writeTextDocument(const QUrl &url, const QString &text);
     Q_INVOKABLE QVariantMap writeSvg(const QUrl &url, const QString &svg);
@@ -54,6 +55,7 @@ signals:
 
 private:
     [[nodiscard]] bool localPath(const QUrl &url, QString *path, QVariantMap *error);
+    [[nodiscard]] bool beginFontCatalogScan();
     [[nodiscard]] QVariantMap success(const QVariantMap &values = {});
     [[nodiscard]] QVariantMap failure(const QString &code, const QString &message);
 

@@ -29,6 +29,9 @@ FocusScope {
     readonly property bool fontCatalogReady: !fileBridge
         || typeof fileBridge.fontCatalogReady !== "boolean"
         || fileBridge.fontCatalogReady
+    readonly property bool fontCatalogScanning: fileBridge
+        && typeof fileBridge.fontCatalogScanning === "boolean"
+        && fileBridge.fontCatalogScanning
 
     LayoutMirroring.enabled: rightToLeft
     LayoutMirroring.childrenInherit: true
@@ -85,6 +88,16 @@ FocusScope {
                 statusText = ""
             ensureFontSelection()
         }
+        return true
+    }
+
+    function refreshFontCatalog() {
+        if (!fileBridge || typeof fileBridge.refreshInstalledFontsAsync !== "function")
+            return false
+        if (!fileBridge.refreshInstalledFontsAsync())
+            return false
+        statusText = uiText("export.loadingFonts")
+        statusLevel = "info"
         return true
     }
 
@@ -440,23 +453,37 @@ FocusScope {
                             Layout.fillWidth: true
                             spacing: AppTheme.spacingSmall
 
-                            FontSelector {
-                                id: fontSelector
-                                objectName: "exportFontSelector"
+                            RowLayout {
                                 Layout.fillWidth: true
-                                fonts: root.currentFontEntries()
-                                selectedKey: root.currentFontKey()
-                                placeholderText: root.uiText("export.searchFonts")
-                                emptyText: !root.fontCatalogReady
-                                    ? root.uiText("export.loadingFonts")
-                                    : root.controller.conversionMode === "compatibility"
-                                    ? root.uiText("export.noCompatibilityFonts")
-                                    : root.uiText("export.noFonts")
-                                previewText: root.controller.conversionMode === "compatibility"
-                                    ? root.compatibilityFontPreview : root.unicodeFontPreview
-                                enabled: root.fontCatalogReady && !root.exportController.busy
-                                    && fonts.length > 0
-                                onFontSelected: function(fontEntry) { root.selectFont(fontEntry) }
+                                spacing: AppTheme.spacingSmall
+
+                                FontSelector {
+                                    id: fontSelector
+                                    objectName: "exportFontSelector"
+                                    Layout.fillWidth: true
+                                    fonts: root.currentFontEntries()
+                                    selectedKey: root.currentFontKey()
+                                    placeholderText: root.uiText("export.searchFonts")
+                                    emptyText: !root.fontCatalogReady
+                                        ? root.uiText("export.loadingFonts")
+                                        : root.controller.conversionMode === "compatibility"
+                                        ? root.uiText("export.noCompatibilityFonts")
+                                        : root.uiText("export.noFonts")
+                                    previewText: root.controller.conversionMode === "compatibility"
+                                        ? root.compatibilityFontPreview : root.unicodeFontPreview
+                                    enabled: root.fontCatalogReady && !root.exportController.busy
+                                        && fonts.length > 0
+                                    onFontSelected: function(fontEntry) { root.selectFont(fontEntry) }
+                                }
+
+                                IconButton {
+                                    objectName: "refreshExportFontsButton"
+                                    glyph: AppTheme.iconRefresh
+                                    toolTip: root.uiText("export.refreshFonts")
+                                    enabled: root.fontCatalogReady && !root.fontCatalogScanning
+                                        && !root.exportController.busy
+                                    onClicked: root.refreshFontCatalog()
+                                }
                             }
 
                             Label {
