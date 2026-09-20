@@ -1,12 +1,18 @@
 #include "FileBridge.h"
 
 #include <QDir>
+#include <QDirIterator>
 #include <QFile>
 #include <QFileInfo>
 #include <QFutureWatcher>
+#include <QRawFont>
 #include <QSaveFile>
+#include <QSet>
+#include <QStandardPaths>
 #include <QStringConverter>
 #include <QtConcurrentRun>
+
+#include <algorithm>
 
 namespace {
 
@@ -38,6 +44,112 @@ QVariantMap readBundledFont()
     };
 }
 
+void appendUniqueDirectory(QStringList *directories, const QString &path)
+{
+    if (path.isEmpty()) {
+        return;
+    }
+    const QString cleanPath = QDir::cleanPath(path);
+    if (!directories->contains(cleanPath)) {
+        directories->append(cleanPath);
+    }
+}
+
+QStringList fontDirectories()
+{
+    QStringList directories;
+    for (const QString &path : QStandardPaths::standardLocations(QStandardPaths::FontsLocation)) {
+        appendUniqueDirectory(&directories, path);
+    }
+    for (const QString &path : QStandardPaths::standardLocations(QStandardPaths::GenericDataLocation)) {
+        appendUniqueDirectory(&directories, QDir(path).filePath(QStringLiteral("fonts")));
+    }
+
+#if defined(Q_OS_WIN)
+    appendUniqueDirectory(&directories, QDir(qEnvironmentVariable("WINDIR")).filePath(QStringLiteral("Fonts")));
+    appendUniqueDirectory(&directories,
+        QDir(QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation))
+            .filePath(QStringLiteral("Microsoft/Windows/Fonts")));
+#elif defined(Q_OS_MACOS)
+    appendUniqueDirectory(&directories, QStringLiteral("/System/Library/Fonts"));
+    appendUniqueDirectory(&directories, QStringLiteral("/Library/Fonts"));
+    appendUniqueDirectory(&directories,
+        QDir(QStandardPaths::writableLocation(QStandardPaths::HomeLocation))
+            .filePath(QStringLiteral("Library/Fonts")));
+#else
+    appendUniqueDirectory(&directories, QStringLiteral("/usr/local/share/fonts"));
+    appendUniqueDirectory(&directories, QStringLiteral("/usr/share/fonts"));
+    appendUniqueDirectory(&directories,
+        QDir(QStandardPaths::writableLocation(QStandardPaths::HomeLocation))
+            .filePath(QStringLiteral(".fonts")));
+#endif
+    return directories;
+}
+
+bool supportedFontFile(const QFileInfo &info)
+{
+    const QString suffix = info.suffix().toLower();
+    return info.isFile() && info.isReadable()
+        && (suffix == QStringLiteral("ttf") || suffix == QStringLiteral("otf")
+            || suffix == QStringLiteral("ttc"));
+}
+
+QVariantList buildFontCatalog()
+{
+    QVariantList fonts;
+    QSet<QString> paths;
+    QSet<QString> faces;
+    for (const QString &directory : fontDirectories()) {
+        if (!QFileInfo::exists(directory)) {
+            continue;
+        }
+        QDirIterator iterator(directory, QDir::Files | QDir::Readable | QDir::NoDotAndDotDot,
+                              QDirIterator::Subdirectories);
+        while (iterator.hasNext()) {
+            const QString path = QDir::cleanPath(iterator.next());
+            const QFileInfo info = iterator.fileInfo();
+            if (!supportedFontFile(info) || paths.contains(path)) {
+                continue;
+            }
+            paths.insert(path);
+            const QRawFont font(path, 16.0, QFont::PreferNoHinting);
+            const QString family = font.familyName().trimmed();
+            if (!font.isValid() || family.isEmpty()) {
+                continue;
+            }
+            const QString style = font.styleName().trimmed();
+            const QString faceKey = family.toCaseFolded() + QLatin1Char('\n') + style.toCaseFolded();
+            if (faces.contains(faceKey)) {
+                continue;
+            }
+            faces.insert(faceKey);
+            const QString display = style.isEmpty() || style.compare(QStringLiteral("Regular"), Qt::CaseInsensitive) == 0
+                ? family
+                : QStringLiteral("%1 — %2").arg(family, style);
+            fonts.append(QVariantMap {
+                { QStringLiteral("family"), family },
+                { QStringLiteral("style"), style },
+                { QStringLiteral("display"), display },
+                { QStringLiteral("path"), path },
+            });
+        }
+    }
+    std::sort(fonts.begin(), fonts.end(), [](const QVariant &left, const QVariant &right) {
+        const auto leftMap = left.toMap();
+        const auto rightMap = right.toMap();
+        const int familyOrder = QString::localeAwareCompare(
+            leftMap.value(QStringLiteral("family")).toString(),
+            rightMap.value(QStringLiteral("family")).toString());
+        if (familyOrder != 0) {
+            return familyOrder < 0;
+        }
+        return QString::localeAwareCompare(
+            leftMap.value(QStringLiteral("style")).toString(),
+            rightMap.value(QStringLiteral("style")).toString()) < 0;
+    });
+    return fonts;
+}
+
 } // namespace
 
 FileBridge::FileBridge(QObject *parent)
@@ -48,6 +160,21 @@ FileBridge::FileBridge(QObject *parent)
 QString FileBridge::lastError() const
 {
     return m_lastError;
+}
+
+QVariantList FileBridge::fontCatalog() const
+{
+    return m_installedFonts;
+}
+
+bool FileBridge::fontCatalogReady() const
+{
+    return m_fontCatalogReady;
+}
+
+bool FileBridge::fontCatalogScanning() const
+{
+    return m_fontCatalogScanning;
 }
 
 QVariantMap FileBridge::readFont(const QUrl &url)
@@ -163,6 +290,27 @@ bool FileBridge::fontPathExists(const QString &path) const
     return info.isAbsolute() && info.isFile() && info.isReadable()
         && (suffix == QStringLiteral("ttf") || suffix == QStringLiteral("otf")
             || suffix == QStringLiteral("ttc"));
+}
+
+bool FileBridge::scanInstalledFontsAsync()
+{
+    if (m_fontCatalogScanning || m_fontCatalogReady) {
+        return false;
+    }
+    m_fontCatalogScanning = true;
+    emit fontCatalogScanningChanged();
+    auto *watcher = new QFutureWatcher<QVariantList>(this);
+    connect(watcher, &QFutureWatcher<QVariantList>::finished, this, [this, watcher]() {
+        m_installedFonts = watcher->result();
+        watcher->deleteLater();
+        m_fontCatalogReady = true;
+        m_fontCatalogScanning = false;
+        emit fontCatalogChanged();
+        emit fontCatalogReadyChanged();
+        emit fontCatalogScanningChanged();
+    });
+    watcher->setFuture(QtConcurrent::run(buildFontCatalog));
+    return true;
 }
 
 QVariantMap FileBridge::readTextDocument(const QUrl &url)

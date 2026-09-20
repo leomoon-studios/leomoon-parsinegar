@@ -145,14 +145,28 @@ FocusScope {
                     label: root.uiText("settings.appearance")
                 }
 
-                SettingsToggle {
-                    id: darkThemeToggle
-                    objectName: "settingsDarkThemeToggle"
+                GridLayout {
                     width: parent.width
-                    title: root.uiText("settings.darkTheme")
-                    description: root.uiText("settings.darkThemeDescription")
-                    checked: AppTheme.darkMode
-                    onToggled: function(checked) { AppTheme.darkMode = checked }
+                    columns: 2
+                    columnSpacing: AppTheme.spacingSmall
+
+                    AppButton {
+                        objectName: "settingsLightThemeButton"
+                        Layout.fillWidth: true
+                        Layout.preferredWidth: 0
+                        text: root.uiText("theme.light")
+                        selected: !AppTheme.darkMode
+                        onClicked: AppTheme.darkMode = false
+                    }
+
+                    AppButton {
+                        objectName: "settingsDarkThemeButton"
+                        Layout.fillWidth: true
+                        Layout.preferredWidth: 0
+                        text: root.uiText("theme.dark")
+                        selected: AppTheme.darkMode
+                        onClicked: AppTheme.darkMode = true
+                    }
                 }
 
                 SectionHeading {

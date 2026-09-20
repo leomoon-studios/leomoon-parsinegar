@@ -22,11 +22,23 @@ TestCase {
             }
             clipboardService: clipboardMock
             property QtObject fileMock: QtObject {
+                property var fontEntries: [
+                    { family: "Noto Sans", style: "Regular", display: "Noto Sans", path: "/fonts/noto.ttf" },
+                    { family: "Roboto Mono", style: "Bold", display: "Roboto Mono — Bold", path: "/fonts/roboto-mono-bold.ttf" },
+                    { family: "LMU Avvali", style: "Regular", display: "LMU Avvali", path: "/fonts/lmu-avvali.ttf" },
+                    { family: "F_Test", style: "Regular", display: "F_Test", path: "/fonts/f-test.ttf" },
+                    { family: "LMN Test", style: "Regular", display: "LMN Test", path: "/fonts/lmn-test.ttf" }
+                ]
+                property var fontCatalog: fontEntries
+                property bool fontCatalogReady: true
+                property bool fontCatalogScanning: false
                 function readBundledFontAsync(requestId) { return true }
                 function readFontAsync(requestId, url) { return true }
                 function writeSvgAsync(requestId, destination, svg) { return true }
                 function localFileUrl(path) { return "file://" + path }
                 function localFilePath(url) { return String(url) }
+                function scanInstalledFontsAsync() { return false }
+                function fontPathExists(path) { return String(path).indexOf("/fonts/") === 0 }
                 function readTextDocument(url) { return { ok: false, code: "DOCUMENT_NOT_FOUND", message: "Missing" } }
                 function writeTextDocument(url, text) { return { ok: true, path: String(url) } }
                 function isReadableFontFile(path) { return true }
@@ -178,7 +190,8 @@ TestCase {
         var conversionStatus = findChild(applicationWindow, "conversionStatus")
         var statusSlot = findChild(applicationWindow, "statusSlot")
         var settingsPage = findChild(applicationWindow, "settingsPage")
-        var darkThemeToggle = findChild(applicationWindow, "settingsDarkThemeToggle")
+        var lightThemeButton = findChild(applicationWindow, "settingsLightThemeButton")
+        var darkThemeButton = findChild(applicationWindow, "settingsDarkThemeButton")
         verify(convertButton !== null)
         verify(exportButton !== null)
         verify(helpButton !== null)
@@ -188,7 +201,8 @@ TestCase {
         verify(undoButton !== null)
         verify(redoButton !== null)
         verify(settingsPage !== null)
-        verify(darkThemeToggle !== null)
+        verify(lightThemeButton !== null)
+        verify(darkThemeButton !== null)
         verify(sourceEditor !== null)
         verify(editorCursor !== null)
         sourceEditor.forceActiveFocus()
@@ -243,23 +257,21 @@ TestCase {
         var originalMode = AppTheme.darkMode
         settingsButton.click()
         compare(controller.page, "settings")
-        compare(darkThemeToggle.descriptionItem.mapToItem(applicationWindow.contentItem, 0, 0).x,
-            darkThemeToggle.titleItem.mapToItem(applicationWindow.contentItem, 0, 0).x)
-        darkThemeToggle.toggleItem.click()
-        compare(AppTheme.darkMode, !originalMode)
-        darkThemeToggle.toggleItem.click()
-        compare(AppTheme.darkMode, originalMode)
+        compare(lightThemeButton.selected, !originalMode)
+        compare(darkThemeButton.selected, originalMode)
+        lightThemeButton.click()
+        compare(AppTheme.darkMode, false)
+        compare(lightThemeButton.selected, true)
+        compare(darkThemeButton.selected, false)
+        darkThemeButton.click()
+        compare(AppTheme.darkMode, true)
+        compare(lightThemeButton.selected, false)
+        compare(darkThemeButton.selected, true)
+        AppTheme.darkMode = originalMode
 
         controller.setUiLanguage("fa")
-        tryCompare(darkThemeToggle.toggleItem, "mirrored", true)
-        compare(darkThemeToggle.titleItem.effectiveHorizontalAlignment, Text.AlignRight)
-        compare(darkThemeToggle.descriptionItem.effectiveHorizontalAlignment, Text.AlignRight)
-        verify(darkThemeToggle.titleItem.width
-            >= darkThemeToggle.width - darkThemeToggle.leftPadding
-                - darkThemeToggle.rightPadding - darkThemeToggle.toggleItem.width
-                - AppTheme.spacingLarge - 1)
-        verify(darkThemeToggle.titleItem.mapToItem(applicationWindow.contentItem, 0, 0).x
-            > darkThemeToggle.toggleItem.mapToItem(applicationWindow.contentItem, 0, 0).x)
+        compare(lightThemeButton.text, "پوستهٔ روشن")
+        compare(darkThemeButton.text, "پوستهٔ تیره")
         controller.setUiLanguage("en")
     }
 
@@ -424,6 +436,7 @@ TestCase {
         var fontSize = findChild(applicationWindow, "exportFontSize")
         var lineSpacing = findChild(applicationWindow, "exportLineSpacing")
         var moreOptions = findChild(applicationWindow, "exportMoreOptionsButton")
+        var fontSelector = findChild(applicationWindow, "exportFontSelector")
         verify(exportButton !== null)
         verify(exportPage !== null)
         verify(headerBackButton !== null)
@@ -436,6 +449,7 @@ TestCase {
         verify(fontSize !== null)
         verify(lineSpacing !== null)
         verify(moreOptions !== null)
+        verify(fontSelector !== null)
 
         controller.sourceText = "draft متن"
         controller.setExportSettings({ fontSize: "64", lineSpacing: "1.4", alignment: "center" })
@@ -460,16 +474,73 @@ TestCase {
         fontSize.editingFinished()
         compare(controller.exportSettings.fontSize, "72")
         compare(exportPage.fontDisplayName(), controller.uiText("export.bundledFont"))
+        compare(fontSelector.searchField.font.family, AppTheme.fontFamily)
+        compare(fontSelector.previewText, exportPage.unicodeFontPreview)
+        verify(fontSelector.previewText.indexOf("The quick brown fox") >= 0)
+        verify(fontSelector.previewText.indexOf("روباه قهوه‌ای سریع") >= 0)
         verify(exportPage.validateBeforeSave())
+
+        fontSelector.openList()
+        fontSelector.filter("lmu")
+        compare(fontSelector.filteredFonts.length, 1)
+        compare(fontSelector.filteredFonts[0].family, "LMU Avvali")
+        fontSelector.filter("rmono")
+        compare(fontSelector.filteredFonts.length, 1)
+        compare(fontSelector.filteredFonts[0].family, "Roboto Mono")
+        fontSelector.searchField.forceActiveFocus()
+        tryCompare(fontSelector.searchField, "activeFocus", true)
+        fontSelector.searchField.accepted()
+        compare(controller.unicodeFontPath, "/fonts/roboto-mono-bold.ttf")
 
         compatibility.click()
         compare(controller.conversionMode, "compatibility")
+        compare(fontSelector.searchField.font.family, AppTheme.fontFamily)
+        compare(fontSelector.previewText, exportPage.compatibilityFontPreview)
+        verify(fontSelector.previewText.indexOf("0123456789") === 0)
+        compare(exportPage.compatibilityFontEntries.length, 2)
+        tryCompare(controller, "compatibilityFontPath", "/fonts/f-test.ttf")
+        fontSelector.openList()
+        fontSelector.filter("lmn")
+        compare(fontSelector.filteredFonts.length, 1)
+        compare(fontSelector.filteredFonts[0].family, "LMN Test")
+        fontSelector.searchField.accepted()
+        compare(controller.compatibilityFontPath, "/fonts/lmn-test.ttf")
+        verify(exportPage.validateBeforeSave())
+
+        applicationWindow.fileMock.fontEntries = [
+            { family: "Noto Sans", style: "Regular", display: "Noto Sans", path: "/fonts/noto.ttf" }
+        ]
+        exportPage.applyFontCatalog(applicationWindow.fileMock.fontEntries)
+        compare(exportPage.compatibilityFontEntries.length, 0)
+        verify(!saveButton.enabled)
         verify(!exportPage.validateBeforeSave())
-        compare(exportPage.statusText, controller.uiText("export.error.fontRequired"))
+        compare(exportPage.statusText, controller.uiText("export.error.noCompatibilityFonts"))
 
         headerBackButton.click()
         compare(controller.page, "editor")
         compare(controller.sourceText, "draft متن")
+    }
+
+    function test_exportPageShowsAsyncFontCatalogState() {
+        var applicationWindow = createMainWindow()
+        var controller = applicationWindow.editorController
+        var exportPage = findChild(applicationWindow, "exportPage")
+        var loadingLabel = findChild(applicationWindow, "exportFontCatalogLoading")
+        var saveButton = findChild(applicationWindow, "saveSvgButton")
+
+        applicationWindow.fileMock.fontCatalogReady = false
+        applicationWindow.fileMock.fontEntries = []
+        controller.openExport()
+        compare(controller.page, "export")
+        verify(exportPage.visible)
+        verify(loadingLabel.visible)
+        compare(exportPage.statusText, controller.uiText("export.loadingFonts"))
+        verify(!saveButton.enabled)
+
+        applicationWindow.fileMock.fontCatalogReady = true
+        tryCompare(loadingLabel, "visible", false)
+        verify(saveButton.enabled)
+        compare(exportPage.statusText, "")
     }
 
     function test_exportDoesNotApplyEnabledTextTools() {

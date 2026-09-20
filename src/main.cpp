@@ -127,6 +127,7 @@ int main(int argc, char *argv[])
     SettingsStore settingsStore;
     FileBridge fileBridge;
     TextDirectionBridge textDirectionBridge;
+    fileBridge.scanInstalledFontsAsync();
     qmlRegisterSingletonInstance("LeoMoon.ParsiNegar.Native", 1, 0, "ClipboardBridge", &clipboardBridge);
     qmlRegisterSingletonInstance("LeoMoon.ParsiNegar.Native", 1, 0, "SettingsStore", &settingsStore);
     qmlRegisterSingletonInstance("LeoMoon.ParsiNegar.Native", 1, 0, "FileBridge", &fileBridge);

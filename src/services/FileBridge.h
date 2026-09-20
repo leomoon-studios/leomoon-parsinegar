@@ -3,12 +3,16 @@
 #include <QObject>
 #include <QString>
 #include <QUrl>
+#include <QVariantList>
 #include <QVariantMap>
 
 class FileBridge final : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString lastError READ lastError NOTIFY lastErrorChanged)
+    Q_PROPERTY(QVariantList fontCatalog READ fontCatalog NOTIFY fontCatalogChanged)
+    Q_PROPERTY(bool fontCatalogReady READ fontCatalogReady NOTIFY fontCatalogReadyChanged)
+    Q_PROPERTY(bool fontCatalogScanning READ fontCatalogScanning NOTIFY fontCatalogScanningChanged)
 
 public:
     static constexpr qint64 maximumFontBytes = 50LL * 1024 * 1024;
@@ -19,6 +23,9 @@ public:
     explicit FileBridge(QObject *parent = nullptr);
 
     [[nodiscard]] QString lastError() const;
+    [[nodiscard]] QVariantList fontCatalog() const;
+    [[nodiscard]] bool fontCatalogReady() const;
+    [[nodiscard]] bool fontCatalogScanning() const;
 
     Q_INVOKABLE QVariantMap readFont(const QUrl &url);
     Q_INVOKABLE bool readFontAsync(int requestId, const QUrl &url);
@@ -26,6 +33,7 @@ public:
     Q_INVOKABLE QString localFilePath(const QUrl &url);
     Q_INVOKABLE QUrl localFileUrl(const QString &path) const;
     Q_INVOKABLE bool fontPathExists(const QString &path) const;
+    Q_INVOKABLE bool scanInstalledFontsAsync();
     Q_INVOKABLE QVariantMap readTextDocument(const QUrl &url);
     Q_INVOKABLE QVariantMap writeTextDocument(const QUrl &url, const QString &text);
     Q_INVOKABLE QVariantMap writeSvg(const QUrl &url, const QString &svg);
@@ -40,6 +48,9 @@ signals:
     void svgWriteCompleted(int requestId, const QVariantMap &result);
     void operationFailed(const QString &code, const QString &message);
     void lastErrorChanged();
+    void fontCatalogChanged();
+    void fontCatalogReadyChanged();
+    void fontCatalogScanningChanged();
 
 private:
     [[nodiscard]] bool localPath(const QUrl &url, QString *path, QVariantMap *error);
@@ -47,4 +58,7 @@ private:
     [[nodiscard]] QVariantMap failure(const QString &code, const QString &message);
 
     QString m_lastError;
+    QVariantList m_installedFonts;
+    bool m_fontCatalogReady = false;
+    bool m_fontCatalogScanning = false;
 };

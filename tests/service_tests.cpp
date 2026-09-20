@@ -38,6 +38,7 @@ private slots:
     void settingsRejectUnsafeData();
     void settingsReportsAtomicWriteFailure();
     void fileBridgeReadsExactFontBytes();
+    void fileBridgeCatalogsInstalledFonts();
     void fileBridgeRejectsInvalidAndOversizedFonts();
     void fileBridgeReadsAndWritesExactUtf8Documents();
     void fileBridgeRejectsUnsafeDocuments();
@@ -220,6 +221,35 @@ void ServiceTests::fileBridgeReadsExactFontBytes()
     QVERIFY(bridge.fontPathExists(path));
     QCOMPARE(readSpy.count(), 1);
     QCOMPARE(failureSpy.count(), 0);
+}
+
+void ServiceTests::fileBridgeCatalogsInstalledFonts()
+{
+    FileBridge bridge;
+    QSignalSpy catalogSpy(&bridge, &FileBridge::fontCatalogChanged);
+    QSignalSpy readySpy(&bridge, &FileBridge::fontCatalogReadyChanged);
+    QSignalSpy scanningSpy(&bridge, &FileBridge::fontCatalogScanningChanged);
+    QVERIFY(!bridge.fontCatalogReady());
+    QVERIFY(!bridge.fontCatalogScanning());
+    QVERIFY(bridge.scanInstalledFontsAsync());
+    QVERIFY(bridge.fontCatalogScanning());
+    QVERIFY(!bridge.scanInstalledFontsAsync());
+    QTRY_COMPARE_WITH_TIMEOUT(readySpy.count(), 1, 10000);
+    QCOMPARE(catalogSpy.count(), 1);
+    QCOMPARE(scanningSpy.count(), 2);
+    QVERIFY(bridge.fontCatalogReady());
+    QVERIFY(!bridge.fontCatalogScanning());
+
+    const QVariantList fonts = bridge.fontCatalog();
+    QVERIFY(!fonts.isEmpty());
+    QVERIFY(!bridge.scanInstalledFontsAsync());
+
+    for (const QVariant &value : fonts) {
+        const QVariantMap font = value.toMap();
+        QVERIFY(!font.value(QStringLiteral("family")).toString().isEmpty());
+        QVERIFY(!font.value(QStringLiteral("display")).toString().isEmpty());
+        QVERIFY(bridge.fontPathExists(font.value(QStringLiteral("path")).toString()));
+    }
 }
 
 void ServiceTests::fileBridgeRejectsInvalidAndOversizedFonts()
