@@ -1,6 +1,13 @@
 name: Release
 
 on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to use for test artifacts
+        required: true
+        default: 3.0.0
+        type: string
   push:
     tags:
       - "v*.*.*"
@@ -18,6 +25,7 @@ jobs:
     runs-on: ubuntu-24.04
     outputs:
       release_date: ${{ steps.metadata.outputs.release_date }}
+      release_tag: ${{ steps.metadata.outputs.release_tag }}
     steps:
       - name: Check out source
         uses: actions/checkout@v5
@@ -25,8 +33,13 @@ jobs:
       - name: Generate version and release date
         id: metadata
         run: |
-          scripts/prepare-release-metadata.sh "$GITHUB_REF_NAME"
+          release_tag="$GITHUB_REF_NAME"
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+            release_tag="v${{ inputs.version }}"
+          fi
+          scripts/prepare-release-metadata.sh "$release_tag"
           echo "release_date=$(tr -d '[:space:]' < metadata/RELEASE_DATE)" >> "$GITHUB_OUTPUT"
+          echo "release_tag=$release_tag" >> "$GITHUB_OUTPUT"
 
   linux:
     name: Linux
@@ -34,6 +47,7 @@ jobs:
     uses: ./.github/workflows/linux.yml
     with:
       release_date: ${{ needs.validate.outputs.release_date }}
+      release_tag: ${{ needs.validate.outputs.release_tag }}
 
   windows:
     name: Windows
@@ -41,6 +55,7 @@ jobs:
     uses: ./.github/workflows/windows.yml
     with:
       release_date: ${{ needs.validate.outputs.release_date }}
+      release_tag: ${{ needs.validate.outputs.release_tag }}
     secrets: inherit
 
   macos:
@@ -49,10 +64,12 @@ jobs:
     uses: ./.github/workflows/macos.yml
     with:
       release_date: ${{ needs.validate.outputs.release_date }}
+      release_tag: ${{ needs.validate.outputs.release_tag }}
     secrets: inherit
 
   publish:
     name: Publish GitHub release
+    if: github.event_name == 'push'
     needs: [validate, linux, windows, macos]
     runs-on: ubuntu-24.04
     permissions:
@@ -70,13 +87,13 @@ jobs:
       - name: Download verified Linux artifacts
         uses: actions/download-artifact@v7
         with:
-          name: leomoon-parsinegar-linux-${{ github.sha }}
+          pattern: leomoon-parsinegar-linux-*-${{ github.sha }}
           path: release-input/linux
 
       - name: Download verified Windows artifacts
         uses: actions/download-artifact@v7
         with:
-          name: leomoon-parsinegar-windows-${{ github.sha }}
+          pattern: leomoon-parsinegar-windows-*-${{ github.sha }}
           path: release-input/windows
 
       - name: Download verified macOS artifacts

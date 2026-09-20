@@ -15,9 +15,9 @@ version="$($repo_dir/scripts/check-release-version.sh)"
     sha256sum --check SHA256SUMS
 )
 
-mapfile -t appimages < <(find "$artifact_dir" -maxdepth 1 -type f -name "leomoon-parsinegar-$version-*.AppImage" -print)
+mapfile -t appimages < <(find "$artifact_dir" -maxdepth 1 -type f -name "leomoon-parsinegar-$version-linux-*.AppImage" -print)
 mapfile -t debs < <(find "$artifact_dir" -maxdepth 1 -type f -name '*.deb' -print | sort)
-if (( ${#appimages[@]} != 1 || ${#debs[@]} < 2 )); then
+if (( ${#appimages[@]} != 1 || ${#debs[@]} < 1 )); then
     echo "Linux release set is incomplete" >&2
     exit 1
 fi
@@ -63,8 +63,8 @@ for deb in "${debs[@]}"; do
         leomoon-parsinegar-fonts) fonts_deb="$deb" ;;
     esac
 done
-if [[ -z "$application_deb" || -z "$fonts_deb" ]]; then
-    echo "Could not identify application and optional font packages" >&2
+if [[ -z "$application_deb" ]]; then
+    echo "Could not identify the application package" >&2
     exit 1
 fi
 
@@ -72,19 +72,24 @@ if dpkg-deb --contents "$application_deb" | grep -q '/fonts/truetype/parsinegar/
     echo "Application package unexpectedly contains optional system fonts" >&2
     exit 1
 fi
-font_count="$(dpkg-deb --contents "$fonts_deb" | grep -Ec '\.(ttf|otf|ttc)$')"
-if (( font_count < 1 )); then
-    echo "Optional font package does not contain fonts" >&2
-    exit 1
+if [[ -n "$fonts_deb" ]]; then
+    font_count="$(dpkg-deb --contents "$fonts_deb" | grep -Ec '\.(ttf|otf|ttc)$')"
+    if (( font_count < 1 )); then
+        echo "Optional font package does not contain fonts" >&2
+        exit 1
+    fi
 fi
 
 dpkg --force-depends --install "$application_deb"
 test -x /usr/bin/leomoon-parsinegar
 test -s /usr/share/applications/com.leomoon.ParsiNegar.desktop
 test -s /usr/share/icons/hicolor/scalable/apps/com.leomoon.ParsiNegar.svg
-dpkg --force-depends --install "$fonts_deb"
-test -d /usr/share/fonts/truetype/parsinegar
-dpkg --remove leomoon-parsinegar-fonts leomoon-parsinegar
+if [[ -n "$fonts_deb" ]]; then
+    dpkg --force-depends --install "$fonts_deb"
+    test -d /usr/share/fonts/truetype/parsinegar
+    dpkg --remove leomoon-parsinegar-fonts
+fi
+dpkg --remove leomoon-parsinegar
 test ! -e /usr/bin/leomoon-parsinegar
 
 echo "Linux AppImage and Debian package smoke checks passed"

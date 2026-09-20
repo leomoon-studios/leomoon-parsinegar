@@ -57,7 +57,7 @@ set(ENV{EXTRA_PLATFORM_PLUGINS} "${extra_platform_plugins}")
 set(ENV{NO_STRIP} 1)
 set(ENV{QMAKE} "${QMAKE}")
 set(ENV{QML_SOURCES_PATHS} "${SOURCE_DIR}/qml")
-set(ENV{LDAI_OUTPUT} "${BUILD_DIR}/package/linux/leomoon-parsinegar-${VERSION}-${ARCH}.AppImage")
+set(ENV{LDAI_OUTPUT} "${BUILD_DIR}/package/linux/leomoon-parsinegar-${VERSION}-linux-${ARCH}.AppImage")
 
 execute_process(
     COMMAND "${LINUXDEPLOY}"

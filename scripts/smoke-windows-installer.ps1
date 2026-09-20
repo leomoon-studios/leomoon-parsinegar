@@ -1,11 +1,14 @@
 [CmdletBinding()]
-param([Parameter(Mandatory = $true)][string]$ArtifactDirectory)
+param(
+    [Parameter(Mandatory = $true)][string]$ArtifactDirectory,
+    [Parameter(Mandatory = $true)][ValidateSet("x64", "arm64")][string]$Architecture
+)
 
 $ErrorActionPreference = "Stop"
 $repoDirectory = Split-Path -Parent $PSScriptRoot
 $version = (Get-Content -LiteralPath (Join-Path $repoDirectory "metadata\VERSION") -Raw).Trim()
 $artifacts = (Resolve-Path -LiteralPath $ArtifactDirectory).Path
-$installer = Join-Path $artifacts "leomoon-parsinegar-$Version-Setup.exe"
+$installer = Join-Path $artifacts "leomoon-parsinegar-$Version-windows-$Architecture-setup.exe"
 $checksums = Join-Path $artifacts "SHA256SUMS"
 if (-not (Test-Path -LiteralPath $installer -PathType Leaf)) {
     throw "Windows installer is missing"

@@ -53,14 +53,14 @@ sed "s/@PROJECT_VERSION@/$version/g" "$source_dir/packaging/macos/distribution.x
 if [ -n "${PARSINEGAR_INSTALLER_IDENTITY:-}" ]; then
     productbuild --distribution "$package_dir/distribution.xml" --resources "$resource_dir" \
         --package-path "$component_dir" --sign "$PARSINEGAR_INSTALLER_IDENTITY" \
-        "$package_dir/leomoon-parsinegar-$version.pkg"
+        "$package_dir/leomoon-parsinegar-$version-macos-universal.pkg"
 else
     productbuild --distribution "$package_dir/distribution.xml" --resources "$resource_dir" \
-        --package-path "$component_dir" "$package_dir/leomoon-parsinegar-$version.pkg"
+        --package-path "$component_dir" "$package_dir/leomoon-parsinegar-$version-macos-universal.pkg"
 fi
 
 hdiutil create -volname "LeoMoon ParsiNegar" -srcfolder "$build_dir/leomoon-parsinegar.app" \
-    -ov -format UDZO "$package_dir/leomoon-parsinegar-$version.dmg"
+    -ov -format UDZO "$package_dir/leomoon-parsinegar-$version-macos-universal.dmg"
 
 if [ -n "${PARSINEGAR_NOTARY_PROFILE:-}" ]; then
     submit_for_notarization() {
@@ -72,8 +72,8 @@ if [ -n "${PARSINEGAR_NOTARY_PROFILE:-}" ]; then
             xcrun notarytool submit "$artifact" --keychain-profile "$PARSINEGAR_NOTARY_PROFILE" --wait
         fi
     }
-    submit_for_notarization "$package_dir/leomoon-parsinegar-$version.pkg"
-    xcrun stapler staple "$package_dir/leomoon-parsinegar-$version.pkg"
-    submit_for_notarization "$package_dir/leomoon-parsinegar-$version.dmg"
-    xcrun stapler staple "$package_dir/leomoon-parsinegar-$version.dmg"
+    submit_for_notarization "$package_dir/leomoon-parsinegar-$version-macos-universal.pkg"
+    xcrun stapler staple "$package_dir/leomoon-parsinegar-$version-macos-universal.pkg"
+    submit_for_notarization "$package_dir/leomoon-parsinegar-$version-macos-universal.dmg"
+    xcrun stapler staple "$package_dir/leomoon-parsinegar-$version-macos-universal.dmg"
 fi

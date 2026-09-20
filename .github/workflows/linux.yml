@@ -6,6 +6,9 @@ on:
       release_date:
         required: true
         type: string
+      release_tag:
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -23,41 +26,61 @@ env:
 
 jobs:
   build-test-package:
-    name: Build, test, and package
-    runs-on: ubuntu-22.04
+    name: Build, test, and package (${{ matrix.release_arch }})
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-22.04
+            qt_host: linux
+            qt_arch: linux_gcc_64
+            appimage_arch: x86_64
+            release_arch: amd64
+            include_fonts: true
+          - runner: ubuntu-24.04-arm
+            qt_host: linux_arm64
+            qt_arch: linux_gcc_arm64
+            appimage_arch: aarch64
+            release_arch: arm64
+            include_fonts: false
 
     steps:
       - name: Check out source
         uses: actions/checkout@v5
 
       - name: Generate release metadata
-        run: scripts/prepare-release-metadata.sh "$GITHUB_REF_NAME" "${{ inputs.release_date }}"
+        run: scripts/prepare-release-metadata.sh "${{ inputs.release_tag }}" "${{ inputs.release_date }}"
 
       - name: Install build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install --yes build-essential cmake curl dpkg-dev file libfuse2 libgl1-mesa-dev libwayland-client0 libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xfixes0 libxcb-xinerama0 ninja-build
+          fuse_package=libfuse2
+          if [[ "${{ matrix.release_arch }}" == "arm64" ]]; then
+            fuse_package=libfuse2t64
+          fi
+          sudo apt-get install --yes build-essential cmake curl dpkg-dev file "$fuse_package" libgl1-mesa-dev libwayland-client0 libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xfixes0 libxcb-xinerama0 ninja-build
 
       - name: Install pinned Qt
         uses: jurplel/install-qt-action@v4
         with:
           version: ${{ env.QT_VERSION }}
-          host: linux
+          host: ${{ matrix.qt_host }}
           target: desktop
-          arch: linux_gcc_64
+          arch: ${{ matrix.qt_arch }}
           cache: true
           setup-python: true
 
       - name: Install pinned Linux deployment tools
         run: |
           mkdir -p "$RUNNER_TEMP/leomoon-parsinegar-tools"
-          curl --fail --location --retry 3 --output "$RUNNER_TEMP/leomoon-parsinegar-tools/linuxdeploy" "https://github.com/linuxdeploy/linuxdeploy/releases/download/$LINUXDEPLOY_VERSION/linuxdeploy-x86_64.AppImage"
-          curl --fail --location --retry 3 --output "$RUNNER_TEMP/leomoon-parsinegar-tools/linuxdeploy-plugin-qt" "https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/$LINUXDEPLOY_QT_VERSION/linuxdeploy-plugin-qt-x86_64.AppImage"
-          curl --fail --location --retry 3 --output "$RUNNER_TEMP/leomoon-parsinegar-tools/runtime-x86_64" "https://github.com/AppImage/type2-runtime/releases/download/continuous/runtime-x86_64"
+          curl --fail --location --retry 3 --output "$RUNNER_TEMP/leomoon-parsinegar-tools/linuxdeploy" "https://github.com/linuxdeploy/linuxdeploy/releases/download/$LINUXDEPLOY_VERSION/linuxdeploy-${{ matrix.appimage_arch }}.AppImage"
+          curl --fail --location --retry 3 --output "$RUNNER_TEMP/leomoon-parsinegar-tools/linuxdeploy-plugin-qt" "https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/$LINUXDEPLOY_QT_VERSION/linuxdeploy-plugin-qt-${{ matrix.appimage_arch }}.AppImage"
+          curl --fail --location --retry 3 --output "$RUNNER_TEMP/leomoon-parsinegar-tools/runtime-${{ matrix.appimage_arch }}" "https://github.com/AppImage/type2-runtime/releases/download/continuous/runtime-${{ matrix.appimage_arch }}"
           chmod +x "$RUNNER_TEMP/leomoon-parsinegar-tools/linuxdeploy" "$RUNNER_TEMP/leomoon-parsinegar-tools/linuxdeploy-plugin-qt"
           echo "$RUNNER_TEMP/leomoon-parsinegar-tools" >> "$GITHUB_PATH"
-          echo "LDAI_RUNTIME_FILE=$RUNNER_TEMP/leomoon-parsinegar-tools/runtime-x86_64" >> "$GITHUB_ENV"
+          echo "LDAI_RUNTIME_FILE=$RUNNER_TEMP/leomoon-parsinegar-tools/runtime-${{ matrix.appimage_arch }}" >> "$GITHUB_ENV"
 
       - name: Configure release build
         run: cmake -S . -B build-linux -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON
@@ -72,13 +95,13 @@ jobs:
         run: cmake --build build-linux --target parsinegar_ui_qmllint
 
       - name: Package and verify Linux artifacts
-        run: scripts/package-linux.sh "$GITHUB_WORKSPACE/build-linux" "$GITHUB_WORKSPACE/dist"
+        run: scripts/package-linux.sh "$GITHUB_WORKSPACE/build-linux" "$GITHUB_WORKSPACE/dist" "${{ matrix.include_fonts }}"
 
       - name: Retain failure logs
         if: failure()
         uses: actions/upload-artifact@v6
         with:
-          name: linux-failure-logs
+          name: linux-${{ matrix.release_arch }}-failure-logs
           path: |
             build-linux/CMakeFiles/CMakeConfigureLog.yaml
             build-linux/Testing/Temporary/*.log
@@ -89,21 +112,33 @@ jobs:
       - name: Upload Linux artifacts
         uses: actions/upload-artifact@v6
         with:
-          name: leomoon-parsinegar-linux-${{ github.sha }}
+          name: leomoon-parsinegar-linux-${{ matrix.release_arch }}-${{ github.sha }}
           path: dist/
           if-no-files-found: error
           retention-days: 14
 
   clean-package-smoke:
-    name: Clean Ubuntu ${{ matrix.version }} package smoke test
+    name: Clean Ubuntu ${{ matrix.version }} package smoke test (${{ matrix.release_arch }})
     needs: build-test-package
-    runs-on: ubuntu-24.04
+    runs-on: ${{ matrix.runner }}
     container: ubuntu:${{ matrix.version }}
     timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
-        version: ["22.04", "24.04"]
+        include:
+          - version: "22.04"
+            release_arch: amd64
+            runner: ubuntu-24.04
+          - version: "24.04"
+            release_arch: amd64
+            runner: ubuntu-24.04
+          - version: "22.04"
+            release_arch: arm64
+            runner: ubuntu-24.04-arm
+          - version: "24.04"
+            release_arch: arm64
+            runner: ubuntu-24.04-arm
 
     steps:
       - name: Install clean-runtime test dependencies
@@ -119,12 +154,12 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Generate release metadata
-        run: scripts/prepare-release-metadata.sh "$GITHUB_REF_NAME" "${{ inputs.release_date }}"
+        run: scripts/prepare-release-metadata.sh "${{ inputs.release_tag }}" "${{ inputs.release_date }}"
 
       - name: Download Linux artifacts
         uses: actions/download-artifact@v7
         with:
-          name: leomoon-parsinegar-linux-${{ github.sha }}
+          name: leomoon-parsinegar-linux-${{ matrix.release_arch }}-${{ github.sha }}
           path: dist
 
       - name: Verify install, runtimes, launch, and uninstall
@@ -134,7 +169,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v6
         with:
-          name: linux-${{ matrix.version }}-smoke-failure-logs
+          name: linux-${{ matrix.release_arch }}-${{ matrix.version }}-smoke-failure-logs
           path: /tmp/**/weston.log
           if-no-files-found: ignore
           retention-days: 14

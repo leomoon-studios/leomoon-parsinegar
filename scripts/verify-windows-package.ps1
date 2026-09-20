@@ -2,7 +2,8 @@
 param(
     [Parameter(Mandatory = $true)][string]$StageDirectory,
     [Parameter(Mandatory = $true)][string]$InstallerPath,
-    [Parameter(Mandatory = $true)][string]$Version
+    [Parameter(Mandatory = $true)][string]$Version,
+    [Parameter(Mandatory = $true)][ValidateSet("x64", "arm64")][string]$Architecture
 )
 
 $ErrorActionPreference = "Stop"
@@ -39,7 +40,7 @@ foreach ($path in $requiredFiles) {
     Require-File $path
 }
 
-if ((Split-Path -Leaf $installer) -ne "leomoon-parsinegar-$Version-Setup.exe") {
+if ((Split-Path -Leaf $installer) -ne "leomoon-parsinegar-$Version-windows-$Architecture-setup.exe") {
     throw "Windows installer filename does not match version $Version"
 }
 

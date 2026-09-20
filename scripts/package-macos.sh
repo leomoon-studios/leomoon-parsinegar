@@ -25,8 +25,8 @@ cmake --build "$build_dir" --target package_macos --parallel 2
 
 app="$build_dir/leomoon-parsinegar.app"
 package_dir="$build_dir/package/macos"
-pkg="$package_dir/leomoon-parsinegar-$version.pkg"
-dmg="$package_dir/leomoon-parsinegar-$version.dmg"
+pkg="$package_dir/leomoon-parsinegar-$version-macos-universal.pkg"
+dmg="$package_dir/leomoon-parsinegar-$version-macos-universal.dmg"
 
 "$repo_dir/scripts/verify-macos-package.sh" "$app" "$pkg" "$dmg" "$version"
 

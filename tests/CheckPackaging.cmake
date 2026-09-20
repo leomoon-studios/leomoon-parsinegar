@@ -50,6 +50,8 @@ foreach(expected IN ITEMS
     "DestDir: \\\"{commonfonts}\\\""
     "FontInstall:"
     "Tasks: systemfonts"
+    "CPACK_DEBIAN_SYSTEMFONTS_PACKAGE_ARCHITECTURE all"
+    "PARSINEGAR_WINDOWS_RELEASE_ARCH"
 )
     string(FIND "${packaging_cmake}" "${expected}" position)
     if(position EQUAL -1)
@@ -72,10 +74,58 @@ foreach(expected IN ITEMS
     "Name: \"systemfonts\""
     "Name: \"desktopshortcut\""
     "Flags: checkedonce"
+    "OutputBaseFilename=leomoon-parsinegar-{#AppVersion}-windows-@PARSINEGAR_WINDOWS_RELEASE_ARCH@-setup"
+    "ArchitecturesAllowed=@PARSINEGAR_WINDOWS_INNO_ARCHITECTURE@"
 )
     string(FIND "${windows_installer}" "${expected}" position)
     if(position EQUAL -1)
         message(FATAL_ERROR "Windows installer is missing: ${expected}")
+    endif()
+endforeach()
+
+file(READ "${SOURCE_DIR}/.github/workflows/linux.yml" linux_workflow)
+foreach(expected IN ITEMS
+    "runner: ubuntu-24.04-arm"
+    "qt_host: linux_arm64"
+    "qt_arch: linux_gcc_arm64"
+    "appimage_arch: aarch64"
+    "leomoon-parsinegar-linux-"
+)
+    string(FIND "${linux_workflow}" "${expected}" position)
+    if(position EQUAL -1)
+        message(FATAL_ERROR "Linux multi-architecture workflow is missing: ${expected}")
+    endif()
+endforeach()
+
+file(READ "${SOURCE_DIR}/.github/workflows/windows.yml" windows_workflow)
+foreach(expected IN ITEMS
+    "runner: windows-11-vs2026-arm"
+    "qt_host: windows_arm64"
+    "qt_arch: win64_msvc2022_arm64"
+    "release_arch: arm64"
+    "leomoon-parsinegar-windows-"
+)
+    string(FIND "${windows_workflow}" "${expected}" position)
+    if(position EQUAL -1)
+        message(FATAL_ERROR "Windows multi-architecture workflow is missing: ${expected}")
+    endif()
+endforeach()
+
+file(READ "${SOURCE_DIR}/scripts/collect-release-assets.sh" release_collector)
+foreach(expected IN ITEMS
+    "linux-x86_64.AppImage"
+    "linux-aarch64.AppImage"
+    "ubuntu-amd64.deb"
+    "ubuntu-arm64.deb"
+    "ubuntu-all.deb"
+    "windows-x64-setup.exe"
+    "windows-arm64-setup.exe"
+    "macos-universal.dmg"
+    "macos-universal.pkg"
+)
+    string(FIND "${release_collector}" "${expected}" position)
+    if(position EQUAL -1)
+        message(FATAL_ERROR "Release artifact naming is missing: ${expected}")
     endif()
 endforeach()
 

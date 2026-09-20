@@ -6,6 +6,9 @@ on:
       release_date:
         required: true
         type: string
+      release_tag:
+        required: true
+        type: string
     secrets:
       MACOS_SIGNING_CERTIFICATE_BASE64:
         required: false
@@ -43,7 +46,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Generate release metadata
-        run: scripts/prepare-release-metadata.sh "$GITHUB_REF_NAME" "${{ inputs.release_date }}"
+        run: scripts/prepare-release-metadata.sh "${{ inputs.release_tag }}" "${{ inputs.release_date }}"
 
       - name: Install pinned Qt
         uses: jurplel/install-qt-action@v4
@@ -147,7 +150,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Generate release metadata
-        run: scripts/prepare-release-metadata.sh "$GITHUB_REF_NAME" "${{ inputs.release_date }}"
+        run: scripts/prepare-release-metadata.sh "${{ inputs.release_tag }}" "${{ inputs.release_date }}"
 
       - name: Download macOS artifacts
         uses: actions/download-artifact@v7
@@ -161,7 +164,7 @@ jobs:
       - name: Retain installer diagnostics
         if: failure()
         run: |
-          installer -showChoicesXML -pkg "dist/leomoon-parsinegar-$(tr -d '[:space:]' < metadata/VERSION).pkg" > "$RUNNER_TEMP/leomoon-parsinegar-installer-choices.xml" || true
+          installer -showChoicesXML -pkg "dist/leomoon-parsinegar-$(tr -d '[:space:]' < metadata/VERSION)-macos-universal.pkg" > "$RUNNER_TEMP/leomoon-parsinegar-installer-choices.xml" || true
           pkgutil --pkgs | grep -i parsinegar > "$RUNNER_TEMP/leomoon-parsinegar-receipts.txt" || true
 
       - name: Upload installer diagnostics

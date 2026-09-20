@@ -2,6 +2,7 @@
 param(
     [Parameter(Mandatory = $true)][string]$BuildDirectory,
     [Parameter(Mandatory = $true)][string]$DistDirectory,
+    [Parameter(Mandatory = $true)][ValidateSet("x64", "arm64")][string]$Architecture,
     [string]$IsccPath = "",
     [string]$Commit = "unknown"
 )
@@ -92,12 +93,12 @@ if ($LASTEXITCODE -ne 0) {
     throw "Inno Setup failed with exit code $LASTEXITCODE"
 }
 
-$installer = Join-Path $build "package\windows\leomoon-parsinegar-$Version-Setup.exe"
+$installer = Join-Path $build "package\windows\leomoon-parsinegar-$Version-windows-$Architecture-setup.exe"
 if ($signed) {
     Sign-Artifact $installer $signTool
 }
 
-& (Join-Path $PSScriptRoot "verify-windows-package.ps1") -StageDirectory $stage -InstallerPath $installer -Version $version
+& (Join-Path $PSScriptRoot "verify-windows-package.ps1") -StageDirectory $stage -InstallerPath $installer -Version $version -Architecture $Architecture
 
 $dist = [System.IO.Path]::GetFullPath($DistDirectory)
 if ($dist -eq [System.IO.Path]::GetPathRoot($dist) -or $dist -eq $repoDirectory) {
@@ -115,7 +116,8 @@ $manifest = [ordered]@{
     version = $version
     releaseDate = $releaseDate
     commit = $Commit
-    platform = "windows-x64"
+    platform = "windows"
+    architecture = $Architecture
     format = "Inno Setup"
     signed = $signed
 }

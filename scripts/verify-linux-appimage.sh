@@ -11,7 +11,7 @@ version="$2"
 work_dir="$(mktemp -d)"
 trap 'rm -rf "$work_dir"' EXIT
 
-if [[ "$(basename "$appimage")" != "leomoon-parsinegar-$version-"*.AppImage ]]; then
+if [[ "$(basename "$appimage")" != "leomoon-parsinegar-$version-linux-"*.AppImage ]]; then
     echo "AppImage filename does not contain version $version" >&2
     exit 1
 fi

@@ -43,7 +43,7 @@ Run the application with `./build/leomoon-parsinegar` on Linux, `open build/leom
 
 ## Packaging
 
-Release packaging is platform-specific. Linux provides AppImage and Debian components, Windows provides an Inno Setup installer, and macOS provides an unsigned DMG and component PKG. Windows and macOS installers include checked-by-default options for installing the bundled compatibility fonts system-wide and creating a desktop shortcut. See the CMake packaging files and release workflow for platform prerequisites and signing options.
+Release packaging is platform-specific. Linux provides x86_64 and ARM64 AppImages and Ubuntu packages, Windows provides x64 and ARM64 Inno Setup installers, and macOS provides universal Intel and Apple Silicon DMG and PKG packages. Windows and macOS installers include checked-by-default options for installing the bundled compatibility fonts system-wide and creating a desktop shortcut. See the CMake packaging files and release workflow for platform prerequisites and signing options.
 
 The bundled compatibility fonts are in `assets/fonts/system/`. Vazirmatn and Material Symbols are embedded for the application interface.
 
@@ -54,9 +54,9 @@ git tag v3.0.0
 git push origin v3.0.0
 ```
 
-Ordinary branch pushes do not build release packages. The Linux workflow builds with Qt 6.8.3, runs the complete test and QML lint suites, produces a self-contained AppImage plus separate application and optional-font Debian packages, and verifies X11 and Wayland startup without a Qt SDK.
+Ordinary branch pushes do not build release packages. The Linux workflow builds native x86_64 and ARM64 packages with Qt 6.8.3, runs the complete test and QML lint suites, produces self-contained AppImages plus separate application and architecture-independent optional-font Ubuntu packages, and verifies X11 and Wayland startup without a Qt SDK.
 
-The Windows workflow builds with Qt 6.8.3 and MSVC 2022, runs the same tests and QML linting, deploys the Qt runtime with `windeployqt`, and produces a versioned Inno Setup installer. A fresh Windows job tests the default font and desktop-shortcut selections, both opt-out choices, application launch, and uninstall. Tagged builds support optional Authenticode signing through protected repository secrets as described in [Windows release signing](docs/WINDOWS_SIGNING.md).
+The Windows workflow builds native x64 and ARM64 installers with Qt 6.8.3 and MSVC, runs the same tests and QML linting, and deploys the Qt runtime with `windeployqt`. Fresh Windows jobs test the default font and desktop-shortcut selections, both opt-out choices, application launch, and uninstall for each architecture. Tagged builds support optional Authenticode signing through protected repository secrets as described in [Windows release signing](docs/WINDOWS_SIGNING.md).
 
 The macOS workflow creates a universal Intel and Apple Silicon bundle with Qt 6.8.3, deploys its private Qt frameworks and QML modules with `macdeployqt`, and produces versioned DMG and component-PKG artifacts. A fresh macOS job tests the disk image, default font and desktop-shortcut selections, both opt-out choices, application launch, and cleanup. Tagged builds support optional Developer ID signing and notarization through protected repository secrets as described in [macOS release signing and notarization](docs/MACOS_SIGNING.md).
 

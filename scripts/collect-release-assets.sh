@@ -10,6 +10,8 @@ linux_dir="$(realpath "$1")"
 windows_dir="$(realpath "$2")"
 macos_dir="$(realpath "$3")"
 output_dir="$4"
+repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+version="$($repo_dir/scripts/check-release-version.sh)"
 
 case "$output_dir" in
     ""|/|"$linux_dir"|"$windows_dir"|"$macos_dir")
@@ -18,20 +20,31 @@ case "$output_dir" in
         ;;
 esac
 
-mapfile -t appimages < <(find "$linux_dir" -maxdepth 1 -type f -name '*.AppImage' -print | sort)
-mapfile -t debs < <(find "$linux_dir" -maxdepth 1 -type f -name '*.deb' -print | sort)
-mapfile -t installers < <(find "$windows_dir" -maxdepth 1 -type f -name '*.exe' -print | sort)
-mapfile -t dmgs < <(find "$macos_dir" -maxdepth 1 -type f -name '*.dmg' -print | sort)
-mapfile -t pkgs < <(find "$macos_dir" -maxdepth 1 -type f -name '*.pkg' -print | sort)
+expected_assets=(
+    "leomoon-parsinegar-$version-linux-x86_64.AppImage"
+    "leomoon-parsinegar-$version-linux-aarch64.AppImage"
+    "leomoon-parsinegar-$version-ubuntu-amd64.deb"
+    "leomoon-parsinegar-$version-ubuntu-arm64.deb"
+    "leomoon-parsinegar-fonts-$version-ubuntu-all.deb"
+    "leomoon-parsinegar-$version-windows-x64-setup.exe"
+    "leomoon-parsinegar-$version-windows-arm64-setup.exe"
+    "leomoon-parsinegar-$version-macos-universal.dmg"
+    "leomoon-parsinegar-$version-macos-universal.pkg"
+)
 
-if (( ${#appimages[@]} != 1 || ${#debs[@]} < 2 || ${#installers[@]} != 1 || ${#dmgs[@]} != 1 || ${#pkgs[@]} != 1 )); then
-    echo "Release artifacts are incomplete or ambiguous" >&2
-    exit 1
-fi
+artifacts=()
+for asset_name in "${expected_assets[@]}"; do
+    mapfile -t matches < <(find "$linux_dir" "$windows_dir" "$macos_dir" -type f -name "$asset_name" -print)
+    if (( ${#matches[@]} != 1 )); then
+        echo "Expected exactly one release asset named $asset_name, found ${#matches[@]}" >&2
+        exit 1
+    fi
+    artifacts+=("${matches[0]}")
+done
 
 rm -rf "$output_dir"
 mkdir -p "$output_dir"
-for artifact in "${appimages[@]}" "${debs[@]}" "${installers[@]}" "${dmgs[@]}" "${pkgs[@]}"; do
+for artifact in "${artifacts[@]}"; do
     destination="$output_dir/$(basename "$artifact")"
     if [[ -e "$destination" ]]; then
         echo "Duplicate release asset name: $(basename "$artifact")" >&2

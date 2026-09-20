@@ -9,8 +9,8 @@ fi
 artifact_dir="$(cd "$1" && pwd)"
 repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 version="$($repo_dir/scripts/check-release-version.sh)"
-pkg="$artifact_dir/leomoon-parsinegar-$version.pkg"
-dmg="$artifact_dir/leomoon-parsinegar-$version.dmg"
+pkg="$artifact_dir/leomoon-parsinegar-$version-macos-universal.pkg"
+dmg="$artifact_dir/leomoon-parsinegar-$version-macos-universal.dmg"
 application=/Applications/leomoon-parsinegar.app
 shortcut="$HOME/Desktop/LeoMoon ParsiNegar.app"
 receipt_ids=(
