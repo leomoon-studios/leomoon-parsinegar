@@ -549,8 +549,11 @@ FocusScope {
 
                         GridLayout {
                             Layout.fillWidth: true
+                            LayoutMirroring.enabled: false
+                            LayoutMirroring.childrenInherit: false
                             columns: 3
                             columnSpacing: AppTheme.spacingSmall
+                            layoutDirection: Qt.LeftToRight
                             AppButton { objectName: "exportAlignLeft"; Layout.fillWidth: true; Layout.preferredWidth: 0; text: root.uiText("export.alignLeft"); selected: root.alignment === "left"; onClicked: { root.alignment = "left"; root.persistExportSettings() } }
                             AppButton { objectName: "exportAlignCenter"; Layout.fillWidth: true; Layout.preferredWidth: 0; text: root.uiText("export.alignCenter"); selected: root.alignment === "center"; onClicked: { root.alignment = "center"; root.persistExportSettings() } }
                             AppButton { objectName: "exportAlignRight"; Layout.fillWidth: true; Layout.preferredWidth: 0; text: root.uiText("export.alignRight"); selected: root.alignment === "right"; onClicked: { root.alignment = "right"; root.persistExportSettings() } }
