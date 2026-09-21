@@ -73,13 +73,24 @@ TestCase {
         var applicationWindow = createMainWindow()
         var contentLayout = findChild(applicationWindow, "contentLayout")
         var editorPage = findChild(applicationWindow, "editorPage")
+        var editorPageScroll = findChild(applicationWindow, "editorPageScroll")
+        var editorWorkspaceHover = findChild(applicationWindow, "editorWorkspaceHover")
+        var editorWorkspace = findChild(applicationWindow, "editorWorkspace")
+        var editorPageContent = findChild(applicationWindow, "editorPageContent")
         var editorScroll = findChild(applicationWindow, "editorScroll")
         var conversionActions = findChild(applicationWindow, "conversionActions")
+        var statusSlot = findChild(applicationWindow, "statusSlot")
+        var applicationTitle = findChild(applicationWindow, "applicationTitle")
         verify(contentLayout !== null)
         verify(editorPage !== null)
+        verify(editorPageScroll !== null)
+        verify(editorWorkspaceHover !== null)
+        verify(editorWorkspace !== null)
+        verify(editorPageContent !== null)
         verify(editorScroll !== null)
         verify(conversionActions !== null)
-        verify(findChild(applicationWindow, "editorPageScroll") === null)
+        verify(statusSlot !== null)
+        verify(applicationTitle !== null)
 
         applicationWindow.width = applicationWindow.minimumWidth
         applicationWindow.height = applicationWindow.minimumHeight
@@ -91,6 +102,14 @@ TestCase {
         verify(editorPage.width > 0)
         verify(editorPage.height > 0)
         verify(editorScroll.height > 0)
+        compare(editorPage.heightDeficit,
+            Math.max(0, applicationWindow.minimumHeight - applicationWindow.usableScreenHeight))
+        compare(applicationWindow.calculateHeightDeficit(450, 600, 600), 0)
+        compare(applicationWindow.calculateHeightDeficit(735, 600, 600), 135)
+        compare(applicationWindow.calculateHeightDeficit(735, 735, 600), 135)
+        verify(!editorPage.constrainedHeight)
+        compare(editorPageScroll.policy, ScrollBar.AlwaysOff)
+        compare(editorWorkspace.scrollContentHeight, editorWorkspace.viewportHeight)
         var compactEditorHeight = editorScroll.height
         var compactActionsHeight = conversionActions.height
 
@@ -102,6 +121,22 @@ TestCase {
         verify(editorScroll.height > compactEditorHeight)
         verify(conversionActions.height <= compactActionsHeight)
         verify(editorScroll.height > conversionActions.height)
+
+        var headerY = applicationTitle.mapToItem(applicationWindow.contentItem, 0, 0).y
+        var statusY = statusSlot.mapToItem(applicationWindow.contentItem, 0, 0).y
+        editorPage.heightDeficit = 100
+        tryCompare(editorPage, "constrainedHeight", true)
+        compare(editorPageScroll.policy, ScrollBar.AsNeeded)
+        verify(editorWorkspace.scrollContentHeight >= editorWorkspace.viewportHeight + 100)
+        verify(editorPageScroll.size < 1)
+        mouseMove(editorWorkspace, editorWorkspace.width / 2,
+            editorWorkspace.contentMargin / 2)
+        tryCompare(editorWorkspaceHover, "hovered", true)
+        tryCompare(editorPageScroll, "active", true)
+        editorPageScroll.position = 1 - editorPageScroll.size
+        verify(editorPageContent.y < editorWorkspace.contentMargin)
+        compare(applicationTitle.mapToItem(applicationWindow.contentItem, 0, 0).y, headerY)
+        compare(statusSlot.mapToItem(applicationWindow.contentItem, 0, 0).y, statusY)
     }
 
     function test_headerDisplaysApplicationVersion() {
@@ -330,6 +365,14 @@ TestCase {
         var controller = applicationWindow.editorController
         var keyboardButton = findChild(applicationWindow, "keyboardButton")
         var keyboard = findChild(applicationWindow, "onScreenKeyboard")
+        var editorPage = findChild(applicationWindow, "editorPage")
+        var editorPageScroll = findChild(applicationWindow, "editorPageScroll")
+        var editorPageWheelTop = findChild(applicationWindow, "editorPageWheelTop")
+        var editorPageWheelBottom = findChild(applicationWindow, "editorPageWheelBottom")
+        var editorPageWheelLeft = findChild(applicationWindow, "editorPageWheelLeft")
+        var editorPageWheelRight = findChild(applicationWindow, "editorPageWheelRight")
+        var editorWorkspace = findChild(applicationWindow, "editorWorkspace")
+        var conversionActions = findChild(applicationWindow, "conversionActions")
         var editor = findChild(applicationWindow, "sourceEditor")
         var primaryLayer = findChild(applicationWindow, "keyboardPrimaryLayer")
         var symbolsLayer = findChild(applicationWindow, "keyboardSymbolsAdvancedLayer")
@@ -338,18 +381,34 @@ TestCase {
         var enter = findChild(applicationWindow, "keyboardEnterButton")
         verify(keyboardButton !== null)
         verify(keyboard !== null)
+        verify(editorPage !== null)
+        verify(editorPageScroll !== null)
+        verify(editorPageWheelTop !== null)
+        verify(editorPageWheelBottom !== null)
+        verify(editorPageWheelLeft !== null)
+        verify(editorPageWheelRight !== null)
+        verify(editorWorkspace !== null)
+        verify(conversionActions !== null)
+        compare(editorPageWheelTop.parent, editorWorkspace)
+        compare(editorPageWheelBottom.parent, editorWorkspace)
+        compare(editorPageWheelLeft.parent, editorWorkspace)
+        compare(editorPageWheelRight.parent, editorWorkspace)
         verify(!keyboard.visible)
         compare(applicationWindow.minimumHeight, applicationWindow.standardMinimumHeight)
         compare(keyboardButton.glyph, AppTheme.iconKeyboard)
 
         controller.sourceText = "a"
         editor.cursorPosition = controller.sourceText.length
+        var closedNaturalContentHeight = editorWorkspace.naturalContentHeight
         applicationWindow.height = applicationWindow.standardMinimumHeight
         tryCompare(applicationWindow, "height", applicationWindow.standardMinimumHeight)
         keyboardButton.click()
         tryCompare(keyboard, "visible", true)
         compare(controller.keyboardDrawerOpen, true)
         compare(applicationWindow.minimumHeight, applicationWindow.keyboardMinimumHeight)
+        tryVerify(function() {
+            return editorWorkspace.naturalContentHeight > closedNaturalContentHeight
+        })
         verify(applicationWindow.height >= applicationWindow.keyboardMinimumHeight)
         verify(keyboardButton.selected)
         tryCompare(editor, "activeFocus", true)
@@ -362,8 +421,35 @@ TestCase {
         verify(zaad !== null)
         verify(che !== null)
         verify(zaad.mapToItem(keyboard, 0, 0).x < che.mapToItem(keyboard, 0, 0).x)
-        pe.click()
+        editorPage.heightDeficit = 100
+        tryCompare(editorPage, "constrainedHeight", true)
+        var initialPageScrollPosition = editorPageScroll.position
+        mouseWheel(keyboard, keyboard.width / 2, keyboard.height / 2,
+            0, -120, Qt.NoButton, Qt.NoModifier)
+        verify(editorPageScroll.position > initialPageScrollPosition)
+
+        editorPageScroll.position = 1 - editorPageScroll.size
+        var conversionScrollPosition = editorPageScroll.position
+        mouseWheel(conversionActions,
+            conversionActions.width / 2, conversionActions.height / 2,
+            0, 120, Qt.NoButton, Qt.NoModifier)
+        verify(editorPageScroll.position < conversionScrollPosition)
+
+        editorPageScroll.position = 0
+        mouseWheel(editorWorkspace,
+            editorWorkspace.contentMargin / 2, editorWorkspace.height / 2,
+            0, -120, Qt.NoButton, Qt.NoModifier)
+        verify(editorPageScroll.position > 0)
+
+        var pagePositionBeforeEditorWheel = editorPageScroll.position
+        mouseWheel(editor, editor.width / 2, editor.height / 2,
+            0, -120, Qt.NoButton, Qt.NoModifier)
+        compare(editorPageScroll.position, pagePositionBeforeEditorWheel)
+
+        editorPageScroll.position = 0
+        mouseClick(pe, pe.width / 2, pe.height / 2)
         compare(controller.sourceText, "aپ")
+        editorPage.heightDeficit = 0
 
         symbolsLayer.click()
         compare(keyboard.activeLayer, "symbols")
@@ -409,6 +495,19 @@ TestCase {
         tryCompare(keyboard, "visible", false)
         compare(controller.keyboardDrawerOpen, false)
         compare(applicationWindow.minimumHeight, applicationWindow.standardMinimumHeight)
+
+        var secondClosedNaturalContentHeight = editorWorkspace.naturalContentHeight
+        keyboardButton.click()
+        tryCompare(keyboard, "visible", true)
+        compare(applicationWindow.activeMinimumHeight,
+            applicationWindow.keyboardMinimumHeight)
+        tryVerify(function() {
+            return editorWorkspace.naturalContentHeight > secondClosedNaturalContentHeight
+        })
+        keyboardButton.click()
+        tryCompare(keyboard, "visible", false)
+        compare(applicationWindow.activeMinimumHeight,
+            applicationWindow.standardMinimumHeight)
     }
 
     function test_editorContextMenuUsesTheMousePositionAndAppStyle() {

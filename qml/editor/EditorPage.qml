@@ -11,9 +11,12 @@ FocusScope {
     required property Typography typography
     property var textDirectionService: null
     property bool syncingEditor: false
+    property real heightDeficit: 0
     readonly property alias editorItem: editor
     readonly property alias editorScroll: editorScroll
     readonly property bool rightToLeft: controller.uiLanguage === "fa" || controller.uiLanguage === "ar"
+    readonly property bool constrainedHeight: heightDeficit > 0.5
+        || editorWorkspace.contentOverflow
 
     LayoutMirroring.enabled: rightToLeft
     LayoutMirroring.childrenInherit: true
@@ -40,6 +43,17 @@ FocusScope {
 
     function insertOnScreenNewline() {
         return insertOnScreenText("\n")
+    }
+
+    function scrollWorkspaceBy(delta) {
+        if (!constrainedHeight || editorWorkspace.scrollRange <= 0 || delta === 0)
+            return false
+
+        var offset = editorPageScroll.position * editorWorkspace.scrollContentHeight
+        var nextOffset = Math.max(0,
+            Math.min(editorWorkspace.scrollRange, offset - delta))
+        editorPageScroll.position = nextOffset / editorWorkspace.scrollContentHeight
+        return nextOffset !== offset
     }
 
     function pastePlainText() {
@@ -129,20 +143,54 @@ FocusScope {
         spacing: AppTheme.spacingMedium
 
         Rectangle {
+            id: editorWorkspace
+            objectName: "editorWorkspace"
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.minimumHeight: 180
+            clip: root.constrainedHeight
             radius: AppTheme.cornerRadiusLarge
             color: AppTheme.surface
             border.color: AppTheme.border
             border.width: AppTheme.borderWidth
 
+            readonly property real contentMargin: AppTheme.spacingLarge
+            readonly property real viewportHeight: Math.max(0, height - contentMargin * 2)
+            readonly property real naturalContentHeight: sourceHeader.implicitHeight
+                + editorScroll.Layout.minimumHeight
+                + conversionActions.implicitHeight
+                + editorContent.spacing * 2
+                + (onScreenKeyboard.visible
+                    ? onScreenKeyboard.implicitHeight + editorContent.spacing : 0)
+            readonly property bool contentOverflow: naturalContentHeight > viewportHeight + 0.5
+            readonly property real scrollContentHeight: root.constrainedHeight
+                ? Math.max(viewportHeight + root.heightDeficit, naturalContentHeight)
+                : viewportHeight
+            readonly property real scrollRange: Math.max(0, scrollContentHeight - viewportHeight)
+            readonly property real editorViewportX: editorContent.x + editorScroll.x
+            readonly property real editorViewportY: editorContent.y + editorScroll.y
+            readonly property real editorViewportRight: editorViewportX + editorScroll.width
+            readonly property real editorViewportBottom: editorViewportY + editorScroll.height
+
+            function handlePageWheel(wheel) {
+                var delta = wheel.pixelDelta.y !== 0
+                    ? wheel.pixelDelta.y : wheel.angleDelta.y / 2
+                wheel.accepted = root.scrollWorkspaceBy(delta)
+            }
+
             ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: AppTheme.spacingLarge
+                id: editorContent
+                objectName: "editorPageContent"
+                x: editorWorkspace.contentMargin
+                y: editorWorkspace.contentMargin
+                    - editorPageScroll.position * editorWorkspace.scrollContentHeight
+                width: editorWorkspace.width - editorWorkspace.contentMargin * 2
+                    - (editorPageScroll.visible ? editorPageScroll.width + AppTheme.spacingSmall : 0)
+                height: editorWorkspace.scrollContentHeight
                 spacing: AppTheme.spacingMedium
 
                 RowLayout {
+                    id: sourceHeader
                     Layout.fillWidth: true
                     spacing: AppTheme.spacingMedium
 
@@ -361,6 +409,93 @@ FocusScope {
                             root.focusEditor()
                         }
                     }
+                }
+            }
+
+            MouseArea {
+                id: editorPageWheelTop
+                objectName: "editorPageWheelTop"
+                x: 0
+                y: 0
+                width: editorWorkspace.width
+                height: Math.max(0, Math.min(editorWorkspace.height,
+                    editorWorkspace.editorViewportY))
+                enabled: root.constrainedHeight && editorWorkspace.scrollRange > 0
+                acceptedButtons: Qt.NoButton
+                z: 1
+                onWheel: function(wheel) { editorWorkspace.handlePageWheel(wheel) }
+            }
+
+            MouseArea {
+                id: editorPageWheelBottom
+                objectName: "editorPageWheelBottom"
+                x: 0
+                y: Math.max(0, Math.min(editorWorkspace.height,
+                    editorWorkspace.editorViewportBottom))
+                width: editorWorkspace.width
+                height: Math.max(0, editorWorkspace.height - y)
+                enabled: root.constrainedHeight && editorWorkspace.scrollRange > 0
+                acceptedButtons: Qt.NoButton
+                z: 1
+                onWheel: function(wheel) { editorWorkspace.handlePageWheel(wheel) }
+            }
+
+            MouseArea {
+                id: editorPageWheelLeft
+                objectName: "editorPageWheelLeft"
+                x: 0
+                y: Math.max(0, editorWorkspace.editorViewportY)
+                width: Math.max(0, Math.min(editorWorkspace.width,
+                    editorWorkspace.editorViewportX))
+                height: Math.max(0, Math.min(editorWorkspace.height,
+                    editorWorkspace.editorViewportBottom) - y)
+                enabled: root.constrainedHeight && editorWorkspace.scrollRange > 0
+                acceptedButtons: Qt.NoButton
+                z: 1
+                onWheel: function(wheel) { editorWorkspace.handlePageWheel(wheel) }
+            }
+
+            MouseArea {
+                id: editorPageWheelRight
+                objectName: "editorPageWheelRight"
+                x: Math.max(0, Math.min(editorWorkspace.width,
+                    editorWorkspace.editorViewportRight))
+                y: Math.max(0, editorWorkspace.editorViewportY)
+                width: Math.max(0, editorWorkspace.width - x)
+                height: Math.max(0, Math.min(editorWorkspace.height,
+                    editorWorkspace.editorViewportBottom) - y)
+                enabled: root.constrainedHeight && editorWorkspace.scrollRange > 0
+                acceptedButtons: Qt.NoButton
+                z: 1
+                onWheel: function(wheel) { editorWorkspace.handlePageWheel(wheel) }
+            }
+
+            HoverHandler {
+                id: editorWorkspaceHover
+                objectName: "editorWorkspaceHover"
+                acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+            }
+
+            ScrollBar {
+                id: editorPageScroll
+                objectName: "editorPageScroll"
+                anchors.top: parent.top
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                anchors.topMargin: editorWorkspace.contentMargin
+                anchors.rightMargin: AppTheme.spacingSmall
+                anchors.bottomMargin: editorWorkspace.contentMargin
+                z: 2
+                orientation: Qt.Vertical
+                policy: root.constrainedHeight ? ScrollBar.AsNeeded : ScrollBar.AlwaysOff
+                active: editorWorkspaceHover.hovered || hovered || pressed
+                size: editorWorkspace.scrollContentHeight > 0
+                    ? Math.min(1, editorWorkspace.viewportHeight / editorWorkspace.scrollContentHeight)
+                    : 1
+                visible: policy !== ScrollBar.AlwaysOff && size < 1
+                onVisibleChanged: {
+                    if (!visible)
+                        position = 0
                 }
             }
         }

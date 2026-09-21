@@ -21,14 +21,24 @@ ApplicationWindow {
     readonly property bool rightToLeft: controller.uiLanguage === "fa" || controller.uiLanguage === "ar"
     readonly property int standardMinimumHeight: 450
     readonly property int keyboardMinimumHeight: 735
+    readonly property int activeMinimumHeight: controller.keyboardDrawerOpen
+        ? keyboardMinimumHeight : standardMinimumHeight
+    readonly property real usableScreenHeight: Screen.desktopAvailableHeight > 0
+        ? Math.min(height, Screen.desktopAvailableHeight) : height
 
     width: 900
     height: 720
     minimumWidth: 740
-    minimumHeight: controller.keyboardDrawerOpen ? keyboardMinimumHeight : standardMinimumHeight
+    minimumHeight: activeMinimumHeight
     visible: true
     title: controller.windowTitle
     color: AppTheme.background
+
+    function calculateHeightDeficit(requiredHeight, windowHeight, screenHeight) {
+        var usableHeight = screenHeight > 0
+            ? Math.min(windowHeight, screenHeight) : windowHeight
+        return Math.max(0, requiredHeight - usableHeight)
+    }
 
     onClosing: function(close) {
         if (allowApplicationClose)
@@ -375,6 +385,8 @@ ApplicationWindow {
             controller: controller
             typography: typography
             textDirectionService: root.textDirectionService
+            heightDeficit: root.calculateHeightDeficit(
+                root.activeMinimumHeight, root.height, Screen.desktopAvailableHeight)
         }
 
         SettingsPage {

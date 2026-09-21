@@ -331,9 +331,13 @@ TestCase {
         var applicationWindow = createMainWindow()
         var controller = applicationWindow.editorController
         var editor = findChild(applicationWindow, "sourceEditor")
+        var editorPage = findChild(applicationWindow, "editorPage")
         var primaryModifier = Qt.platform.os === "osx" ? Qt.MetaModifier : Qt.ControlModifier
         var initialSize = controller.editorFontSize
 
+        verify(editorPage !== null)
+        editorPage.heightDeficit = 100
+        tryCompare(editorPage, "constrainedHeight", true)
         compare(editor.font.pixelSize, initialSize)
         mouseWheel(editor, editor.width / 2, editor.height / 2, 0, 120,
             Qt.NoButton, primaryModifier)
