@@ -1,5 +1,15 @@
 # Changelog
 
+## 3.0.1 (Unreleased)
+
+- Added persistent accent-color presets in Settings, including a neutral option.
+- Kept the source editor focused during on-screen keyboard and mouse interactions.
+- Fixed the extra cursor that appeared in mixed right-to-left and left-to-right text.
+- Adjusted paired on-screen keyboard punctuation for the current paragraph direction while keeping ornate bracket keys in a consistent order.
+- Matched the SVG export Fill Color and Variable Axes fields to the application theme.
+- Made the Linux AppImage use the desktop portal file picker when available.
+- Fixed pasting copied text over the same selected text so the selection clears and subsequent pastes insert another copy.
+
 ## 3.0.0 (2026-09-20)
 
 - Rebuilt ParsiNegar as an open-source, standalone Qt 6 desktop application using C++, QML, and JavaScript for Linux, Windows, and macOS.

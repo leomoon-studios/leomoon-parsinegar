@@ -307,7 +307,12 @@ Item {
     function replaceSourceText(text, cursor, anchor) {
         var nextText = String(text === undefined || text === null ? "" : text)
         if (sourceText === nextText) {
+            var previousCursor = sourceHistory.current.cursor
+            var previousAnchor = sourceHistory.current.anchor
             sourceHistory = History.SourceHistory.updateSelection(sourceHistory, cursor, anchor)
+            if (sourceHistory.current.cursor !== previousCursor
+                    || sourceHistory.current.anchor !== previousAnchor)
+                sourceHistoryRestored(sourceHistory.current.cursor, sourceHistory.current.anchor)
             return false
         }
         sourceText = nextText

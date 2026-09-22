@@ -28,6 +28,10 @@ TestCase {
                     lastError = ""
                     return true
                 }
+
+                function readText() {
+                    return text
+                }
             }
             clipboardService: clipboardMock
         }
@@ -234,6 +238,30 @@ TestCase {
         verify(controller.undoSourceEdit())
         controller.sourceText = "divergent"
         verify(!controller.canRedo)
+    }
+
+    function test_pastingCopiedSelectionTwiceInsertsTheSecondCopy() {
+        var applicationWindow = createMainWindow()
+        var controller = applicationWindow.editorController
+        var editorPage = findChild(applicationWindow, "editorPage")
+        var editor = findChild(applicationWindow, "sourceEditor")
+
+        controller.resetDocument("this is a test sentence.", "")
+        editor.cursorPosition = 10
+        editor.moveCursorSelection(14, TextEdit.SelectCharacters)
+        controller.clipboardBridge.text = editor.selectedText
+
+        compare(controller.clipboardBridge.text, "test")
+        verify(editorPage.pastePlainText())
+        compare(controller.sourceText, "this is a test sentence.")
+        compare(editor.selectionStart, 14)
+        compare(editor.selectionEnd, 14)
+
+        verify(editorPage.pastePlainText())
+        compare(controller.sourceText, "this is a testtest sentence.")
+        compare(editor.cursorPosition, 18)
+        verify(controller.undoSourceEdit())
+        compare(controller.sourceText, "this is a test sentence.")
     }
 
     function test_onScreenEditorHelpersReplaceSelectionAndRespectLimits() {
