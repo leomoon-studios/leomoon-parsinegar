@@ -41,7 +41,6 @@ Item {
     readonly property var activeRows: activeLayer === "primary" ? primaryRows : symbolsRows
     readonly property var pairedSymbols: ({
         "«": "»", "»": "«",
-        "﴿": "﴾", "﴾": "﴿",
         "(": ")", ")": "(",
         "[": "]", "]": "[",
         "{": "}", "}": "{"

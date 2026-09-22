@@ -549,7 +549,7 @@ TestCase {
         verify(symbolsLayer !== null)
 
         function verifyPairPositions(rightToLeft) {
-            var pairs = [["«", "»"], ["﴿", "﴾"], ["(", ")"], ["[", "]"], ["{", "}"]]
+            var pairs = [["«", "»"], ["(", ")"], ["[", "]"], ["{", "}"]]
             for (var i = 0; i < pairs.length; ++i) {
                 var opener = findChild(keyboard, "keyboardKey_" + pairs[i][0])
                 var closer = findChild(keyboard, "keyboardKey_" + pairs[i][1])
@@ -563,6 +563,15 @@ TestCase {
             }
         }
 
+        function verifyOrnatePosition() {
+            var opener = findChild(keyboard, "keyboardKey_﴿")
+            var closer = findChild(keyboard, "keyboardKey_﴾")
+            verify(opener !== null)
+            verify(closer !== null)
+            verify(opener.mapToItem(keyboard, 0, 0).x
+                > closer.mapToItem(keyboard, 0, 0).x)
+        }
+
         controller.setUiLanguage("en")
         controller.sourceText = "English"
         editor.cursorPosition = 0
@@ -573,9 +582,11 @@ TestCase {
         verify(quote !== null)
         tryCompare(keyboard, "visualDirection", "ltr")
         verifyPairPositions(false)
+        verifyOrnatePosition()
         controller.sourceText = "سلام"
         tryCompare(keyboard, "visualDirection", "rtl")
         verifyPairPositions(true)
+        verifyOrnatePosition()
 
         var source = "English\nسلام\n\nLatin"
         controller.sourceText = source
@@ -608,16 +619,10 @@ TestCase {
         verifyPairPositions(false)
 
         primaryLayer.click()
-        var ornateOpen = findChild(keyboard, "keyboardKey_﴿")
-        var ornateClose = findChild(keyboard, "keyboardKey_﴾")
-        verify(ornateOpen.mapToItem(keyboard, 0, 0).x
-            < ornateClose.mapToItem(keyboard, 0, 0).x)
+        verifyOrnatePosition()
         editor.cursorPosition = source.indexOf("سلام")
         tryCompare(keyboard, "visualDirection", "rtl")
-        ornateOpen = findChild(keyboard, "keyboardKey_﴿")
-        ornateClose = findChild(keyboard, "keyboardKey_﴾")
-        verify(ornateOpen.mapToItem(keyboard, 0, 0).x
-            > ornateClose.mapToItem(keyboard, 0, 0).x)
+        verifyOrnatePosition()
     }
 
     function test_editorContextMenuUsesTheMousePositionAndAppStyle() {
