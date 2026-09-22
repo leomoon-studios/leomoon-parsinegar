@@ -514,6 +514,7 @@ var CoreTestResults;
             videoStudioPro: true,
             editorFontSize: 14,
             keyboardDrawerOpen: true,
+            accentPreset: "purple",
             fontPaths: { unicode: "/fonts/unicode.ttf", compatibility: "/fonts/maryam.otf" },
             exportSettings: settings.desktopDefaults().exportSettings
         });
@@ -537,6 +538,9 @@ var CoreTestResults;
         equal(settings.sanitizeDesktop({ editorFontSize: 49 }).editorFontSize, 14);
         equal(settings.sanitizeDesktop({ keyboardDrawerOpen: true }).keyboardDrawerOpen, true);
         equal(settings.sanitizeDesktop({ keyboardDrawerOpen: "true" }).keyboardDrawerOpen, false);
+        equal(settings.sanitizeDesktop({ accentPreset: "teal" }).accentPreset, "teal");
+        equal(settings.sanitizeDesktop({ accentPreset: "faint" }).accentPreset, "faint");
+        equal(settings.sanitizeDesktop({ accentPreset: "invalid" }).accentPreset, "purple");
     });
 
     test("resource limits accept boundaries and reject oversized values", function () {

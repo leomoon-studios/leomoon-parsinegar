@@ -429,7 +429,6 @@ FocusScope {
                         text: root.controller.busy ? root.uiText("status.converting") : root.uiText("button.convert")
                         textPixelSize: AppTheme.fontHeading
                         textWeight: Font.Bold
-                        accent: true
                         enabled: !root.controller.busy && root.typography.ready
                         Accessible.name: root.uiText("button.convert")
                         onClicked: {

@@ -171,6 +171,47 @@ FocusScope {
 
                 SectionHeading {
                     width: parent.width
+                    label: root.uiText("settings.accentColor")
+                }
+
+                GridLayout {
+                    width: parent.width
+                    columns: width >= 600 ? 3 : 2
+                    columnSpacing: AppTheme.spacingSmall
+                    rowSpacing: AppTheme.spacingSmall
+
+                    Repeater {
+                        id: accentChoices
+                        objectName: "accentColorChoices"
+                        model: AppTheme.accentPresets
+
+                        AppButton {
+                            id: accentButton
+                            required property string modelData
+                            objectName: "accentColorButton_" + modelData
+                            Layout.fillWidth: true
+                            Layout.preferredWidth: 0
+                            text: root.uiText("accent." + modelData)
+                            selected: root.controller.accentPreset === modelData
+                            onClicked: root.controller.setAccentPreset(modelData)
+
+                            Rectangle {
+                                width: 16
+                                height: 16
+                                radius: width / 2
+                                anchors.left: parent.left
+                                anchors.leftMargin: AppTheme.spacingMedium
+                                anchors.verticalCenter: parent.verticalCenter
+                                color: AppTheme.accentPalettes[accentButton.modelData][AppTheme.darkMode ? "dark" : "light"].accent
+                                border.color: AppTheme.border
+                                border.width: AppTheme.borderWidth
+                            }
+                        }
+                    }
+                }
+
+                SectionHeading {
+                    width: parent.width
                     label: root.uiText("settings.language")
                 }
 

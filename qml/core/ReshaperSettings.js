@@ -1507,6 +1507,7 @@ var ReshaperSettings = (function () {
       videoStudioPro: false,
       editorFontSize: 14,
       keyboardDrawerOpen: false,
+      accentPreset: "purple",
       fontPaths: { unicode: "", compatibility: "" },
       exportSettings: {
         advancedVisible: false,
@@ -1550,6 +1551,8 @@ var ReshaperSettings = (function () {
     if (typeof value.editorFontSize === "number" && isFinite(value.editorFontSize) &&
         value.editorFontSize >= 10 && value.editorFontSize <= 48)
       result.editorFontSize = Math.round(value.editorFontSize);
+    if (["purple", "slate", "faint", "blue", "teal", "rose"].indexOf(value.accentPreset) !== -1)
+      result.accentPreset = value.accentPreset;
     if (object(value.fontPaths)) {
       ["unicode", "compatibility"].forEach(function (mode) {
         if (typeof value.fontPaths[mode] === "string" && value.fontPaths[mode].length <= 4096)

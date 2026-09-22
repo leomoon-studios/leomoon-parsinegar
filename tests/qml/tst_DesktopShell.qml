@@ -212,15 +212,64 @@ TestCase {
 
     function test_lightAndDarkPalettesRemainLegible() {
         var originalMode = AppTheme.darkMode
+        var originalAccent = AppTheme.accentPreset
         var modes = [true, false]
         for (var index = 0; index < modes.length; index++) {
             AppTheme.darkMode = modes[index]
             verify(AppTheme.contrastRatio(AppTheme.foreground, AppTheme.background) >= 4.5)
             verify(AppTheme.contrastRatio(AppTheme.foreground, AppTheme.surface) >= 4.5)
             verify(AppTheme.contrastRatio(AppTheme.muted, AppTheme.background) >= 4.5)
-            verify(AppTheme.contrastRatio(AppTheme.accentText, AppTheme.accent) >= 4.5)
+            for (var accentIndex = 0; accentIndex < AppTheme.accentPresets.length; accentIndex++) {
+                AppTheme.accentPreset = AppTheme.accentPresets[accentIndex]
+                verify(AppTheme.contrastRatio(AppTheme.accentText, AppTheme.accent) >= 4.5)
+                if (AppTheme.accentPreset === "faint") {
+                    verify(AppTheme.contrastRatio(AppTheme.accent, AppTheme.surface) < 2.5)
+                    verify(AppTheme.contrastRatio(AppTheme.focus, AppTheme.surface) >= 3)
+                }
+            }
         }
+        AppTheme.accentPreset = originalAccent
         AppTheme.darkMode = originalMode
+    }
+
+    function test_accentColorButtonsUpdateThemeAndSettings() {
+        var applicationWindow = createMainWindow()
+        var controller = applicationWindow.editorController
+        var choices = findChild(applicationWindow, "accentColorChoices")
+        verify(choices !== null)
+        compare(choices.count, AppTheme.accentPresets.length)
+        var purpleButton = choices.itemAt(0)
+        var slateButton = choices.itemAt(1)
+        var faintButton = choices.itemAt(2)
+        verify(purpleButton !== null)
+        verify(slateButton !== null)
+        verify(faintButton !== null)
+        compare(controller.accentPreset, "purple")
+        verify(purpleButton.selected)
+
+        controller.openSettings()
+        slateButton.click()
+        compare(controller.accentPreset, "slate")
+        compare(AppTheme.accentPreset, "slate")
+        verify(slateButton.selected)
+        verify(!purpleButton.selected)
+
+        controller.setUiLanguage("fa")
+        compare(slateButton.text, "خاکستری")
+        controller.setUiLanguage("ar")
+        compare(slateButton.text, "رمادي")
+        controller.setUiLanguage("en")
+        compare(slateButton.text, "Slate")
+
+        faintButton.click()
+        compare(controller.accentPreset, "faint")
+        verify(faintButton.selected)
+        controller.setUiLanguage("fa")
+        compare(faintButton.text, "کم‌رنگ")
+        controller.setUiLanguage("ar")
+        compare(faintButton.text, "باهت")
+        controller.setUiLanguage("en")
+        compare(faintButton.text, "Faint")
     }
 
     function test_reusableControlsAndThemeSwitch() {
@@ -267,7 +316,7 @@ TestCase {
         verify(statusSlot !== null)
         compare(statusSlot.height, 44)
         verify(!conversionStatus.visible)
-        verify(convertButton.accent)
+        verify(!convertButton.accent)
         verify(convertButton.width >= 120)
         verify(convertButton.width <= 200)
         compare(convertButton.contentItem.font.pixelSize, AppTheme.fontHeading)

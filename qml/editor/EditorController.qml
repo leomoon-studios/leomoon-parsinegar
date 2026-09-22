@@ -20,6 +20,8 @@ Item {
     property bool videoStudioPro: false
     property int editorFontSize: Settings.ReshaperSettings.desktopDefaults().editorFontSize
     property bool keyboardDrawerOpen: Settings.ReshaperSettings.desktopDefaults().keyboardDrawerOpen
+    property string accentPreset: Settings.ReshaperSettings.desktopDefaults().accentPreset
+    onAccentPresetChanged: AppTheme.accentPreset = accentPreset
     property string uiLanguage: "en"
     property string unicodeFontPath: ""
     property string compatibilityFontPath: ""
@@ -496,6 +498,14 @@ Item {
         return true
     }
 
+    function setAccentPreset(preset) {
+        if (AppTheme.accentPresets.indexOf(preset) === -1 || accentPreset === preset)
+            return false
+        accentPreset = preset
+        saveSettings()
+        return true
+    }
+
     function desktopSettings() {
         return {
             conversionMode: conversionMode,
@@ -503,6 +513,7 @@ Item {
             videoStudioPro: videoStudioPro,
             editorFontSize: editorFontSize,
             keyboardDrawerOpen: keyboardDrawerOpen,
+            accentPreset: accentPreset,
             fontPaths: {
                 unicode: unicodeFontPath,
                 compatibility: compatibilityFontPath
@@ -548,6 +559,7 @@ Item {
             : false
         editorFontSize = desktop.editorFontSize
         keyboardDrawerOpen = desktop.keyboardDrawerOpen
+        accentPreset = desktop.accentPreset
         exportSettings = Settings.ReshaperSettings.sanitizeExportSettings(desktop.exportSettings)
         unicodeFontPath = validFontPath(desktop.fontPaths.unicode) ? desktop.fontPaths.unicode : ""
         compatibilityFontPath = validFontPath(desktop.fontPaths.compatibility) ? desktop.fontPaths.compatibility : ""
@@ -700,7 +712,10 @@ Item {
             })
         }
     }
-    Component.onCompleted: initializeSettings()
+    Component.onCompleted: {
+        AppTheme.accentPreset = accentPreset
+        initializeSettings()
+    }
 
     WorkerScript {
         id: conversionWorker
