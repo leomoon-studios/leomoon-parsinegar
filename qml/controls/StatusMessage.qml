@@ -6,14 +6,18 @@ Control {
     id: control
 
     property string message: ""
+    property string idleMessage: ""
     property string level: "info"
     property bool busy: false
-    readonly property color statusColor: level === "error" ? AppTheme.urgent
+    readonly property bool idle: !busy && message === "" && idleMessage !== ""
+    readonly property string displayMessage: idle ? idleMessage : message
+    readonly property color statusColor: idle ? AppTheme.muted
+        : level === "error" ? AppTheme.urgent
         : level === "warning" ? AppTheme.warning
         : level === "success" ? AppTheme.success
         : AppTheme.accent
 
-    visible: busy || message !== ""
+    visible: busy || message !== "" || idleMessage !== ""
     implicitHeight: contentItem.implicitHeight + topPadding + bottomPadding
     leftPadding: AppTheme.spacingMedium
     rightPadding: AppTheme.spacingMedium
@@ -31,7 +35,7 @@ Control {
 
         Label {
             Layout.fillWidth: true
-            text: control.message
+            text: control.displayMessage
             font.family: AppTheme.fontFamily
             font.pixelSize: AppTheme.fontCaption
             color: control.statusColor
@@ -40,8 +44,10 @@ Control {
     }
 
     background: Rectangle {
-        color: AppTheme.withAlpha(control.statusColor, AppTheme.darkMode ? 0.12 : 0.08)
-        border.color: AppTheme.withAlpha(control.statusColor, 0.45)
+        color: control.idle ? AppTheme.surface
+            : AppTheme.withAlpha(control.statusColor, AppTheme.darkMode ? 0.12 : 0.08)
+        border.color: control.idle ? AppTheme.border
+            : AppTheme.withAlpha(control.statusColor, 0.45)
         border.width: AppTheme.borderWidth
         radius: AppTheme.cornerRadiusSmall
     }

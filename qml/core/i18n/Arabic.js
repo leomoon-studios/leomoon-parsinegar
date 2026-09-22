@@ -38,6 +38,7 @@ var values = Object.freeze({
   "keyboard.lreTooltip": "تضمين من اليسار إلى اليمين (U+202A)",
   "status.converting": "جارٍ التحويل والنسخ…",
   "status.converted": "تم التحويل والنسخ.",
+  "status.ready": "جاهز",
   "document.menu": "المستند",
   "document.untitled": "بلا عنوان",
   "document.new": "جديد",

@@ -38,6 +38,7 @@ var values = Object.freeze({
   "keyboard.lreTooltip": "Left-to-right embedding (U+202A)",
   "status.converting": "Converting and copying…",
   "status.converted": "Converted and copied.",
+  "status.ready": "Ready",
   "document.menu": "Document",
   "document.untitled": "Untitled",
   "document.new": "New",

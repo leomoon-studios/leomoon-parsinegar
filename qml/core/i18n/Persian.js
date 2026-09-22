@@ -38,6 +38,7 @@ var values = Object.freeze({
   "keyboard.lreTooltip": "تعبیهٔ چپ‌به‌راست (U+202A)",
   "status.converting": "در حال تبدیل و کپی…",
   "status.converted": "تبدیل و کپی شد.",
+  "status.ready": "آماده",
   "document.menu": "پرونده",
   "document.untitled": "بدون نام",
   "document.new": "پروندهٔ نو",

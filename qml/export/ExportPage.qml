@@ -715,11 +715,19 @@ FocusScope {
         }
 
         Item {
+            objectName: "exportStatusSlot"
             Layout.fillWidth: true
             Layout.minimumHeight: 44
             Layout.preferredHeight: 44
             Layout.maximumHeight: 44
-            StatusMessage { anchors.fill: parent; message: root.statusText; level: root.statusLevel; busy: root.exportController.busy }
+            StatusMessage {
+                objectName: "exportStatus"
+                anchors.fill: parent
+                idleMessage: root.uiText("status.ready")
+                message: root.statusText
+                level: root.statusLevel
+                busy: root.exportController.busy
+            }
         }
     }
 

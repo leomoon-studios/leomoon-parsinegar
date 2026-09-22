@@ -1,6 +1,6 @@
 # Changelog
 
-## 3.0.1 (Unreleased)
+## 3.0.1 (2026-09-22)
 
 - Added persistent accent-color presets in Settings, including a neutral option.
 - Kept the source editor focused during on-screen keyboard and mouse interactions.
@@ -9,6 +9,7 @@
 - Matched the SVG export Fill Color and Variable Axes fields to the application theme.
 - Made the Linux AppImage use the desktop portal file picker when available.
 - Fixed pasting copied text over the same selected text so the selection clears and subsequent pastes insert another copy.
+- Added permanent status bars to the editor and SVG export pages, with a neutral Ready state when idle.
 
 ## 3.0.0 (2026-09-20)
 

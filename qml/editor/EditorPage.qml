@@ -539,6 +539,7 @@ FocusScope {
                 id: conversionStatus
                 objectName: "conversionStatus"
                 anchors.fill: parent
+                idleMessage: root.uiText("status.ready")
                 message: root.controller.statusText !== "" || root.controller.busy
                     ? root.controller.statusText
                     : root.controller.settingsStatusText
