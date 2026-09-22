@@ -55,6 +55,10 @@ if ! find "$app_dir/usr" -path '*/platforms/libqwayland*.so' -print -quit | grep
     echo "AppImage is missing the Qt Wayland platform plugin" >&2
     exit 1
 fi
+if ! find "$app_dir/usr" -path '*/platformthemes/libqxdgdesktopportal.so' -print -quit | grep -q .; then
+    echo "AppImage is missing the Qt desktop portal platform theme" >&2
+    exit 1
+fi
 if ! find "$app_dir/usr" -path '*/wayland-shell-integration/libxdg-shell*.so' -print -quit | grep -q .; then
     echo "AppImage is missing the Qt Wayland XDG shell integration" >&2
     exit 1

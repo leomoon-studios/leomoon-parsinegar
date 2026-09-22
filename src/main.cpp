@@ -109,6 +109,13 @@ int main(int argc, char *argv[])
     QCoreApplication::setApplicationVersion(QStringLiteral(PARSINEGAR_VERSION));
     qInstallMessageHandler(applicationMessageHandler);
 
+#if defined(Q_OS_LINUX)
+    if (qEnvironmentVariableIsSet("APPIMAGE")) {
+        // Use the bundled portal theme instead of an unbundled host theme such as gtk3.
+        qputenv("QT_QPA_PLATFORMTHEME", "xdgdesktopportal");
+    }
+#endif
+
     QGuiApplication application(argc, argv);
     application.setWindowIcon(QIcon(QStringLiteral(":/qt/qml/LeoMoon/ParsiNegar/assets/app-icon.svg")));
 
