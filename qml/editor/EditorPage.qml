@@ -268,7 +268,6 @@ FocusScope {
                         color: AppTheme.foreground
                         selectionColor: AppTheme.accent
                         selectedTextColor: AppTheme.accentText
-                        cursorVisible: false
                         horizontalAlignment: length === 0 ? TextEdit.AlignRight : TextEdit.AlignLeft
                         wrapMode: TextEdit.Wrap
                         textFormat: root.textDirectionService !== null
@@ -278,6 +277,13 @@ FocusScope {
                         persistentSelection: true
                         padding: AppTheme.spacingMedium
                         Accessible.name: qsTr("Source text editor")
+                        cursorDelegate: Component {
+                            Rectangle {
+                                objectName: "editorCursor"
+                                width: Math.max(1, AppTheme.focusBorderWidth)
+                                color: AppTheme.foreground
+                            }
+                        }
 
                         Keys.onPressed: function(event) {
                             if (event.key === Qt.Key_Tab || event.key === Qt.Key_Backtab) {
@@ -310,18 +316,6 @@ FocusScope {
                                 root.pastePlainText()
                                 event.accepted = true
                             }
-                        }
-
-                        Rectangle {
-                            id: editorCursor
-                            objectName: "editorCursor"
-                            x: editor.cursorRectangle.x
-                            y: editor.cursorRectangle.y
-                            width: Math.max(1, AppTheme.focusBorderWidth)
-                            height: editor.cursorRectangle.height
-                            color: AppTheme.foreground
-                            visible: editor.activeFocus && editor.selectionStart === editor.selectionEnd
-                            z: 1
                         }
 
                         background: Rectangle {
