@@ -63,7 +63,7 @@ Item {
         objectName: "keyboardKey_" + keyId
         padding: AppTheme.spacingTiny
         hoverEnabled: true
-        focusPolicy: Qt.StrongFocus
+        focusPolicy: Qt.TabFocus
         text: keyLabel
         Accessible.name: keyLabel
 
@@ -126,6 +126,7 @@ Item {
 
                 AppButton {
                     objectName: "keyboardPrimaryLayer"
+                    focusPolicy: Qt.TabFocus
                     text: root.controller.uiText("keyboard.primary")
                     selected: root.activeLayer === "primary"
                     onClicked: root.activeLayer = "primary"
@@ -133,6 +134,7 @@ Item {
 
                 AppButton {
                     objectName: "keyboardSymbolsAdvancedLayer"
+                    focusPolicy: Qt.TabFocus
                     text: root.controller.uiText("keyboard.symbols")
                     selected: root.activeLayer === "symbols"
                     onClicked: root.activeLayer = "symbols"
@@ -179,6 +181,7 @@ Item {
 
                 AppButton {
                     objectName: "keyboardBackspaceButton"
+                    focusPolicy: Qt.TabFocus
                     Layout.preferredWidth: 0
                     Layout.fillWidth: true
                     Layout.fillHeight: true
@@ -188,6 +191,7 @@ Item {
 
                 AppButton {
                     objectName: "keyboardSpaceButton"
+                    focusPolicy: Qt.TabFocus
                     Layout.preferredWidth: 0
                     Layout.fillWidth: true
                     Layout.fillHeight: true
@@ -197,6 +201,7 @@ Item {
 
                 AppButton {
                     objectName: "keyboardEnterButton"
+                    focusPolicy: Qt.TabFocus
                     Layout.preferredWidth: 0
                     Layout.fillWidth: true
                     Layout.fillHeight: true

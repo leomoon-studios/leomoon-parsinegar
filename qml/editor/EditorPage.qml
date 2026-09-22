@@ -260,6 +260,16 @@ FocusScope {
                         Accessible.name: qsTr("Source text editor")
 
                         Keys.onPressed: function(event) {
+                            if (event.key === Qt.Key_Tab || event.key === Qt.Key_Backtab) {
+                                var forward = event.key === Qt.Key_Tab
+                                    && (event.modifiers & Qt.ShiftModifier) === 0
+                                var nextFocusItem = editor.nextItemInFocusChain(forward)
+                                if (nextFocusItem !== null) {
+                                    nextFocusItem.forceActiveFocus(Qt.TabFocusReason)
+                                    event.accepted = true
+                                    return
+                                }
+                            }
                             var primaryModifier = Qt.platform.os === "osx" ? Qt.MetaModifier : Qt.ControlModifier
                             var hasPrimaryModifier = (event.modifiers & primaryModifier) !== 0
                             var hasShift = (event.modifiers & Qt.ShiftModifier) !== 0
@@ -369,6 +379,7 @@ FocusScope {
 
                         ModeCard {
                             objectName: "unicodeButton"
+                            focusPolicy: Qt.TabFocus
                             Layout.fillWidth: true
                             LayoutMirroring.enabled: root.rightToLeft
                             LayoutMirroring.childrenInherit: true
@@ -380,6 +391,7 @@ FocusScope {
 
                         ModeCard {
                             objectName: "compatibilityButton"
+                            focusPolicy: Qt.TabFocus
                             Layout.fillWidth: true
                             LayoutMirroring.enabled: root.rightToLeft
                             LayoutMirroring.childrenInherit: true
@@ -394,6 +406,7 @@ FocusScope {
                     AppButton {
                         id: convertButton
                         objectName: "convertButton"
+                        focusPolicy: Qt.TabFocus
                         Layout.fillHeight: true
                         Layout.minimumWidth: 120
                         Layout.preferredWidth: 170
