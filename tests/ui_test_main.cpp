@@ -1,4 +1,5 @@
 #include "services/FileBridge.h"
+#include "services/TextDirectionBridge.h"
 
 #include <QtQuickTest/quicktest.h>
 #include <qqml.h>
@@ -12,10 +13,13 @@ public slots:
     {
         qmlRegisterSingletonInstance(
             "LeoMoon.ParsiNegar.Test", 1, 0, "NativeFileBridge", &m_fileBridge);
+        qmlRegisterSingletonInstance(
+            "LeoMoon.ParsiNegar.Test", 1, 0, "NativeTextDirectionBridge", &m_textDirectionBridge);
     }
 
 private:
     FileBridge m_fileBridge;
+    TextDirectionBridge m_textDirectionBridge;
 };
 
 QUICK_TEST_MAIN_WITH_SETUP(parsinegar_ui, ParsiNegarTestSetup)

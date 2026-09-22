@@ -9,6 +9,7 @@ Item {
 
     required property var controller
     property string activeLayer: "primary"
+    property string visualDirection: "rtl"
     readonly property bool rightToLeft: controller.uiLanguage === "fa" || controller.uiLanguage === "ar"
     readonly property var primaryRows: [
         ["\\", "چ", "ج", "ح", "خ", "ه", "ع", "غ", "ف", "ق", "ث", "ص", "ض", "ژ"],
@@ -38,6 +39,40 @@ Item {
         ]
     ]
     readonly property var activeRows: activeLayer === "primary" ? primaryRows : symbolsRows
+    readonly property var pairedSymbols: ({
+        "«": "»", "»": "«",
+        "﴿": "﴾", "﴾": "﴿",
+        "(": ")", ")": "(",
+        "[": "]", "]": "[",
+        "{": "}", "}": "{"
+    })
+
+    function keyAt(row, position) {
+        var key = row[position]
+        if (visualDirection !== "ltr" || typeof key !== "string")
+            return key
+
+        var partner = pairedSymbols[key]
+        if (partner !== undefined
+                && ((position > 0 && row[position - 1] === partner)
+                    || (position + 1 < row.length && row[position + 1] === partner)))
+            return partner
+        return key
+    }
+
+    function displayLabel(value) {
+        var mirroredLabels = {
+            "(": ")",
+            ")": "(",
+            "[": "]",
+            "]": "[",
+            "{": "}",
+            "}": "{",
+            "«": "»",
+            "»": "«"
+        }
+        return visualDirection === "rtl" ? (mirroredLabels[value] || value) : value
+    }
 
     signal textRequested(string text)
     signal backspaceRequested()
@@ -52,7 +87,8 @@ Item {
 
         required property var keyData
         readonly property string insertionText: typeof keyData === "string" ? keyData : keyData.text
-        readonly property string keyLabel: typeof keyData === "string" ? keyData : keyData.label
+        readonly property string keyLabel: root.displayLabel(
+            typeof keyData === "string" ? keyData : keyData.label)
         readonly property string keyId: typeof keyData === "string" ? keyData : keyData.id || keyData.label
         readonly property bool diacritic: typeof keyData === "object" && keyData.diacritic === true
         readonly property string toolTipText: typeof keyData === "object" && keyData.tooltipKey
@@ -68,7 +104,8 @@ Item {
         Accessible.name: keyLabel
 
         contentItem: Text {
-            text: keyButton.text
+            text: keyButton.insertionText === "﴿" || keyButton.insertionText === "﴾"
+                ? "\u200E" + keyButton.text + "\u200E" : keyButton.text
             font.family: AppTheme.fontFamily
             font.pixelSize: keyButton.diacritic ? AppTheme.fontBody + 10
                 : keyButton.keyLabel.length > 3 ? AppTheme.fontCaption : AppTheme.fontBody
@@ -160,12 +197,12 @@ Item {
                         model: keyRow.modelData
 
                         delegate: KeyboardKey {
-                            required property var modelData
+                            required property int index
 
                             Layout.fillWidth: true
                             Layout.preferredWidth: 0
                             Layout.fillHeight: true
-                            keyData: modelData
+                            keyData: root.keyAt(keyRow.modelData, index)
                         }
                     }
                 }

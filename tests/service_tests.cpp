@@ -463,6 +463,7 @@ void ServiceTests::textDirectionBridgeAlignsRenderedParagraphs()
     QVERIFY(!bridge.applyAutomaticDirection(nullptr));
     QVERIFY(!bridge.setPlainText(nullptr, source));
     QVERIFY(bridge.plainText(nullptr).isEmpty());
+    QCOMPARE(bridge.paragraphDirection(nullptr, 0), QStringLiteral("rtl"));
 
     QVERIFY(bridge.setPlainText(wrapper, QStringLiteral(".")));
     QVERIFY(bridge.applyAutomaticDirection(wrapper));
@@ -498,6 +499,9 @@ void ServiceTests::textDirectionBridgeAlignsRenderedParagraphs()
     for (QTextBlock block = document->begin(); block.isValid(); block = block.next()) {
         QVERIFY(blockIndex < expectedDirections.size());
         const Qt::LayoutDirection expectedDirection = expectedDirections.at(blockIndex);
+        QCOMPARE(
+            bridge.paragraphDirection(wrapper, block.position()),
+            expectedDirection == Qt::RightToLeft ? QStringLiteral("rtl") : QStringLiteral("ltr"));
         const Qt::Alignment expectedAlignment = (expectedDirection == Qt::RightToLeft
                 ? Qt::AlignRight
                 : Qt::AlignLeft)
@@ -509,6 +513,8 @@ void ServiceTests::textDirectionBridgeAlignsRenderedParagraphs()
         blockIndex++;
     }
     QCOMPARE(blockIndex, expectedDirections.size());
+    QCOMPARE(bridge.paragraphDirection(wrapper, -1), QStringLiteral("ltr"));
+    QCOMPARE(bridge.paragraphDirection(wrapper, document->characterCount()), QStringLiteral("ltr"));
 
     const auto cursorX = [&editor](int position) {
         QRectF rectangle;

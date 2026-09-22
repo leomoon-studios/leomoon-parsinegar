@@ -12,6 +12,7 @@ FocusScope {
     property var textDirectionService: null
     property bool syncingEditor: false
     property real heightDeficit: 0
+    property string keyboardDirection: "rtl"
     readonly property alias editorItem: editor
     readonly property alias editorScroll: editorScroll
     readonly property bool rightToLeft: controller.uiLanguage === "fa" || controller.uiLanguage === "ar"
@@ -27,6 +28,18 @@ FocusScope {
 
     function focusEditor() {
         editor.forceActiveFocus()
+    }
+
+    function updateKeyboardDirection() {
+        if (textDirectionService === null
+                || typeof textDirectionService.paragraphDirection !== "function") {
+            keyboardDirection = rightToLeft ? "rtl" : "ltr"
+            return
+        }
+
+        var direction = textDirectionService.paragraphDirection(
+            editor.textDocument, editor.cursorPosition)
+        keyboardDirection = direction === "ltr" ? "ltr" : "rtl"
     }
 
     function insertOnScreenText(text) {
@@ -112,6 +125,7 @@ FocusScope {
                 } finally {
                     syncingEditor = false
                 }
+                updateKeyboardDirection()
             }
         } else if (editor.text !== controller.sourceText) {
             syncingEditor = true
@@ -120,12 +134,14 @@ FocusScope {
             } finally {
                 syncingEditor = false
             }
+            updateKeyboardDirection()
         }
     }
 
     Component.onCompleted: {
         syncEditorFromController()
         updateParagraphDirections()
+        updateKeyboardDirection()
     }
 
     Connections {
@@ -236,9 +252,13 @@ FocusScope {
                                 root.controller.sourceText = source
                             if (!root.syncingEditor)
                                 root.updateParagraphDirections()
+                            root.updateKeyboardDirection()
                             root.reportEditorSelection()
                         }
-                        onCursorPositionChanged: root.reportEditorSelection()
+                        onCursorPositionChanged: {
+                            root.updateKeyboardDirection()
+                            root.reportEditorSelection()
+                        }
                         onSelectionStartChanged: root.reportEditorSelection()
                         onSelectionEndChanged: root.reportEditorSelection()
                         font.family: AppTheme.fontFamily
@@ -357,6 +377,7 @@ FocusScope {
                     Layout.fillWidth: true
                     visible: root.controller.keyboardDrawerOpen
                     controller: root.controller
+                    visualDirection: root.keyboardDirection
                     onTextRequested: function(text) { root.insertOnScreenText(text) }
                     onBackspaceRequested: root.deleteOnScreenBackward()
                     onNewlineRequested: root.insertOnScreenNewline()

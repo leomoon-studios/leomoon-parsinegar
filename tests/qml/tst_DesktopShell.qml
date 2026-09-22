@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtTest
 import LeoMoon.ParsiNegar
+import LeoMoon.ParsiNegar.Test
 
 TestCase {
     id: testCase
@@ -21,6 +22,7 @@ TestCase {
                 }
             }
             clipboardService: clipboardMock
+            textDirectionService: NativeTextDirectionBridge
             property QtObject fileMock: QtObject {
                 property var fontEntries: [
                     { family: "Noto Sans", style: "Regular", display: "Noto Sans", path: "/fonts/noto.ttf" },
@@ -455,7 +457,27 @@ TestCase {
         compare(keyboard.activeLayer, "symbols")
         compare(keyboard.symbolsRows.length, 4)
         var quote = findChild(keyboard, "keyboardKey_«")
+        var quoteClose = findChild(keyboard, "keyboardKey_»")
         verify(quote !== null)
+        verify(quoteClose !== null)
+        compare(keyboard.visualDirection, "ltr")
+        compare(quote.text, "«")
+        compare(quoteClose.text, "»")
+        controller.setUiLanguage("fa")
+        controller.sourceText = "پ"
+        compare(NativeTextDirectionBridge.plainText(editor.textDocument), "پ")
+        editor.cursorPosition = editor.length
+        tryCompare(keyboard, "visualDirection", "rtl")
+        quote = findChild(keyboard, "keyboardKey_«")
+        quoteClose = findChild(keyboard, "keyboardKey_»")
+        compare(quote.text, "»")
+        compare(quoteClose.text, "«")
+        controller.sourceText = "aپ"
+        controller.setUiLanguage("en")
+        compare(NativeTextDirectionBridge.plainText(editor.textDocument), "aپ")
+        editor.cursorPosition = editor.length
+        tryCompare(keyboard, "visualDirection", "ltr")
+        quote = findChild(keyboard, "keyboardKey_«")
         quote.click()
         compare(controller.sourceText, "aپ«")
 
@@ -508,6 +530,92 @@ TestCase {
         tryCompare(keyboard, "visible", false)
         compare(applicationWindow.activeMinimumHeight,
             applicationWindow.standardMinimumHeight)
+    }
+
+    function test_keyboardDirectionFollowsCursorParagraph() {
+        var applicationWindow = createMainWindow()
+        var controller = applicationWindow.editorController
+        var editor = findChild(applicationWindow, "sourceEditor")
+        var keyboardButton = findChild(applicationWindow, "keyboardButton")
+        var keyboard = findChild(applicationWindow, "onScreenKeyboard")
+        var primaryLayer = findChild(applicationWindow, "keyboardPrimaryLayer")
+        var symbolsLayer = findChild(applicationWindow, "keyboardSymbolsAdvancedLayer")
+        verify(editor !== null)
+        verify(keyboardButton !== null)
+        verify(keyboard !== null)
+        verify(primaryLayer !== null)
+        verify(symbolsLayer !== null)
+
+        function verifyPairPositions(rightToLeft) {
+            var pairs = [["«", "»"], ["﴿", "﴾"], ["(", ")"], ["[", "]"], ["{", "}"]]
+            for (var i = 0; i < pairs.length; ++i) {
+                var opener = findChild(keyboard, "keyboardKey_" + pairs[i][0])
+                var closer = findChild(keyboard, "keyboardKey_" + pairs[i][1])
+                verify(opener !== null)
+                verify(closer !== null)
+                compare(opener.insertionText, pairs[i][0])
+                compare(closer.insertionText, pairs[i][1])
+                var openX = opener.mapToItem(keyboard, 0, 0).x
+                var closeX = closer.mapToItem(keyboard, 0, 0).x
+                verify(rightToLeft ? openX > closeX : openX < closeX)
+            }
+        }
+
+        controller.setUiLanguage("en")
+        controller.sourceText = "English"
+        editor.cursorPosition = 0
+        keyboardButton.click()
+        tryCompare(keyboard, "visible", true)
+        symbolsLayer.click()
+        var quote = findChild(keyboard, "keyboardKey_«")
+        verify(quote !== null)
+        tryCompare(keyboard, "visualDirection", "ltr")
+        verifyPairPositions(false)
+        controller.sourceText = "سلام"
+        tryCompare(keyboard, "visualDirection", "rtl")
+        verifyPairPositions(true)
+
+        var source = "English\nسلام\n\nLatin"
+        controller.sourceText = source
+        compare(NativeTextDirectionBridge.plainText(editor.textDocument), source)
+
+        editor.cursorPosition = 0
+        tryCompare(keyboard, "visualDirection", "ltr")
+        quote = findChild(keyboard, "keyboardKey_«")
+        compare(quote.text, "«")
+        verifyPairPositions(false)
+        editor.cursorPosition = source.indexOf("سلام")
+        tryCompare(keyboard, "visualDirection", "rtl")
+        quote = findChild(keyboard, "keyboardKey_«")
+        compare(quote.text, "»")
+        verifyPairPositions(true)
+        editor.cursorPosition = source.indexOf("\n\n") + 1
+        tryCompare(keyboard, "visualDirection", "rtl")
+        editor.cursorPosition = source.indexOf("Latin")
+        tryCompare(keyboard, "visualDirection", "ltr")
+        quote = findChild(keyboard, "keyboardKey_«")
+        compare(quote.text, "«")
+        verifyPairPositions(false)
+
+        controller.setUiLanguage("fa")
+        editor.cursorPosition = source.indexOf("سلام")
+        tryCompare(keyboard, "visualDirection", "rtl")
+        verifyPairPositions(true)
+        editor.cursorPosition = source.indexOf("Latin")
+        tryCompare(keyboard, "visualDirection", "ltr")
+        verifyPairPositions(false)
+
+        primaryLayer.click()
+        var ornateOpen = findChild(keyboard, "keyboardKey_﴿")
+        var ornateClose = findChild(keyboard, "keyboardKey_﴾")
+        verify(ornateOpen.mapToItem(keyboard, 0, 0).x
+            < ornateClose.mapToItem(keyboard, 0, 0).x)
+        editor.cursorPosition = source.indexOf("سلام")
+        tryCompare(keyboard, "visualDirection", "rtl")
+        ornateOpen = findChild(keyboard, "keyboardKey_﴿")
+        ornateClose = findChild(keyboard, "keyboardKey_﴾")
+        verify(ornateOpen.mapToItem(keyboard, 0, 0).x
+            > ornateClose.mapToItem(keyboard, 0, 0).x)
     }
 
     function test_editorContextMenuUsesTheMousePositionAndAppStyle() {

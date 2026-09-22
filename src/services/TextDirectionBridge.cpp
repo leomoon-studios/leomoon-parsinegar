@@ -6,6 +6,7 @@
 #include <QTextCursor>
 #include <QTextDocument>
 
+#include <algorithm>
 #include <optional>
 
 namespace {
@@ -85,6 +86,24 @@ bool TextDirectionBridge::applyAutomaticDirection(QObject *quickTextDocument) co
 
     applyParagraphFormats(wrapper->textDocument());
     return true;
+}
+
+QString TextDirectionBridge::paragraphDirection(QObject *quickTextDocument, int position) const
+{
+    QQuickTextDocument *wrapper = textDocumentWrapper(quickTextDocument);
+    if (!wrapper) {
+        return QStringLiteral("rtl");
+    }
+
+    QTextDocument *document = wrapper->textDocument();
+    const int boundedPosition = std::clamp(position, 0, std::max(0, document->characterCount() - 1));
+    const QTextBlock targetBlock = document->findBlock(boundedPosition);
+    const Qt::LayoutDirection direction = targetBlock.isValid()
+        ? targetBlock.blockFormat().layoutDirection()
+        : Qt::RightToLeft;
+    return direction == Qt::LeftToRight
+        ? QStringLiteral("ltr")
+        : QStringLiteral("rtl");
 }
 
 QString TextDirectionBridge::plainText(QObject *quickTextDocument) const
