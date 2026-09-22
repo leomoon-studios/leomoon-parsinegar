@@ -632,12 +632,63 @@ FocusScope {
                                 ColumnLayout {
                                     Layout.fillWidth: true
                                     Label { text: root.uiText("export.fill"); font.family: AppTheme.fontFamily; color: AppTheme.muted }
-                                    TextField { id: fillField; objectName: "exportFill"; Layout.fillWidth: true; text: root.controller.exportSettings.fill; font.family: AppTheme.fontFamily; onEditingFinished: root.persistExportSettings() }
+                                    TextField {
+                                        id: fillField
+                                        objectName: "exportFill"
+                                        Layout.fillWidth: true
+                                        LayoutMirroring.enabled: false
+                                        text: root.controller.exportSettings.fill
+                                        focusPolicy: Qt.StrongFocus
+                                        selectByMouse: true
+                                        horizontalAlignment: TextInput.AlignLeft
+                                        implicitHeight: 42
+                                        leftPadding: AppTheme.spacingMedium
+                                        rightPadding: AppTheme.spacingMedium
+                                        font.family: AppTheme.fontFamily
+                                        font.pixelSize: AppTheme.fontControl
+                                        color: AppTheme.foreground
+                                        placeholderTextColor: AppTheme.muted
+                                        selectionColor: AppTheme.accent
+                                        selectedTextColor: AppTheme.accentText
+                                        background: Rectangle {
+                                            color: AppTheme.surface
+                                            border.color: fillField.activeFocus ? AppTheme.focus : AppTheme.border
+                                            border.width: fillField.activeFocus ? AppTheme.focusBorderWidth : AppTheme.borderWidth
+                                            radius: AppTheme.cornerRadius
+                                        }
+                                        onEditingFinished: root.persistExportSettings()
+                                    }
                                 }
                             }
 
                             Label { text: root.uiText("export.axes"); font.family: AppTheme.fontFamily; color: AppTheme.muted }
-                            TextField { id: axesField; objectName: "exportAxes"; Layout.fillWidth: true; text: root.controller.exportSettings.axes; placeholderText: root.uiText("export.axesHint"); font.family: AppTheme.fontFamily; LayoutMirroring.enabled: false; onEditingFinished: root.persistExportSettings() }
+                            TextField {
+                                id: axesField
+                                objectName: "exportAxes"
+                                Layout.fillWidth: true
+                                LayoutMirroring.enabled: false
+                                text: root.controller.exportSettings.axes
+                                placeholderText: root.uiText("export.axesHint")
+                                focusPolicy: Qt.StrongFocus
+                                selectByMouse: true
+                                horizontalAlignment: TextInput.AlignLeft
+                                implicitHeight: 42
+                                leftPadding: AppTheme.spacingMedium
+                                rightPadding: AppTheme.spacingMedium
+                                font.family: AppTheme.fontFamily
+                                font.pixelSize: AppTheme.fontControl
+                                color: AppTheme.foreground
+                                placeholderTextColor: AppTheme.muted
+                                selectionColor: AppTheme.accent
+                                selectedTextColor: AppTheme.accentText
+                                background: Rectangle {
+                                    color: AppTheme.surface
+                                    border.color: axesField.activeFocus ? AppTheme.focus : AppTheme.border
+                                    border.width: axesField.activeFocus ? AppTheme.focusBorderWidth : AppTheme.borderWidth
+                                    radius: AppTheme.cornerRadius
+                                }
+                                onEditingFinished: root.persistExportSettings()
+                            }
                         }
                     }
                 }

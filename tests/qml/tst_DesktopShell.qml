@@ -806,6 +806,8 @@ TestCase {
         var moreOptions = findChild(applicationWindow, "exportMoreOptionsButton")
         var fontSelector = findChild(applicationWindow, "exportFontSelector")
         var refreshFonts = findChild(applicationWindow, "refreshExportFontsButton")
+        var fillField = findChild(applicationWindow, "exportFill")
+        var axesField = findChild(applicationWindow, "exportAxes")
         verify(exportButton !== null)
         verify(exportPage !== null)
         verify(headerBackButton !== null)
@@ -820,6 +822,8 @@ TestCase {
         verify(moreOptions !== null)
         verify(fontSelector !== null)
         verify(refreshFonts !== null)
+        verify(fillField !== null)
+        verify(axesField !== null)
         compare(refreshFonts.glyph, AppTheme.iconRefresh)
 
         controller.sourceText = "draft متن"
@@ -848,6 +852,12 @@ TestCase {
         verify(alignCenter.selected)
         moreOptions.click()
         compare(controller.exportSettings.advancedVisible, true)
+        compare(fillField.background.color, AppTheme.surface)
+        compare(axesField.background.color, AppTheme.surface)
+        compare(fillField.color, AppTheme.foreground)
+        compare(axesField.color, AppTheme.foreground)
+        compare(fillField.implicitHeight, fontSize.implicitHeight)
+        compare(axesField.implicitHeight, fontSize.implicitHeight)
         alignLeft.click()
         compare(controller.exportSettings.alignment, "left")
         fontSize.text = "72"
