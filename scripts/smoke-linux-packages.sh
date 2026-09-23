@@ -1,14 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if (( $# != 1 )); then
-    echo "Usage: $0 ARTIFACT_DIRECTORY" >&2
+if (( $# != 2 )); then
+    echo "Usage: $0 ARTIFACT_DIRECTORY EXPECT_FONT_PACKAGES" >&2
     exit 2
 fi
 
 artifact_dir="$(realpath "$1")"
+expect_font_packages="$2"
 repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 version="$($repo_dir/scripts/check-release-version.sh)"
+if [[ "$expect_font_packages" != true && "$expect_font_packages" != false ]]; then
+    echo "EXPECT_FONT_PACKAGES must be true or false" >&2
+    exit 2
+fi
 
 (
     cd "$artifact_dir"
@@ -16,9 +21,36 @@ version="$($repo_dir/scripts/check-release-version.sh)"
 )
 
 mapfile -t appimages < <(find "$artifact_dir" -maxdepth 1 -type f -name "leomoon-parsinegar-$version-linux-*.AppImage" -print)
-mapfile -t debs < <(find "$artifact_dir" -maxdepth 1 -type f -name '*.deb' -print | sort)
-if (( ${#appimages[@]} != 1 || ${#debs[@]} < 1 )); then
-    echo "Linux release set is incomplete" >&2
+mapfile -t application_debs < <(find "$artifact_dir" -maxdepth 1 -type f -name "leomoon-parsinegar-$version-ubuntu-*.deb" -print)
+if (( ${#appimages[@]} != 1 || ${#application_debs[@]} != 0 )); then
+    echo "Expected one AppImage and no application Debian package" >&2
+    exit 1
+fi
+
+fonts_deb="$artifact_dir/leomoon-parsinegar-fonts-$version-ubuntu-all.deb"
+fonts_zip="$artifact_dir/leomoon-parsinegar-fonts-$version-linux-all.zip"
+if [[ "$expect_font_packages" == true ]]; then
+    if [[ ! -f "$fonts_deb" || ! -f "$fonts_zip" ]]; then
+        echo "Linux font packages are missing" >&2
+        exit 1
+    fi
+    if [[ "$(dpkg-deb --field "$fonts_deb" Package)" != leomoon-parsinegar-fonts \
+        || "$(dpkg-deb --field "$fonts_deb" Architecture)" != all ]]; then
+        echo "Ubuntu font package metadata is incorrect" >&2
+        exit 1
+    fi
+    unzip -tqq "$fonts_zip"
+    deb_font_count="$(dpkg-deb --contents "$fonts_deb" | grep -Ec '\.(ttf|otf|ttc)$')"
+    zip_font_count="$(unzip -Z -1 "$fonts_zip" | grep -Ec '^leomoon-parsinegar-fonts/.*\.(ttf|otf|ttc)$')"
+    source_font_count="$(find "$repo_dir/assets/fonts/system" -maxdepth 1 -type f \
+        \( -name '*.ttf' -o -name '*.otf' -o -name '*.ttc' \) | wc -l)"
+    if (( source_font_count < 1 || deb_font_count != source_font_count || zip_font_count != source_font_count )); then
+        echo "Ubuntu and ZIP font packages must include every bundled font" >&2
+        exit 1
+    fi
+    unzip -Z -1 "$fonts_zip" | grep -Fx 'leomoon-parsinegar-fonts/README.txt' >/dev/null
+elif [[ -e "$fonts_deb" || -e "$fonts_zip" ]]; then
+    echo "Architecture-independent font packages must be uploaded only once" >&2
     exit 1
 fi
 
@@ -54,42 +86,11 @@ cleanup
 trap - EXIT
 rm -rf "$runtime_dir"
 
-application_deb=""
-fonts_deb=""
-for deb in "${debs[@]}"; do
-    package_name="$(dpkg-deb --field "$deb" Package)"
-    case "$package_name" in
-        leomoon-parsinegar) application_deb="$deb" ;;
-        leomoon-parsinegar-fonts) fonts_deb="$deb" ;;
-    esac
-done
-if [[ -z "$application_deb" ]]; then
-    echo "Could not identify the application package" >&2
-    exit 1
-fi
-
-if dpkg-deb --contents "$application_deb" | grep -q '/fonts/truetype/parsinegar/'; then
-    echo "Application package unexpectedly contains optional system fonts" >&2
-    exit 1
-fi
-if [[ -n "$fonts_deb" ]]; then
-    font_count="$(dpkg-deb --contents "$fonts_deb" | grep -Ec '\.(ttf|otf|ttc)$')"
-    if (( font_count < 1 )); then
-        echo "Optional font package does not contain fonts" >&2
-        exit 1
-    fi
-fi
-
-dpkg --force-depends --install "$application_deb"
-test -x /usr/bin/leomoon-parsinegar
-test -s /usr/share/applications/com.leomoon.ParsiNegar.desktop
-test -s /usr/share/icons/hicolor/scalable/apps/com.leomoon.ParsiNegar.svg
-if [[ -n "$fonts_deb" ]]; then
-    dpkg --force-depends --install "$fonts_deb"
+if [[ "$expect_font_packages" == true ]]; then
+    dpkg --install "$fonts_deb"
     test -d /usr/share/fonts/truetype/parsinegar
     dpkg --remove leomoon-parsinegar-fonts
+    test ! -e /usr/share/fonts/truetype/parsinegar
 fi
-dpkg --remove leomoon-parsinegar
-test ! -e /usr/bin/leomoon-parsinegar
 
-echo "Linux AppImage and Debian package smoke checks passed"
+echo "Linux AppImage and optional font package smoke checks passed"

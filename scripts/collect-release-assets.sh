@@ -23,9 +23,8 @@ esac
 expected_assets=(
     "leomoon-parsinegar-$version-linux-x86_64.AppImage"
     "leomoon-parsinegar-$version-linux-aarch64.AppImage"
-    "leomoon-parsinegar-$version-ubuntu-amd64.deb"
-    "leomoon-parsinegar-$version-ubuntu-arm64.deb"
     "leomoon-parsinegar-fonts-$version-ubuntu-all.deb"
+    "leomoon-parsinegar-fonts-$version-linux-all.zip"
     "leomoon-parsinegar-$version-windows-x64-setup.exe"
     "leomoon-parsinegar-$version-windows-arm64-setup.exe"
     "leomoon-parsinegar-$version-macos-universal.dmg"

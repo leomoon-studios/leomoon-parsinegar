@@ -9,8 +9,12 @@ set(required_files
     packaging/linux/com.leomoon.ParsiNegar.desktop
     packaging/linux/com.leomoon.ParsiNegar.metainfo.xml.in
     packaging/linux/build-appimage.cmake
+    packaging/linux/FONTS-README.txt
     packaging/linux/fonts-postinst
     packaging/linux/fonts-postrm
+    scripts/package-linux.sh
+    scripts/package-linux-fonts.sh
+    scripts/smoke-linux-packages.sh
     packaging/windows/leomoon-parsinegar.rc.in
     packaging/windows/leomoon-parsinegar.iss.in
     packaging/windows/app-icon.ico
@@ -51,6 +55,7 @@ foreach(expected IN ITEMS
     "FontInstall:"
     "Tasks: systemfonts"
     "CPACK_DEBIAN_SYSTEMFONTS_PACKAGE_ARCHITECTURE all"
+    "set(CPACK_COMPONENTS_ALL SystemFonts)"
     "PARSINEGAR_WINDOWS_RELEASE_ARCH"
     "set(PARSINEGAR_WINDOWS_INNO_ARCHITECTURE arm64)"
 )
@@ -137,9 +142,8 @@ file(READ "${SOURCE_DIR}/scripts/collect-release-assets.sh" release_collector)
 foreach(expected IN ITEMS
     "linux-x86_64.AppImage"
     "linux-aarch64.AppImage"
-    "ubuntu-amd64.deb"
-    "ubuntu-arm64.deb"
     "ubuntu-all.deb"
+    "linux-all.zip"
     "windows-x64-setup.exe"
     "windows-arm64-setup.exe"
     "macos-universal.dmg"
@@ -148,6 +152,12 @@ foreach(expected IN ITEMS
     string(FIND "${release_collector}" "${expected}" position)
     if(position EQUAL -1)
         message(FATAL_ERROR "Release artifact naming is missing: ${expected}")
+    endif()
+endforeach()
+foreach(unexpected IN ITEMS "ubuntu-amd64.deb" "ubuntu-arm64.deb")
+    string(FIND "${release_collector}" "${unexpected}" position)
+    if(NOT position EQUAL -1)
+        message(FATAL_ERROR "Release collector still expects an application Debian package: ${unexpected}")
     endif()
 endforeach()
 

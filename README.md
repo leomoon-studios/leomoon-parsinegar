@@ -43,9 +43,11 @@ Run the application with `./build/leomoon-parsinegar` on Linux, `open "build/Leo
 
 ## Packaging
 
-Release packaging is platform-specific. Linux provides x86_64 and ARM64 AppImages and Ubuntu packages, Windows provides x64 and ARM64 Inno Setup installers, and macOS provides universal Intel and Apple Silicon DMG and PKG packages. Windows and macOS installers include checked-by-default options for installing the bundled compatibility fonts system-wide and creating a desktop shortcut. See the CMake packaging files and release workflow for platform prerequisites and signing options.
+Release packaging is platform-specific. Linux provides x86_64 and ARM64 AppImages, Windows provides x64 and ARM64 Inno Setup installers, and macOS provides universal Intel and Apple Silicon DMG and PKG packages. Linux compatibility fonts are available separately as an architecture-independent Ubuntu `.deb` or a ZIP for manual installation. Windows and macOS installers include checked-by-default options for installing the bundled compatibility fonts system-wide and creating a desktop shortcut. See the CMake packaging files and release workflow for platform prerequisites and signing options.
 
 The bundled compatibility fonts are in `assets/fonts/system/`. Vazirmatn and Material Symbols are embedded for the application interface.
+
+The Linux AppImages do not install the optional fonts system-wide. Ubuntu users can install the separate `leomoon-parsinegar-fonts-<version>-ubuntu-all.deb` package. Advanced users on other Linux distributions can extract `leomoon-parsinegar-fonts-<version>-linux-all.zip` and follow its `FONTS-README.txt` for manual installation. Both font packages contain the same LMN and LMU fonts; neither includes the application.
 
 Pushing a tag in the exact `vX.Y.Z` form starts the release workflow. The workflow derives `metadata/VERSION` from the tag, writes the current UTC date to `metadata/RELEASE_DATE`, and then starts the separate Linux, Windows, and macOS builds. It publishes one GitHub Release only after every build and clean-install test succeeds. The release page includes a commit list, GitHub source archives, each native package as an individual download, and one combined `SHA256SUMS` file.
 
@@ -78,7 +80,7 @@ gh workflow run release.yml --ref master \
 
 Monitor the latest run from the terminal with `gh run watch --exit-status`, or open the run under the repository's **Actions** tab. Successful packages can be downloaded from the run's **Artifacts** section. Manual runs never execute the publishing job.
 
-Ordinary branch pushes do not build release packages. The Linux workflow builds native x86_64 and ARM64 packages with Qt 6.8.3, runs the complete test and QML lint suites, produces self-contained AppImages plus separate application and architecture-independent optional-font Ubuntu packages, and verifies X11 and Wayland startup without a Qt SDK.
+Ordinary branch pushes do not build release packages. The Linux workflow builds native x86_64 and ARM64 AppImages with Qt 6.8.3, runs the complete test and QML lint suites, produces one architecture-independent optional-font Ubuntu package and font ZIP, and verifies X11 and Wayland startup without a Qt SDK. It also checks that both font packages contain the same font inventory.
 
 The Windows workflow builds native x64 and ARM64 installers with Qt 6.8.3 and MSVC, runs the same tests and QML linting, and deploys the Qt runtime with `windeployqt`. Fresh Windows jobs test the default font and desktop-shortcut selections, both opt-out choices, application launch, and uninstall for each architecture. Tagged builds support optional Authenticode signing through protected repository secrets as described in [Windows release signing](docs/WINDOWS_SIGNING.md).
 
