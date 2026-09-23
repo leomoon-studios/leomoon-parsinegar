@@ -51,6 +51,8 @@ target_sources(parsinegar_native_services PRIVATE
     src/services/ClipboardKeeper.h
     src/services/FileBridge.cpp
     src/services/FileBridge.h
+    src/services/KeyboardModifierBridge.cpp
+    src/services/KeyboardModifierBridge.h
     src/services/SettingsStore.cpp
     src/services/SettingsStore.h
     src/services/TextDirectionBridge.cpp

@@ -1,6 +1,7 @@
 #include "services/ClipboardBridge.h"
 #include "services/ClipboardKeeper.h"
 #include "services/FileBridge.h"
+#include "services/KeyboardModifierBridge.h"
 #include "services/SettingsStore.h"
 #include "services/TextDirectionBridge.h"
 
@@ -8,6 +9,7 @@
 #include <QDir>
 #include <QFile>
 #include <QGuiApplication>
+#include <QKeyEvent>
 #include <QQmlComponent>
 #include <QQmlEngine>
 #include <QQuickItem>
@@ -32,6 +34,7 @@ private slots:
     void initTestCase();
     void clipboardRoundTrip();
     void clipboardKeeperHandoff();
+    void keyboardModifierFollowsGlobalKeyRelease();
     void settingsUsePlatformLocation();
     void settingsRoundTripAtomically();
     void settingsDelegateSchemaRecovery();
@@ -89,6 +92,37 @@ void ServiceTests::clipboardRoundTrip()
     QCOMPARE(copiedSpy.count(), 1);
     QCOMPARE(failureSpy.count(), 0);
     QVERIFY(bridge.lastError().isEmpty());
+}
+
+void ServiceTests::keyboardModifierFollowsGlobalKeyRelease()
+{
+    KeyboardModifierBridge bridge;
+    QObject recipient;
+    QSignalSpy changedSpy(&bridge, &KeyboardModifierBridge::shiftPressedChanged);
+
+    QKeyEvent shiftPress(QEvent::KeyPress, Qt::Key_Shift, Qt::ShiftModifier);
+    QCoreApplication::sendEvent(&recipient, &shiftPress);
+    QVERIFY(bridge.shiftPressed());
+
+    QKeyEvent shiftedKeyRelease(QEvent::KeyRelease, Qt::Key_A, Qt::ShiftModifier);
+    QCoreApplication::sendEvent(&recipient, &shiftedKeyRelease);
+    QVERIFY(bridge.shiftPressed());
+
+    QKeyEvent shiftRelease(QEvent::KeyRelease, Qt::Key_Shift, Qt::NoModifier);
+    QCoreApplication::sendEvent(&recipient, &shiftRelease);
+    QVERIFY(!bridge.shiftPressed());
+    QCOMPARE(changedSpy.size(), 2);
+
+    QCoreApplication::sendEvent(&recipient, &shiftPress);
+    QEvent deactivate(QEvent::ApplicationDeactivate);
+    QCoreApplication::sendEvent(QCoreApplication::instance(), &deactivate);
+    QVERIFY(!bridge.shiftPressed());
+
+    // A platform may not deliver the modifier-only release until another key event.
+    // Polling the physical state must clear Shift without waiting for Enter.
+    QCoreApplication::sendEvent(&recipient, &shiftPress);
+    QVERIFY(bridge.shiftPressed());
+    QTRY_VERIFY_WITH_TIMEOUT(!bridge.shiftPressed(), 500);
 }
 
 void ServiceTests::clipboardKeeperHandoff()

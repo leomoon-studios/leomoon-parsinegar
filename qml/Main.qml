@@ -16,6 +16,7 @@ ApplicationWindow {
     required property var clipboardService
     property var settingsService: null
     property var fileService: null
+    property var modifierService: null
     property var textDirectionService: null
     property bool allowApplicationClose: false
     readonly property bool rightToLeft: controller.uiLanguage === "fa" || controller.uiLanguage === "ar"
@@ -389,6 +390,7 @@ ApplicationWindow {
         EditorPage {
             id: editorPage
             objectName: "editorPage"
+            modifierService: root.modifierService
             Layout.fillWidth: true
             Layout.fillHeight: true
             visible: controller.page === "editor"

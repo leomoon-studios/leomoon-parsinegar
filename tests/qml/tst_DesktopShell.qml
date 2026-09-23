@@ -23,6 +23,8 @@ TestCase {
                 function readText() { return text }
             }
             clipboardService: clipboardMock
+            property QtObject modifierMock: QtObject { property bool shiftPressed: false }
+            modifierService: modifierMock
             textDirectionService: NativeTextDirectionBridge
             property QtObject fileMock: QtObject {
                 property var fontEntries: [
@@ -505,8 +507,6 @@ TestCase {
         var editorWorkspace = findChild(applicationWindow, "editorWorkspace")
         var conversionActions = findChild(applicationWindow, "conversionActions")
         var editor = findChild(applicationWindow, "sourceEditor")
-        var primaryLayer = findChild(applicationWindow, "keyboardPrimaryLayer")
-        var symbolsLayer = findChild(applicationWindow, "keyboardSymbolsAdvancedLayer")
         var backspace = findChild(applicationWindow, "keyboardBackspaceButton")
         var space = findChild(applicationWindow, "keyboardSpaceButton")
         var enter = findChild(applicationWindow, "keyboardEnterButton")
@@ -543,7 +543,14 @@ TestCase {
         verify(applicationWindow.height >= applicationWindow.keyboardMinimumHeight)
         verify(keyboardButton.selected)
         tryCompare(editor, "activeFocus", true)
-        compare(keyboard.primaryRows.length, 4)
+        compare(keyboard.activeRows.length, 5)
+        var keyboardHeight = keyboard.implicitHeight
+        var four = findChild(keyboard, "keyboardKey_۴")
+        var minus = findChild(keyboard, "keyboardKey_-")
+        verify(four !== null)
+        verify(minus !== null)
+        compare(four.alternateLabel, "﷼")
+        compare(minus.alternateLabel, "ـ")
 
         var pe = findChild(keyboard, "keyboardKey_پ")
         var zaad = findChild(keyboard, "keyboardKey_ض")
@@ -582,11 +589,13 @@ TestCase {
         compare(controller.sourceText, "aپ")
         editorPage.heightDeficit = 0
 
-        symbolsLayer.click()
-        compare(keyboard.activeLayer, "symbols")
-        compare(keyboard.symbolsRows.length, 4)
-        var quote = findChild(keyboard, "keyboardKey_«")
-        var quoteClose = findChild(keyboard, "keyboardKey_»")
+        applicationWindow.modifierMock.shiftPressed = true
+        compare(keyboard.shiftActive, true)
+        compare(keyboard.implicitHeight, keyboardHeight)
+        compare(four.insertionText, "﷼")
+        compare(minus.insertionText, "ـ")
+        var quote = findChild(keyboard, "keyboardKey_ن")
+        var quoteClose = findChild(keyboard, "keyboardKey_م")
         verify(quote !== null)
         verify(quoteClose !== null)
         compare(keyboard.visualDirection, "ltr")
@@ -597,20 +606,20 @@ TestCase {
         compare(NativeTextDirectionBridge.plainText(editor.textDocument), "پ")
         editor.cursorPosition = editor.length
         tryCompare(keyboard, "visualDirection", "rtl")
-        quote = findChild(keyboard, "keyboardKey_«")
-        quoteClose = findChild(keyboard, "keyboardKey_»")
-        compare(quote.text, "»")
-        compare(quoteClose.text, "«")
+        quote = findChild(keyboard, "keyboardKey_ن")
+        quoteClose = findChild(keyboard, "keyboardKey_م")
+        compare(quote.text, "«")
+        compare(quoteClose.text, "»")
         controller.sourceText = "aپ"
         controller.setUiLanguage("en")
         compare(NativeTextDirectionBridge.plainText(editor.textDocument), "aپ")
         editor.cursorPosition = editor.length
         tryCompare(keyboard, "visualDirection", "ltr")
-        quote = findChild(keyboard, "keyboardKey_«")
+        quote = findChild(keyboard, "keyboardKey_ن")
         quote.click()
         compare(controller.sourceText, "aپ«")
 
-        var zwnj = findChild(keyboard, "keyboardKey_ZWNJ")
+        var zwnj = findChild(keyboard, "keyboardKey_ذ")
         verify(zwnj !== null)
         compare(zwnj.toolTipText, "Zero-width non-joiner (U+200C)")
         zwnj.click()
@@ -621,7 +630,7 @@ TestCase {
         enter.click()
         compare(controller.sourceText, "aپ« \n")
 
-        primaryLayer.click()
+        applicationWindow.modifierMock.shiftPressed = false
         zaad = findChild(keyboard, "keyboardKey_ض")
         che = findChild(keyboard, "keyboardKey_چ")
         verify(zaad !== null)
@@ -629,8 +638,8 @@ TestCase {
         controller.setUiLanguage("fa")
         wait(0)
         verify(zaad.mapToItem(keyboard, 0, 0).x < che.mapToItem(keyboard, 0, 0).x)
-        symbolsLayer.click()
-        zwnj = findChild(keyboard, "keyboardKey_ZWNJ")
+        applicationWindow.modifierMock.shiftPressed = true
+        zwnj = findChild(keyboard, "keyboardKey_ذ")
         compare(zwnj.toolTipText, "نویسهٔ نامرئیِ فاصلهٔ مجازی (U+200C)")
         controller.setUiLanguage("en")
         applicationWindow.width = applicationWindow.minimumWidth
@@ -667,23 +676,26 @@ TestCase {
         var editor = findChild(applicationWindow, "sourceEditor")
         var keyboardButton = findChild(applicationWindow, "keyboardButton")
         var keyboard = findChild(applicationWindow, "onScreenKeyboard")
-        var primaryLayer = findChild(applicationWindow, "keyboardPrimaryLayer")
-        var symbolsLayer = findChild(applicationWindow, "keyboardSymbolsAdvancedLayer")
+        var shiftButton = findChild(applicationWindow, "keyboardShiftButton")
         verify(editor !== null)
         verify(keyboardButton !== null)
         verify(keyboard !== null)
-        verify(primaryLayer !== null)
-        verify(symbolsLayer !== null)
+        verify(shiftButton !== null)
 
         function verifyPairPositions(rightToLeft) {
-            var pairs = [["«", "»"], ["(", ")"], ["[", "]"], ["{", "}"]]
+            var pairs = [
+                ["م", "ن", "«", "»"],
+                ["۰", "۹", "(", ")"],
+                ["ح", "خ", "[", "]"],
+                ["چ", "ج", "{", "}"]
+            ]
             for (var i = 0; i < pairs.length; ++i) {
-                var opener = findChild(keyboard, "keyboardKey_" + pairs[i][0])
-                var closer = findChild(keyboard, "keyboardKey_" + pairs[i][1])
+                var opener = findChild(keyboard, "keyboardKey_" + pairs[i][rightToLeft ? 0 : 1])
+                var closer = findChild(keyboard, "keyboardKey_" + pairs[i][rightToLeft ? 1 : 0])
                 verify(opener !== null)
                 verify(closer !== null)
-                compare(opener.insertionText, pairs[i][0])
-                compare(closer.insertionText, pairs[i][1])
+                compare(opener.insertionText, pairs[i][2])
+                compare(closer.insertionText, pairs[i][3])
                 var openX = opener.mapToItem(keyboard, 0, 0).x
                 var closeX = closer.mapToItem(keyboard, 0, 0).x
                 verify(rightToLeft ? openX > closeX : openX < closeX)
@@ -704,16 +716,12 @@ TestCase {
         editor.cursorPosition = 0
         keyboardButton.click()
         tryCompare(keyboard, "visible", true)
-        symbolsLayer.click()
-        var quote = findChild(keyboard, "keyboardKey_«")
-        verify(quote !== null)
+        applicationWindow.modifierMock.shiftPressed = true
         tryCompare(keyboard, "visualDirection", "ltr")
         verifyPairPositions(false)
-        verifyOrnatePosition()
         controller.sourceText = "سلام"
         tryCompare(keyboard, "visualDirection", "rtl")
         verifyPairPositions(true)
-        verifyOrnatePosition()
 
         var source = "English\nسلام\n\nLatin"
         controller.sourceText = source
@@ -721,20 +729,14 @@ TestCase {
 
         editor.cursorPosition = 0
         tryCompare(keyboard, "visualDirection", "ltr")
-        quote = findChild(keyboard, "keyboardKey_«")
-        compare(quote.text, "«")
         verifyPairPositions(false)
         editor.cursorPosition = source.indexOf("سلام")
         tryCompare(keyboard, "visualDirection", "rtl")
-        quote = findChild(keyboard, "keyboardKey_«")
-        compare(quote.text, "»")
         verifyPairPositions(true)
         editor.cursorPosition = source.indexOf("\n\n") + 1
         tryCompare(keyboard, "visualDirection", "rtl")
         editor.cursorPosition = source.indexOf("Latin")
         tryCompare(keyboard, "visualDirection", "ltr")
-        quote = findChild(keyboard, "keyboardKey_«")
-        compare(quote.text, "«")
         verifyPairPositions(false)
 
         controller.setUiLanguage("fa")
@@ -745,11 +747,52 @@ TestCase {
         tryCompare(keyboard, "visualDirection", "ltr")
         verifyPairPositions(false)
 
-        primaryLayer.click()
+        applicationWindow.modifierMock.shiftPressed = false
         verifyOrnatePosition()
         editor.cursorPosition = source.indexOf("سلام")
         tryCompare(keyboard, "visualDirection", "rtl")
         verifyOrnatePosition()
+    }
+
+    function test_onScreenShiftTogglesAndPhysicalShiftOverridesIt() {
+        var applicationWindow = createMainWindow()
+        var editor = findChild(applicationWindow, "sourceEditor")
+        var keyboardButton = findChild(applicationWindow, "keyboardButton")
+        var keyboard = findChild(applicationWindow, "onScreenKeyboard")
+        var shiftButton = findChild(applicationWindow, "keyboardShiftButton")
+        verify(editor !== null)
+        verify(keyboardButton !== null)
+        verify(keyboard !== null)
+        verify(shiftButton !== null)
+
+        keyboardButton.click()
+        tryCompare(keyboard, "visible", true)
+        var four = findChild(keyboard, "keyboardKey_۴")
+        verify(four !== null)
+        var keyboardHeight = keyboard.implicitHeight
+        compare(four.insertionText, "۴")
+        shiftButton.click()
+        compare(keyboard.shiftActive, true)
+        compare(four.insertionText, "﷼")
+        compare(keyboard.shiftLatched, true)
+        shiftButton.click()
+        compare(keyboard.shiftActive, false)
+        compare(four.insertionText, "۴")
+        shiftButton.click()
+        compare(keyboard.shiftLatched, true)
+        editor.forceActiveFocus()
+        applicationWindow.modifierMock.shiftPressed = true
+        compare(keyboard.shiftActive, true)
+        compare(keyboard.shiftLatched, false)
+        compare(four.insertionText, "﷼")
+        compare(keyboard.implicitHeight, keyboardHeight)
+        applicationWindow.modifierMock.shiftPressed = false
+        compare(keyboard.shiftActive, false)
+        compare(four.insertionText, "۴")
+        applicationWindow.modifierMock.shiftPressed = true
+        compare(keyboard.shiftActive, true)
+        applicationWindow.modifierMock.shiftPressed = false
+        compare(keyboard.shiftActive, false)
     }
 
     function test_editorContextMenuUsesTheMousePositionAndAppStyle() {

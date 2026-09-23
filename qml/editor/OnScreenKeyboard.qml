@@ -8,37 +8,48 @@ Item {
     id: root
 
     required property var controller
-    property string activeLayer: "primary"
+    property var modifierService: null
     property string visualDirection: "rtl"
+    property bool shiftLatched: false
     readonly property bool rightToLeft: controller.uiLanguage === "fa" || controller.uiLanguage === "ar"
+    readonly property bool physicalShift: modifierService !== null && modifierService.shiftPressed
+    readonly property bool shiftActive: physicalShift || shiftLatched
+    readonly property var numberRow: [
+        "=", "-", "۰", "۹", "۸", "۷", "۶", "۵", "۴", "۳", "۲", "۱",
+        { id: "ZWJ", label: "ZWJ", text: "‍", tooltipKey: "keyboard.zwjTooltip" }
+    ]
     readonly property var primaryRows: [
         ["\\", "چ", "ج", "ح", "خ", "ه", "ع", "غ", "ف", "ق", "ث", "ص", "ض", "ژ"],
         ["گ", "ک", "م", "ن", "ت", "ا", "ل", "ب", "ی", "س", "ش"],
         ["/", ".", "و", "پ", "د", "ذ", "ر", "ز", "ط", "ظ", "﴿", "﴾"],
         ["ئ", "ؤ", "ي", "ك", "ة", "آ", "إ", "أ", "ء"]
     ]
-    readonly property var symbolsRows: [
-        ["=", "-", "۰", "۹", "۸", "۷", "۶", "۵", "۴", "۳", "۲", "۱", "ـ"],
-        ["«", "»", "﴿", "﴾", "﷼", "٪", "٫", "،", "؛", "؟", "!", "-", "/", "\\"],
-        ["(", ")", "[", "]", "{", "}", ":", "=", "+", "*", "×", "÷", "·", "…"],
+    readonly property var shiftedRows: [
+        ["+", "ـ", "(", ")", "*", "،", "×", "٪", "﷼", "٫", "٬", "!", "÷"],
+        ["|", "{", "}", "[", "]",
+            { label: "◌ّ", text: "ّ", diacritic: true },
+            { label: "◌َ", text: "َ", diacritic: true },
+            { label: "◌ِ", text: "ِ", diacritic: true },
+            { label: "◌ُ", text: "ُ", diacritic: true },
+            { label: "◌ً", text: "ً", diacritic: true },
+            { label: "◌ٍ", text: "ٍ", diacritic: true },
+            { label: "◌ٌ", text: "ٌ", diacritic: true },
+            { label: "◌ْ", text: "ْ", diacritic: true }, "؛"],
+        ["؛", ":", "«", "»", "ة", "آ", "أ", "إ", "ي", "ئ", "ؤ"],
+        ["؟", "<", ">", "ء",
+            { label: "◌ٔ", text: "ٔ", diacritic: true },
+            { label: "ZWNJ", text: "‌", tooltipKey: "keyboard.zwnjTooltip" },
+            { label: "◌ٰ", text: "ٰ", diacritic: true },
+            "ژ", "…", "·",
+            { label: "RLM", text: "‏", tooltipKey: "keyboard.rlmTooltip" },
+            { label: "LRM", text: "‎", tooltipKey: "keyboard.lrmTooltip" }],
         [
-            { id: "fatha", label: "◌َ", text: "َ", diacritic: true },
-            { id: "kasra", label: "◌ِ", text: "ِ", diacritic: true },
-            { id: "damma", label: "◌ُ", text: "ُ", diacritic: true },
-            { id: "fathatan", label: "◌ً", text: "ً", diacritic: true },
-            { id: "kasratan", label: "◌ٍ", text: "ٍ", diacritic: true },
-            { id: "dammatan", label: "◌ٌ", text: "ٌ", diacritic: true },
-            { id: "shadda", label: "◌ّ", text: "ّ", diacritic: true },
-            { id: "sukun", label: "◌ْ", text: "ْ", diacritic: true },
-            { id: "hamzaAbove", label: "◌ٔ", text: "ٔ", diacritic: true },
-            { id: "superscriptAlef", label: "◌ٰ", text: "ٰ", diacritic: true },
-            "ـ",
-            { label: "ZWNJ", text: "‌", tooltipKey: "keyboard.zwnjTooltip" }, { label: "ZWJ", text: "‍", tooltipKey: "keyboard.zwjTooltip" },
-            { label: "RLM", text: "‏", tooltipKey: "keyboard.rlmTooltip" }, { label: "LRM", text: "‎", tooltipKey: "keyboard.lrmTooltip" },
-            { label: "RLE", text: "‫", tooltipKey: "keyboard.rleTooltip" }, { label: "LRE", text: "‪", tooltipKey: "keyboard.lreTooltip" }
+            { label: "RLE", text: "‫", tooltipKey: "keyboard.rleTooltip" },
+            { label: "LRE", text: "‪", tooltipKey: "keyboard.lreTooltip" },
+            "﴿", "﴾", "\\", "/", "-", "=", "ك"
         ]
     ]
-    readonly property var activeRows: activeLayer === "primary" ? primaryRows : symbolsRows
+    readonly property var activeRows: [numberRow].concat(primaryRows)
     readonly property var pairedSymbols: ({
         "«": "»", "»": "«",
         "(": ")", ")": "(",
@@ -46,17 +57,40 @@ Item {
         "{": "}", "}": "{"
     })
 
-    function keyAt(row, position) {
-        var key = row[position]
-        if (visualDirection !== "ltr" || typeof key !== "string")
-            return key
+    onPhysicalShiftChanged: {
+        if (physicalShift)
+            shiftLatched = false
+    }
 
-        var partner = pairedSymbols[key]
-        if (partner !== undefined
-                && ((position > 0 && row[position - 1] === partner)
-                    || (position + 1 < row.length && row[position + 1] === partner)))
-            return partner
-        return key
+    function keyText(key) {
+        return typeof key === "string" ? key : key.text
+    }
+
+    function keyLabel(key) {
+        return typeof key === "string" ? key : key.label
+    }
+
+    function keyAt(row, rowIndex, position) {
+        var base = row[position]
+        var shifted = shiftedRows[rowIndex][position]
+        if (visualDirection === "ltr" && typeof shifted === "string") {
+            var partner = pairedSymbols[shifted]
+            var shiftedRow = shiftedRows[rowIndex]
+            if (partner !== undefined
+                    && ((position > 0 && shiftedRow[position - 1] === partner)
+                        || (position + 1 < shiftedRow.length && shiftedRow[position + 1] === partner)))
+                shifted = partner
+        }
+        var current = shiftActive ? shifted : base
+        var alternate = shiftActive ? base : shifted
+        return {
+            id: typeof base === "string" ? base : base.id,
+            text: keyText(current),
+            label: keyLabel(current),
+            alternateLabel: keyLabel(alternate),
+            diacritic: typeof current === "object" && current.diacritic === true,
+            tooltipKey: typeof current === "object" ? current.tooltipKey : ""
+        }
     }
 
     function displayLabel(value) {
@@ -85,12 +119,12 @@ Item {
         id: keyButton
 
         required property var keyData
-        readonly property string insertionText: typeof keyData === "string" ? keyData : keyData.text
-        readonly property string keyLabel: root.displayLabel(
-            typeof keyData === "string" ? keyData : keyData.label)
-        readonly property string keyId: typeof keyData === "string" ? keyData : keyData.id || keyData.label
-        readonly property bool diacritic: typeof keyData === "object" && keyData.diacritic === true
-        readonly property string toolTipText: typeof keyData === "object" && keyData.tooltipKey
+        readonly property string insertionText: keyData.text
+        readonly property string keyLabel: root.displayLabel(keyData.label)
+        readonly property string alternateLabel: root.displayLabel(keyData.alternateLabel)
+        readonly property string keyId: keyData.id
+        readonly property bool diacritic: keyData.diacritic === true
+        readonly property string toolTipText: keyData.tooltipKey
             ? root.controller.uiText(keyData.tooltipKey) : ""
 
         implicitWidth: 40
@@ -102,17 +136,26 @@ Item {
         text: keyLabel
         Accessible.name: keyLabel
 
-        contentItem: Text {
-            text: keyButton.insertionText === "﴿" || keyButton.insertionText === "﴾"
-                ? "\u200E" + keyButton.text + "\u200E" : keyButton.text
-            font.family: AppTheme.fontFamily
-            font.pixelSize: keyButton.diacritic ? AppTheme.fontBody + 10
-                : keyButton.keyLabel.length > 3 ? AppTheme.fontCaption : AppTheme.fontBody
-            font.weight: keyButton.diacritic ? Font.DemiBold : Font.Medium
-            color: AppTheme.foreground
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
-            elide: Text.ElideRight
+        contentItem: Item {
+            Text {
+                anchors.centerIn: parent
+                text: keyButton.insertionText === "﴿" || keyButton.insertionText === "﴾"
+                    ? "\u200E" + keyButton.text + "\u200E" : keyButton.text
+                font.family: AppTheme.fontFamily
+                font.pixelSize: keyButton.diacritic ? AppTheme.fontBody + 10
+                    : keyButton.keyLabel.length > 3 ? AppTheme.fontCaption : AppTheme.fontBody
+                font.weight: keyButton.diacritic ? Font.DemiBold : Font.Medium
+                color: AppTheme.foreground
+            }
+
+            Text {
+                anchors.top: parent.top
+                anchors.right: parent.right
+                text: keyButton.alternateLabel
+                font.family: AppTheme.fontFamily
+                font.pixelSize: AppTheme.fontCaption - 2
+                color: AppTheme.muted
+            }
         }
 
         background: Rectangle {
@@ -144,45 +187,13 @@ Item {
             anchors.margins: AppTheme.spacingMedium
             spacing: AppTheme.spacingSmall
 
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: AppTheme.spacingSmall
-                LayoutMirroring.enabled: root.rightToLeft
-                LayoutMirroring.childrenInherit: true
-
-                Label {
-                    Layout.fillWidth: true
-                    text: root.controller.uiText("keyboard.title")
-                    font.family: AppTheme.fontFamily
-                    font.pixelSize: AppTheme.fontControl
-                    font.weight: Font.DemiBold
-                    color: AppTheme.foreground
-                    elide: Text.ElideRight
-                }
-
-                AppButton {
-                    objectName: "keyboardPrimaryLayer"
-                    focusPolicy: Qt.TabFocus
-                    text: root.controller.uiText("keyboard.primary")
-                    selected: root.activeLayer === "primary"
-                    onClicked: root.activeLayer = "primary"
-                }
-
-                AppButton {
-                    objectName: "keyboardSymbolsAdvancedLayer"
-                    focusPolicy: Qt.TabFocus
-                    text: root.controller.uiText("keyboard.symbols")
-                    selected: root.activeLayer === "symbols"
-                    onClicked: root.activeLayer = "symbols"
-                }
-            }
-
             Repeater {
                 model: root.activeRows
 
                 delegate: RowLayout {
                     id: keyRow
 
+                    required property int index
                     required property var modelData
 
                     Layout.fillWidth: true
@@ -201,7 +212,7 @@ Item {
                             Layout.fillWidth: true
                             Layout.preferredWidth: 0
                             Layout.fillHeight: true
-                            keyData: root.keyAt(keyRow.modelData, index)
+                            keyData: root.keyAt(keyRow.modelData, keyRow.index, index)
                         }
                     }
                 }
@@ -214,6 +225,21 @@ Item {
                 layoutDirection: Qt.RightToLeft
                 LayoutMirroring.enabled: false
                 LayoutMirroring.childrenInherit: false
+
+                AppButton {
+                    id: shiftButton
+                    objectName: "keyboardShiftButton"
+                    focusPolicy: Qt.TabFocus
+                    Layout.preferredWidth: 0
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    text: root.controller.uiText("keyboard.shift")
+                    selected: root.shiftActive
+                    onClicked: {
+                        if (!root.physicalShift)
+                            root.shiftLatched = !root.shiftLatched
+                    }
+                }
 
                 AppButton {
                     objectName: "keyboardBackspaceButton"

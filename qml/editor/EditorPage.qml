@@ -9,6 +9,7 @@ FocusScope {
 
     required property var controller
     required property Typography typography
+    property var modifierService: null
     property var textDirectionService: null
     property bool syncingEditor: false
     property real heightDeficit: 0
@@ -371,6 +372,7 @@ FocusScope {
                     Layout.fillWidth: true
                     visible: root.controller.keyboardDrawerOpen
                     controller: root.controller
+                    modifierService: root.modifierService
                     visualDirection: root.keyboardDirection
                     onTextRequested: function(text) { root.insertOnScreenText(text) }
                     onBackspaceRequested: root.deleteOnScreenBackward()
