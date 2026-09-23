@@ -95,6 +95,14 @@ TestCase {
         }
     }
 
+    function verifyEditorCursorPosition(editor, cursor) {
+        var position = cursor.mapToItem(editor, 0, 0)
+        verify(Math.abs(position.x - editor.cursorRectangle.x) <= 2,
+            "cursor x=" + position.x + ", expected=" + editor.cursorRectangle.x)
+        verify(Math.abs(position.y - editor.cursorRectangle.y) <= 2,
+            "cursor y=" + position.y + ", expected=" + editor.cursorRectangle.y)
+    }
+
     function test_windowResizesWithoutClipping() {
         var applicationWindow = createMainWindow()
         var contentLayout = findChild(applicationWindow, "contentLayout")
@@ -339,7 +347,7 @@ TestCase {
         var editorCursor = findChild(applicationWindow, "editorCursor")
         verify(editorCursor !== null)
         verify(editorCursor.visible)
-        verify(Math.abs(editorCursor.x - sourceEditor.cursorRectangle.x) <= 2)
+        verifyEditorCursorPosition(sourceEditor, editorCursor)
         verify(editorCursor.height > 0)
         compare(sourceEditor.horizontalAlignment, TextEdit.AlignRight)
         verify(conversionStatus !== null)
@@ -793,6 +801,51 @@ TestCase {
         compare(keyboard.shiftActive, true)
         applicationWindow.modifierMock.shiftPressed = false
         compare(keyboard.shiftActive, false)
+    }
+
+    function test_onScreenInputKeepsCursorAtRtlInsertionPoint() {
+        var applicationWindow = createMainWindow()
+        var controller = applicationWindow.editorController
+        var editor = findChild(applicationWindow, "sourceEditor")
+        var editorPage = findChild(applicationWindow, "editorPage")
+        var keyboardButton = findChild(applicationWindow, "keyboardButton")
+        var editorCursor = findChild(applicationWindow, "editorCursor")
+        verify(editor !== null)
+        verify(editorPage !== null)
+        verify(keyboardButton !== null)
+        verify(editorCursor !== null)
+
+        controller.setUiLanguage("fa")
+        controller.sourceText = "سلام"
+        editor.cursorPosition = editor.length
+        keyboardButton.click()
+        var keyboard = findChild(applicationWindow, "onScreenKeyboard")
+        tryCompare(keyboard, "visible", true)
+        applicationWindow.height = applicationWindow.keyboardMinimumHeight
+        var key = findChild(keyboard, "keyboardKey_پ")
+        verify(key !== null)
+        key.click()
+        compare(controller.sourceText, "سلامپ")
+        compare(editor.cursorPosition, editor.length)
+        tryCompare(editor, "activeFocus", true)
+        verifyEditorCursorPosition(editor, editorCursor)
+
+        findChild(keyboard, "keyboardBackspaceButton").click()
+        compare(controller.sourceText, "سلام")
+        compare(editor.cursorPosition, editor.length)
+        verifyEditorCursorPosition(editor, editorCursor)
+
+        editor.select(0, editor.length)
+        key.click()
+        compare(controller.sourceText, "پ")
+        compare(editor.cursorPosition, 1)
+        verifyEditorCursorPosition(editor, editorCursor)
+
+        editorPage.insertOnScreenText("<>&")
+        compare(controller.sourceText, "پ<>&")
+        compare(NativeTextDirectionBridge.plainText(editor.textDocument), "پ<>&")
+        compare(editor.cursorPosition, editor.length)
+        verifyEditorCursorPosition(editor, editorCursor)
     }
 
     function test_editorContextMenuUsesTheMousePositionAndAppStyle() {

@@ -12,6 +12,7 @@ FocusScope {
     property var modifierService: null
     property var textDirectionService: null
     property bool syncingEditor: false
+    property rect cursorVisualRect: Qt.rect(0, 0, 0, 0)
     property real heightDeficit: 0
     property string keyboardDirection: "rtl"
     readonly property alias editorItem: editor
@@ -29,6 +30,10 @@ FocusScope {
 
     function focusEditor() {
         editor.forceActiveFocus()
+    }
+
+    function refreshCursorVisualRect() {
+        cursorVisualRect = editor.cursorRectangle
     }
 
     function updateKeyboardDirection() {
@@ -115,6 +120,7 @@ FocusScope {
             syncingEditor = false
         }
         reportEditorSelection()
+        refreshCursorVisualRect()
     }
 
     function syncEditorFromController() {
@@ -143,6 +149,7 @@ FocusScope {
         syncEditorFromController()
         updateParagraphDirections()
         updateKeyboardDirection()
+        refreshCursorVisualRect()
     }
 
     Connections {
@@ -255,11 +262,14 @@ FocusScope {
                                 root.updateParagraphDirections()
                             root.updateKeyboardDirection()
                             root.reportEditorSelection()
+                            root.refreshCursorVisualRect()
                         }
                         onCursorPositionChanged: {
                             root.updateKeyboardDirection()
                             root.reportEditorSelection()
+                            root.refreshCursorVisualRect()
                         }
+                        onCursorRectangleChanged: root.refreshCursorVisualRect()
                         onSelectionStartChanged: root.reportEditorSelection()
                         onSelectionEndChanged: root.reportEditorSelection()
                         font.family: AppTheme.fontFamily
@@ -279,10 +289,17 @@ FocusScope {
                         padding: AppTheme.spacingMedium
                         Accessible.name: qsTr("Source text editor")
                         cursorDelegate: Component {
-                            Rectangle {
-                                objectName: "editorCursor"
+                            Item {
+                                id: cursorHost
                                 width: Math.max(1, AppTheme.focusBorderWidth)
-                                color: AppTheme.foreground
+                                Rectangle {
+                                    objectName: "editorCursor"
+                                    x: root.cursorVisualRect.x - cursorHost.x
+                                    y: root.cursorVisualRect.y - cursorHost.y
+                                    width: cursorHost.width
+                                    height: root.cursorVisualRect.height
+                                    color: AppTheme.foreground
+                                }
                             }
                         }
 
