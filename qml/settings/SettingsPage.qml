@@ -12,7 +12,6 @@ FocusScope {
     property var navigationBackButton: null
     property string ligatureGroupId: ""
     readonly property alias settingsScroll: settingsScroll
-    readonly property alias ligatureScroll: ligatureScroll
     readonly property alias ligatureList: ligatureList
     readonly property bool rightToLeft: controller.uiLanguage === "fa" || controller.uiLanguage === "ar"
 
@@ -89,16 +88,19 @@ FocusScope {
         ScrollView {
             id: settingsScroll
             objectName: "settingsScroll"
+            readonly property bool overflowing: settingsContent.implicitHeight > height + 0.5
+            readonly property real scrollGutter: overflowing ? ScrollBar.vertical.width + 6 : 0
             Layout.fillWidth: true
             Layout.fillHeight: true
             contentWidth: availableWidth
             clip: true
-            leftPadding: AppTheme.spacingLarge
-            rightPadding: AppTheme.spacingLarge
+            leftPadding: root.rightToLeft ? scrollGutter : 0
+            rightPadding: root.rightToLeft ? 0 : scrollGutter
             ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
             ScrollBar.vertical.policy: ScrollBar.AsNeeded
 
             Column {
+                id: settingsContent
                 width: settingsScroll.availableWidth
                 spacing: AppTheme.spacingMedium
 
@@ -450,40 +452,46 @@ FocusScope {
             subtitle: root.uiText("settings.fontNotice")
         }
 
-        ScrollView {
-            id: ligatureScroll
+        ListView {
+            id: ligatureList
+            objectName: "ligatureList"
+            readonly property bool overflowing: contentHeight > height + 0.5
+            readonly property real scrollGutter: overflowing ? ScrollBar.vertical.width + 6 : 0
             Layout.fillWidth: true
             Layout.fillHeight: true
-            contentWidth: availableWidth
             clip: true
-            leftPadding: AppTheme.spacingLarge
-            rightPadding: AppTheme.spacingLarge
-            ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
-            ScrollBar.vertical.policy: ScrollBar.AsNeeded
+            spacing: AppTheme.spacingSmall
+            boundsBehavior: Flickable.StopAtBounds
+            ScrollBar.vertical: ScrollBar {
+                policy: ScrollBar.AsNeeded
+                active: ligatureList.overflowing
+            }
+            model: {
+                var group = root.groupById(root.ligatureGroupId)
+                return group ? group.ligatures : []
+            }
 
-            ListView {
-                id: ligatureList
-                objectName: "ligatureList"
-                width: ligatureScroll.availableWidth
-                spacing: AppTheme.spacingSmall
-                boundsBehavior: Flickable.StopAtBounds
-                model: {
-                    var group = root.groupById(root.ligatureGroupId)
-                    return group ? group.ligatures : []
-                }
+            delegate: Item {
+                id: ligatureRow
+                required property var modelData
+                required property int index
+                width: ligatureList.width
+                height: ligatureToggle.implicitHeight
+                LayoutMirroring.enabled: false
+                LayoutMirroring.childrenInherit: false
 
-                delegate: SettingsToggle {
-                    required property var modelData
-                    required property int index
-                    objectName: "ligatureRow_" + index
-                    width: ligatureList.width
-                    leftPadding: AppTheme.spacingLarge
-                    rightPadding: AppTheme.spacingLarge
-                    title: modelData.name
-                    description: modelData.name === "RIAL SIGN" ? root.uiText("settings.rialDescription") : ""
-                    checked: root.controller.ligatureEnabled(modelData.name)
+                SettingsToggle {
+                    id: ligatureToggle
+                    objectName: "ligatureRow_" + ligatureRow.index
+                    x: root.rightToLeft ? ligatureList.scrollGutter : 0
+                    width: Math.max(0, parent.width - ligatureList.scrollGutter)
+                    LayoutMirroring.enabled: root.rightToLeft
+                    LayoutMirroring.childrenInherit: true
+                    title: ligatureRow.modelData.name
+                    description: ligatureRow.modelData.name === "RIAL SIGN" ? root.uiText("settings.rialDescription") : ""
+                    checked: root.controller.ligatureEnabled(ligatureRow.modelData.name)
                     enabled: root.controller.baseOption("supportLigatures")
-                    onToggled: root.controller.toggleLigature(modelData.name)
+                    onToggled: root.controller.toggleLigature(ligatureRow.modelData.name)
                 }
             }
         }

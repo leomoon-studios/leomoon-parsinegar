@@ -44,12 +44,14 @@ FocusScope {
         ScrollView {
             id: toolsScroll
             objectName: "textToolsScroll"
+            readonly property bool overflowing: toolsContent.implicitHeight > height + 0.5
+            readonly property real scrollGutter: overflowing ? ScrollBar.vertical.width + 6 : 0
             Layout.fillWidth: true
             Layout.fillHeight: true
             contentWidth: availableWidth
             clip: true
-            leftPadding: AppTheme.spacingLarge
-            rightPadding: AppTheme.spacingLarge
+            leftPadding: root.rightToLeft ? scrollGutter : 0
+            rightPadding: root.rightToLeft ? 0 : scrollGutter
             ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
             ScrollBar.vertical.policy: ScrollBar.AsNeeded
 

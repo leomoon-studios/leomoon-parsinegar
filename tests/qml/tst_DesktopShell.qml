@@ -71,6 +71,27 @@ TestCase {
         return applicationWindow
     }
 
+    function verifyScrollGutter(scroll, rightToLeft) {
+        verify(scroll !== null)
+        var scrollBar = scroll.ScrollBar.vertical
+        verify(scrollBar !== null)
+        compare(scroll.scrollGutter, scroll.overflowing ? scrollBar.width + 6 : 0)
+        compare(scroll.leftPadding,
+            rightToLeft ? scroll.scrollGutter : 0)
+        compare(scroll.rightPadding,
+            rightToLeft ? 0 : scroll.scrollGutter)
+        if (scroll.overflowing) {
+            verify(scrollBar.size < 1)
+            var barX = scrollBar.mapToItem(scroll, 0, 0).x
+            if (rightToLeft)
+                verify(Math.abs(barX) < 1)
+            else
+                verify(Math.abs(barX + scrollBar.width - scroll.width) < 1)
+        } else {
+            verify(scrollBar.size >= 0.999)
+        }
+    }
+
     function test_windowResizesWithoutClipping() {
         var applicationWindow = createMainWindow()
         var contentLayout = findChild(applicationWindow, "contentLayout")
@@ -727,8 +748,7 @@ TestCase {
         tryVerify(function() { return toolsPage.height > 0 && toolsPage.contentImplicitHeight > toolsPage.height })
         verify(backButton.visible)
         compare(backButton.glyph, AppTheme.iconBack)
-        compare(toolsScroll.leftPadding, AppTheme.spacingLarge)
-        compare(toolsScroll.rightPadding, AppTheme.spacingLarge)
+        verifyScrollGutter(toolsScroll, false)
 
         controller.toggleTextTool("persianDigits")
         compare(controller.textToolEnabled("persianDigits"), true)
@@ -737,6 +757,7 @@ TestCase {
         compare(controller.textToolEnabled("persianDigits"), false)
 
         controller.setUiLanguage("fa")
+        verifyScrollGutter(toolsScroll, true)
         compare(backButton.glyph, AppTheme.iconForward)
         tryVerify(function() { return toolsPage.firstGroupHeading !== null })
         compare(toolsPage.firstGroupHeading.effectiveHorizontalAlignment, Text.AlignRight)
@@ -758,6 +779,8 @@ TestCase {
         helpButton.click()
         compare(controller.page, "help")
         verify(helpPage.visible)
+        tryVerify(function() { return helpScroll.height > 0 })
+        verifyScrollGutter(helpScroll, false)
         verify(backButton.visible)
         tryVerify(function() { return helpPage.contentImplicitHeight > helpScroll.height })
         var englishShortcutSections = helpPage.englishSections.filter(function(section) {
@@ -770,6 +793,7 @@ TestCase {
         verify(englishShortcutSections[0].body.indexOf("Ctrl+Shift+S: Save As") >= 0)
 
         controller.setUiLanguage("fa")
+        verifyScrollGutter(helpScroll, true)
         compare(backButton.glyph, AppTheme.iconForward)
         tryVerify(function() { return helpPage.firstSectionHeading !== null && helpPage.firstSectionBody !== null })
         compare(helpPage.firstSectionHeading.effectiveHorizontalAlignment, Text.AlignRight)
@@ -838,6 +862,7 @@ TestCase {
         exportButton.click()
         compare(controller.page, "export")
         verify(exportPage.visible)
+        tryVerify(function() { return exportScroll.height > 0 })
         verify(exportStatus.visible)
         verify(exportStatus.idle)
         compare(exportStatus.displayMessage, controller.uiText("status.ready"))
@@ -845,21 +870,32 @@ TestCase {
         verify(findChild(applicationWindow, "headerActions").visible)
         verify(headerBackButton.visible)
         compare(headerBackButton.glyph, AppTheme.iconBack)
-        compare(exportScroll.leftPadding, AppTheme.spacingLarge)
-        compare(exportScroll.rightPadding, AppTheme.spacingLarge)
+        verifyScrollGutter(exportScroll, false)
+        applicationWindow.height = 1400
+        tryCompare(exportScroll, "overflowing", false)
+        verifyScrollGutter(exportScroll, false)
+        compare(saveButton.mapToItem(applicationWindow.contentItem, 0, 0).x,
+            exportStatus.mapToItem(applicationWindow.contentItem, 0, 0).x)
+        compare(saveButton.width, exportStatus.width)
+        applicationWindow.height = applicationWindow.minimumHeight
+        tryCompare(exportScroll, "overflowing", true)
+        verifyScrollGutter(exportScroll, false)
         verify(Math.abs(alignLeft.width - alignCenter.width) <= 1)
         verify(Math.abs(alignCenter.width - alignRight.width) <= 1)
         controller.setUiLanguage("fa")
         wait(0)
+        verifyScrollGutter(exportScroll, true)
         compare(exportStatus.displayMessage, controller.uiText("status.ready"))
         verify(alignLeft.mapToItem(exportPage, 0, 0).x < alignCenter.mapToItem(exportPage, 0, 0).x)
         verify(alignCenter.mapToItem(exportPage, 0, 0).x < alignRight.mapToItem(exportPage, 0, 0).x)
         controller.setUiLanguage("ar")
         wait(0)
+        verifyScrollGutter(exportScroll, true)
         compare(exportStatus.displayMessage, controller.uiText("status.ready"))
         verify(alignLeft.mapToItem(exportPage, 0, 0).x < alignCenter.mapToItem(exportPage, 0, 0).x)
         verify(alignCenter.mapToItem(exportPage, 0, 0).x < alignRight.mapToItem(exportPage, 0, 0).x)
         controller.setUiLanguage("en")
+        applicationWindow.height = 720
         compare(fontSize.text, "64")
         compare(lineSpacing.text, "1.4")
         verify(alignCenter.selected)

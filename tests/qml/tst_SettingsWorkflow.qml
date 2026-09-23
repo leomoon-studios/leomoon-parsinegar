@@ -139,6 +139,49 @@ TestCase {
         return controller
     }
 
+    function verifyScrollGutter(scroll, rightToLeft) {
+        verify(scroll !== null)
+        var scrollBar = scroll.ScrollBar.vertical
+        verify(scrollBar !== null)
+        compare(scroll.scrollGutter, scroll.overflowing ? scrollBar.width + 6 : 0)
+        compare(scroll.leftPadding,
+            rightToLeft ? scroll.scrollGutter : 0)
+        compare(scroll.rightPadding,
+            rightToLeft ? 0 : scroll.scrollGutter)
+        if (scroll.overflowing) {
+            verify(scrollBar.size < 1)
+            var barX = scrollBar.mapToItem(scroll, 0, 0).x
+            if (rightToLeft)
+                verify(Math.abs(barX) < 1)
+            else
+                verify(Math.abs(barX + scrollBar.width - scroll.width) < 1)
+        } else {
+            verify(scrollBar.size >= 0.999)
+        }
+    }
+
+    function verifyLigatureGutter(list, rightToLeft) {
+        var scrollBar = list.ScrollBar.vertical
+        verify(scrollBar !== null)
+        compare(list.scrollGutter, list.overflowing ? scrollBar.width + 6 : 0)
+        var wrapper = list.itemAtIndex(0)
+        verify(wrapper !== null)
+        var toggle = findChild(wrapper, "ligatureRow_0")
+        verify(toggle !== null)
+        compare(toggle.x, rightToLeft ? list.scrollGutter : 0)
+        compare(toggle.width, Math.max(0, list.width - list.scrollGutter))
+        if (list.overflowing) {
+            verify(scrollBar.size < 1)
+            var barX = scrollBar.mapToItem(list, 0, 0).x
+            if (rightToLeft)
+                verify(Math.abs(barX) < 1)
+            else
+                verify(Math.abs(barX + scrollBar.width - list.width) < 1)
+        } else {
+            verify(scrollBar.size >= 0.999)
+        }
+    }
+
     function test_languageAndPreferenceRoundTrips_data() {
         return [
             { tag: "english", language: "en" },
@@ -436,10 +479,10 @@ TestCase {
         settingsButton.click()
         compare(controller.page, "settings")
         verify(settingsPage.visible)
+        tryVerify(function() { return settingsPage.settingsScroll.height > 0 })
         verify(headerActions.visible)
         verify(headerBackButton.visible)
-        compare(settingsPage.settingsScroll.leftPadding, AppTheme.spacingLarge)
-        compare(settingsPage.settingsScroll.rightPadding, AppTheme.spacingLarge)
+        verifyScrollGutter(settingsPage.settingsScroll, false)
         compare(englishButton.width, persianButton.width)
         compare(persianButton.width, arabicButton.width)
         compare(standardButton.width, kurdishButton.width)
@@ -447,12 +490,14 @@ TestCase {
 
         persianButton.click()
         compare(controller.uiLanguage, "fa")
+        verifyScrollGutter(settingsPage.settingsScroll, true)
         verify(settingsPage.LayoutMirroring.enabled)
         verify(headerActions.LayoutMirroring.enabled)
         compare(headerBackButton.glyph, AppTheme.iconForward)
 
         arabicButton.click()
         compare(controller.uiLanguage, "ar")
+        verifyScrollGutter(settingsPage.settingsScroll, true)
         verify(settingsPage.LayoutMirroring.enabled)
         verify(headerActions.LayoutMirroring.enabled)
         compare(headerBackButton.glyph, AppTheme.iconForward)
@@ -460,22 +505,34 @@ TestCase {
         sentencesButton.click()
         compare(settingsPage.ligatureGroupId, "sentences")
         compare(ligatureList.count, 3)
+        tryVerify(function() { return ligatureList.height > 0 })
+        tryCompare(ligatureList, "overflowing", false)
+        verifyLigatureGutter(ligatureList, true)
         headerBackButton.click()
 
         wordsButton.click()
         compare(settingsPage.ligatureGroupId, "words")
         compare(ligatureList.count, 9)
-        compare(settingsPage.ligatureScroll.leftPadding, AppTheme.spacingLarge)
-        compare(settingsPage.ligatureScroll.rightPadding, AppTheme.spacingLarge)
-        compare(ligatureList.width, settingsPage.ligatureScroll.availableWidth)
         tryVerify(function() { return ligatureList.itemAtIndex(0) !== null })
-        compare(ligatureList.itemAtIndex(0).leftPadding, AppTheme.spacingLarge)
-        compare(ligatureList.itemAtIndex(0).rightPadding, AppTheme.spacingLarge)
+        verifyLigatureGutter(ligatureList, true)
+        var firstWordToggle = findChild(ligatureList.itemAtIndex(0), "ligatureRow_0")
+        compare(firstWordToggle.leftPadding, AppTheme.spacingLarge)
+        compare(firstWordToggle.rightPadding, AppTheme.spacingLarge)
         headerBackButton.click()
         compare(settingsPage.ligatureGroupId, "")
 
         lettersButton.click()
         compare(ligatureList.count, 274)
+        tryCompare(ligatureList, "overflowing", true)
+        tryVerify(function() { return ligatureList.itemAtIndex(0) !== null })
+        verifyLigatureGutter(ligatureList, true)
+        ligatureList.contentY = 200
+        tryVerify(function() { return ligatureList.ScrollBar.vertical.position > 0 })
+        ligatureList.contentY = 0
+        tryVerify(function() { return ligatureList.itemAtIndex(0) !== null })
+        controller.setUiLanguage("en")
+        verifyLigatureGutter(ligatureList, false)
+        controller.setUiLanguage("ar")
         settingsPage.closeGroup()
         hebrewButton.click()
         compare(controller.shapingProfile, "hebrew")

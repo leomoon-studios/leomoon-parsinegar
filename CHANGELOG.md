@@ -10,6 +10,7 @@
 - Made the Linux AppImage use the desktop portal file picker when available.
 - Fixed pasting copied text over the same selected text so the selection clears and subsequent pastes insert another copy.
 - Added permanent status bars to the editor and SVG export pages, with a neutral Ready state when idle.
+- Removed unused side gutters from Export, Text Tools, Settings, Help, and ligature settings; overflowing pages reserve scrollbar space only on the appropriate side for the interface language.
 
 ## 3.0.0 (2026-09-20)
 
