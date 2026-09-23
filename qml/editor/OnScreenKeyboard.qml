@@ -22,7 +22,7 @@ Item {
         ["\\", "چ", "ج", "ح", "خ", "ه", "ع", "غ", "ف", "ق", "ث", "ص", "ض", "ژ"],
         ["گ", "ک", "م", "ن", "ت", "ا", "ل", "ب", "ی", "س", "ش"],
         ["/", ".", "و", "پ", "د", "ذ", "ر", "ز", "ط", "ظ", "﴿", "﴾"],
-        ["ئ", "ؤ", "ي", "ك", "ة", "آ", "إ", "أ", "ء"]
+        ["#", "'", "\"", "ك", "ة", "$", "إ", "أ", "?"]
     ]
     readonly property var shiftedRows: [
         ["+", "ـ", "(", ")", "*", "،", "×", "٪", "﷼", "٫", "٬", "!", "÷"],
@@ -40,13 +40,13 @@ Item {
             { label: "◌ٔ", text: "ٔ", diacritic: true },
             "",
             { label: "◌ٰ", text: "ٰ", diacritic: true },
-            "ژ", "…", "·",
+            "ژ", "…", ",",
             { label: "RLM", text: "‏", tooltipKey: "keyboard.rlmTooltip" },
             { label: "LRM", text: "‎", tooltipKey: "keyboard.lrmTooltip" }],
         [
             { label: "RLE", text: "‫", tooltipKey: "keyboard.rleTooltip" },
             { label: "LRE", text: "‪", tooltipKey: "keyboard.lreTooltip" },
-            "﴿", "﴾", "\\", "/", "-", "=", "ك"
+            "@", "&", "\\", "/", "_", "%", ";"
         ]
     ]
     readonly property var activeRows: [numberRow].concat(primaryRows)

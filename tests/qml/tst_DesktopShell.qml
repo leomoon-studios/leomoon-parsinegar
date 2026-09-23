@@ -827,6 +827,70 @@ TestCase {
         compare(keyboard.shiftActive, false)
     }
 
+    function test_onScreenDuplicateKeysBecomeAsciiPunctuation() {
+        var applicationWindow = createMainWindow()
+        var controller = applicationWindow.editorController
+        controller.setUiLanguage("en")
+        var keyboardButton = findChild(applicationWindow, "keyboardButton")
+        var keyboard = findChild(applicationWindow, "onScreenKeyboard")
+        var shiftButton = findChild(applicationWindow, "keyboardShiftButton")
+        verify(keyboardButton !== null)
+        verify(keyboard !== null)
+        verify(shiftButton !== null)
+
+        keyboardButton.click()
+        tryCompare(keyboard, "visible", true)
+
+        var replacements = [
+            [3, 9, "ظ", ","],
+            [4, 0, "#", null],
+            [4, 1, "'", null],
+            [4, 2, "\"", "@"],
+            [4, 3, "ك", "&"],
+            [4, 5, "$", "/"],
+            [4, 6, "إ", "_"],
+            [4, 7, "أ", "%"],
+            [4, 8, "?", ";"]
+        ]
+        for (var i = 0; i < replacements.length; ++i) {
+            var entry = replacements[i]
+            var key = keyboard.keyAt(keyboard.activeRows[entry[0]], entry[0], entry[1])
+            compare(key.text, entry[2])
+        }
+
+        var question = findChild(keyboard, "keyboardKey_?")
+        verify(question !== null)
+        question.click()
+        compare(controller.sourceText, "?")
+
+        shiftButton.click()
+        for (var j = 0; j < replacements.length; ++j) {
+            var shiftedEntry = replacements[j]
+            if (shiftedEntry[3] !== null) {
+                var shiftedKey = keyboard.keyAt(keyboard.activeRows[shiftedEntry[0]],
+                    shiftedEntry[0], shiftedEntry[1])
+                compare(shiftedKey.text, shiftedEntry[3])
+            }
+        }
+        var at = findChild(keyboard, "keyboardKey_\"")
+        verify(at !== null)
+        compare(at.insertionText, "@")
+        at.click()
+        compare(controller.sourceText, "?@")
+
+        compare(keyboard.numberRow[0], "=")
+        compare(keyboard.numberRow[1], "-")
+        compare(keyboard.primaryRows[2][1], ".")
+        compare(keyboard.primaryRows[2][10], "﴿")
+        compare(keyboard.primaryRows[2][11], "﴾")
+        compare(keyboard.primaryRows[3][3], "ك")
+        compare(keyboard.shiftedRows[2][5], "آ")
+        compare(keyboard.shiftedRows[2][8], "ي")
+        compare(keyboard.shiftedRows[2][9], "ئ")
+        compare(keyboard.shiftedRows[2][10], "ؤ")
+        compare(keyboard.shiftedRows[3][3], "ء")
+    }
+
     function test_onScreenInputKeepsCursorAtRtlInsertionPoint() {
         var applicationWindow = createMainWindow()
         var controller = applicationWindow.editorController
