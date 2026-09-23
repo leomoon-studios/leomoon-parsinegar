@@ -56,6 +56,7 @@ QtObject {
     readonly property string iconKeyboard: "\ue312"
     readonly property string iconDocument: "\ue873"
     readonly property string iconHelp: "\ue8fd"
+    readonly property string iconDonate: "\ue87d"
 
     readonly property int spacingUnit: 4
     readonly property int spacingTiny: spacingUnit
@@ -89,6 +90,7 @@ QtObject {
     readonly property color success: darkMode ? "#66d6a0" : "#147a4c"
     readonly property color warning: darkMode ? "#f4c66a" : "#8a5700"
     readonly property color urgent: darkMode ? "#ff929b" : "#b4232f"
+    readonly property color donationHeart: darkMode ? "#ef4444" : "#c62828"
 
     function spacing(multiplier) {
         return Math.round(spacingUnit * multiplier)

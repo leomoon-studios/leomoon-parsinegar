@@ -20,6 +20,7 @@ var values = Object.freeze({
   "mode.compatibilityDescription": "برای برنامه‌های قدیمی که متن یونیکد را پشتیبانی نمی‌کنند، از فونت‌های قدیمی سازگار با مریم/LMN استفاده می‌کند.",
   "button.convert": "تبدیل",
   "button.settings": "تنظیمات",
+  "button.donate": "حمایت مالی",
   "button.cancel": "لغو",
   "history.undo": "واگردانی",
   "history.redo": "انجام دوباره",

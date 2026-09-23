@@ -5,6 +5,7 @@ Button {
     id: control
 
     property string glyph: ""
+    property color glyphColor: AppTheme.foreground
     property string toolTip: ""
     property bool selected: false
     readonly property bool focusIndicatorVisible: visualFocus
@@ -22,7 +23,7 @@ Button {
         font.family: AppTheme.iconFontFamily
         font.pixelSize: 24
         font.weight: Font.Normal
-        color: control.enabled ? AppTheme.foreground : AppTheme.muted
+        color: control.enabled ? control.glyphColor : AppTheme.muted
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }

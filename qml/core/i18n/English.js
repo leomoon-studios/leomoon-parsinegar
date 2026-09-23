@@ -20,6 +20,7 @@ var values = Object.freeze({
   "mode.compatibilityDescription": "Uses legacy Maryam/LMN-compatible fonts for older applications that do not support Unicode text.",
   "button.convert": "Convert",
   "button.settings": "Settings",
+  "button.donate": "Donate",
   "button.cancel": "Cancel",
   "history.undo": "Undo",
   "history.redo": "Redo",

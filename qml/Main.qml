@@ -372,6 +372,17 @@ ApplicationWindow {
                     enabled: controller.settingsReady && !controller.busy && !exportController.busy
                     onClicked: controller.openHelp()
                 }
+
+                IconButton {
+                    id: donateButton
+                    objectName: "donateButton"
+                    readonly property url donationUrl: "https://www.paypal.com/donate?hosted_button_id=TYDVJHYA9VYKN"
+                    visible: controller.page === "editor"
+                    glyph: AppTheme.iconDonate
+                    glyphColor: AppTheme.donationHeart
+                    toolTip: controller.uiText("button.donate")
+                    onClicked: Qt.openUrlExternally(donationUrl)
+                }
             }
         }
 

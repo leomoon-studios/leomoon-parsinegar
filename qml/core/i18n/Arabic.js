@@ -20,6 +20,7 @@ var values = Object.freeze({
   "mode.compatibilityDescription": "يستخدم خطوط Maryam/LMN القديمة المتوافقة للتطبيقات القديمة التي لا تدعم نص Unicode.",
   "button.convert": "تحويل",
   "button.settings": "الإعدادات",
+  "button.donate": "تبرّع",
   "button.cancel": "إلغاء",
   "history.undo": "تراجع",
   "history.redo": "إعادة",
