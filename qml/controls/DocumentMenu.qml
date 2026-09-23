@@ -93,4 +93,43 @@ Menu {
                 Qt.callLater(root.editorPage.focusEditor)
         }
     }
+
+    MenuSeparator { }
+
+    AppMenuItem {
+        objectName: "cutDocumentMenuItem"
+        text: root.controller.uiText("edit.cut")
+        shortcutText: "Ctrl+X"
+        rightToLeft: root.rightToLeft
+        enabled: !root.editorPage.editorItem.readOnly
+            && root.editorPage.editorItem.selectionStart !== root.editorPage.editorItem.selectionEnd
+        onTriggered: {
+            root.editorPage.editorItem.cut()
+            Qt.callLater(root.editorPage.focusEditor)
+        }
+    }
+
+    AppMenuItem {
+        objectName: "copyDocumentMenuItem"
+        text: root.controller.uiText("edit.copy")
+        shortcutText: "Ctrl+C"
+        rightToLeft: root.rightToLeft
+        enabled: root.editorPage.editorItem.selectionStart !== root.editorPage.editorItem.selectionEnd
+        onTriggered: {
+            root.editorPage.editorItem.copy()
+            Qt.callLater(root.editorPage.focusEditor)
+        }
+    }
+
+    AppMenuItem {
+        objectName: "pasteDocumentMenuItem"
+        text: root.controller.uiText("edit.paste")
+        shortcutText: "Ctrl+V"
+        rightToLeft: root.rightToLeft
+        enabled: !root.editorPage.editorItem.readOnly && root.editorPage.editorItem.canPaste
+        onTriggered: {
+            root.editorPage.pastePlainText()
+            Qt.callLater(root.editorPage.focusEditor)
+        }
+    }
 }

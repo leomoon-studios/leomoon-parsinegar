@@ -20,6 +20,7 @@ TestCase {
                     text = value
                     return true
                 }
+                function readText() { return text }
             }
             clipboardService: clipboardMock
             textDirectionService: NativeTextDirectionBridge
@@ -447,6 +448,47 @@ TestCase {
         tryCompare(documentMenu, "visible", false)
         compare(controller.sourceText, "")
         verify(!controller.documentDirty)
+    }
+
+    function test_documentMenuCutCopyAndPasteUseEditorActions() {
+        var applicationWindow = createMainWindow()
+        var controller = applicationWindow.editorController
+        var clipboard = applicationWindow.clipboardMock
+        var documentButton = findChild(applicationWindow, "documentButton")
+        var editor = findChild(applicationWindow, "sourceEditor")
+        var cutItem = findChild(applicationWindow, "cutDocumentMenuItem")
+        var copyItem = findChild(applicationWindow, "copyDocumentMenuItem")
+        var pasteItem = findChild(applicationWindow, "pasteDocumentMenuItem")
+        verify(documentButton !== null)
+        verify(editor !== null)
+        verify(cutItem !== null)
+        verify(copyItem !== null)
+        verify(pasteItem !== null)
+        verify(!cutItem.enabled)
+        verify(!copyItem.enabled)
+
+        controller.resetDocument("alpha beta", "")
+        editor.select(0, 5)
+        verify(cutItem.enabled)
+        verify(copyItem.enabled)
+        documentButton.click()
+        copyItem.click()
+        compare(controller.sourceText, "alpha beta")
+        editor.cursorPosition = editor.length
+        editor.paste()
+        compare(controller.sourceText, "alpha betaalpha")
+
+        controller.resetDocument("alpha beta", "")
+        editor.select(6, 10)
+        documentButton.click()
+        cutItem.click()
+        compare(controller.sourceText, "alpha ")
+        clipboard.text = "beta"
+        editor.cursorPosition = editor.length
+        verify(pasteItem.enabled)
+        documentButton.click()
+        pasteItem.click()
+        compare(controller.sourceText, "alpha beta")
     }
 
     function test_onScreenKeyboardDrawerTogglesLayersAndInsertsText() {
