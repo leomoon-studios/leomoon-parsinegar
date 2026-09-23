@@ -627,18 +627,25 @@ TestCase {
         quote.click()
         compare(controller.sourceText, "aپ«")
 
-        var zwnj = findChild(keyboard, "keyboardKey_ذ")
-        verify(zwnj !== null)
-        compare(zwnj.toolTipText, "Zero-width non-joiner (U+200C)")
-        zwnj.click()
+        var formerZwnj = findChild(keyboard, "keyboardKey_ذ")
+        verify(formerZwnj !== null)
+        compare(formerZwnj.insertionText, "")
+        compare(formerZwnj.text, "")
+        compare(formerZwnj.alternateLabel, "")
+        compare(formerZwnj.enabled, false)
+        compare(formerZwnj.toolTipText, "")
+        compare(space.text, "ZWNJ")
+        space.click()
         compare(controller.sourceText, "aپ«‌")
         backspace.click()
         compare(controller.sourceText, "aپ«")
+        applicationWindow.modifierMock.shiftPressed = false
+        compare(space.text, "Space")
+        compare(formerZwnj.alternateLabel, "")
         space.click()
         enter.click()
         compare(controller.sourceText, "aپ« \n")
 
-        applicationWindow.modifierMock.shiftPressed = false
         zaad = findChild(keyboard, "keyboardKey_ض")
         che = findChild(keyboard, "keyboardKey_چ")
         verify(zaad !== null)
@@ -647,8 +654,8 @@ TestCase {
         wait(0)
         verify(zaad.mapToItem(keyboard, 0, 0).x < che.mapToItem(keyboard, 0, 0).x)
         applicationWindow.modifierMock.shiftPressed = true
-        zwnj = findChild(keyboard, "keyboardKey_ذ")
-        compare(zwnj.toolTipText, "نویسهٔ نامرئیِ فاصلهٔ مجازی (U+200C)")
+        compare(space.text, "فاصلهٔ مجازی")
+        compare(space.ToolTip.text, "نویسهٔ نامرئیِ فاصلهٔ مجازی (U+200C)")
         controller.setUiLanguage("en")
         applicationWindow.width = applicationWindow.minimumWidth
         applicationWindow.height = applicationWindow.minimumHeight
@@ -695,7 +702,8 @@ TestCase {
                 ["م", "ن", "«", "»"],
                 ["۰", "۹", "(", ")"],
                 ["ح", "خ", "[", "]"],
-                ["چ", "ج", "{", "}"]
+                ["چ", "ج", "{", "}"],
+                [".", "و", "<", ">"]
             ]
             for (var i = 0; i < pairs.length; ++i) {
                 var opener = findChild(keyboard, "keyboardKey_" + pairs[i][rightToLeft ? 0 : 1])
@@ -704,6 +712,10 @@ TestCase {
                 verify(closer !== null)
                 compare(opener.insertionText, pairs[i][2])
                 compare(closer.insertionText, pairs[i][3])
+                if (pairs[i][2] === "<") {
+                    compare(opener.text, rightToLeft ? ">" : "<")
+                    compare(closer.text, rightToLeft ? "<" : ">")
+                }
                 var openX = opener.mapToItem(keyboard, 0, 0).x
                 var closeX = closer.mapToItem(keyboard, 0, 0).x
                 verify(rightToLeft ? openX > closeX : openX < closeX)
@@ -764,14 +776,17 @@ TestCase {
 
     function test_onScreenShiftTogglesAndPhysicalShiftOverridesIt() {
         var applicationWindow = createMainWindow()
+        applicationWindow.editorController.setUiLanguage("en")
         var editor = findChild(applicationWindow, "sourceEditor")
         var keyboardButton = findChild(applicationWindow, "keyboardButton")
         var keyboard = findChild(applicationWindow, "onScreenKeyboard")
         var shiftButton = findChild(applicationWindow, "keyboardShiftButton")
+        var space = findChild(applicationWindow, "keyboardSpaceButton")
         verify(editor !== null)
         verify(keyboardButton !== null)
         verify(keyboard !== null)
         verify(shiftButton !== null)
+        verify(space !== null)
 
         keyboardButton.click()
         tryCompare(keyboard, "visible", true)
@@ -779,23 +794,32 @@ TestCase {
         verify(four !== null)
         var keyboardHeight = keyboard.implicitHeight
         compare(four.insertionText, "۴")
+        compare(space.text, "Space")
         shiftButton.click()
         compare(keyboard.shiftActive, true)
+        compare(space.text, "ZWNJ")
         compare(four.insertionText, "﷼")
         compare(keyboard.shiftLatched, true)
+        space.click()
+        compare(applicationWindow.editorController.sourceText, "‌")
         shiftButton.click()
         compare(keyboard.shiftActive, false)
+        compare(space.text, "Space")
         compare(four.insertionText, "۴")
+        space.click()
+        compare(applicationWindow.editorController.sourceText, "‌ ")
         shiftButton.click()
         compare(keyboard.shiftLatched, true)
         editor.forceActiveFocus()
         applicationWindow.modifierMock.shiftPressed = true
         compare(keyboard.shiftActive, true)
+        compare(space.text, "ZWNJ")
         compare(keyboard.shiftLatched, false)
         compare(four.insertionText, "﷼")
         compare(keyboard.implicitHeight, keyboardHeight)
         applicationWindow.modifierMock.shiftPressed = false
         compare(keyboard.shiftActive, false)
+        compare(space.text, "Space")
         compare(four.insertionText, "۴")
         applicationWindow.modifierMock.shiftPressed = true
         compare(keyboard.shiftActive, true)

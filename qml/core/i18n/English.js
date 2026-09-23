@@ -27,6 +27,7 @@ var values = Object.freeze({
   "keyboard.toggle": "On-screen keyboard",
   "keyboard.backspace": "Backspace",
   "keyboard.space": "Space",
+  "keyboard.zwnj": "ZWNJ",
   "keyboard.enter": "Enter",
   "keyboard.shift": "Shift",
   "keyboard.zwnjTooltip": "Zero-width non-joiner (U+200C)",

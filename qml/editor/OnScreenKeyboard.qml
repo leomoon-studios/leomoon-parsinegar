@@ -38,7 +38,7 @@ Item {
         ["؛", ":", "«", "»", "ة", "آ", "أ", "إ", "ي", "ئ", "ؤ"],
         ["؟", "<", ">", "ء",
             { label: "◌ٔ", text: "ٔ", diacritic: true },
-            { label: "ZWNJ", text: "‌", tooltipKey: "keyboard.zwnjTooltip" },
+            "",
             { label: "◌ٰ", text: "ٰ", diacritic: true },
             "ژ", "…", "·",
             { label: "RLM", text: "‏", tooltipKey: "keyboard.rlmTooltip" },
@@ -54,7 +54,8 @@ Item {
         "«": "»", "»": "«",
         "(": ")", ")": "(",
         "[": "]", "]": "[",
-        "{": "}", "}": "{"
+        "{": "}", "}": "{",
+        "<": ">", ">": "<"
     })
 
     onPhysicalShiftChanged: {
@@ -87,7 +88,7 @@ Item {
             id: typeof base === "string" ? base : base.id,
             text: keyText(current),
             label: keyLabel(current),
-            alternateLabel: keyLabel(alternate),
+            alternateLabel: shifted === "" ? "" : keyLabel(alternate),
             diacritic: typeof current === "object" && current.diacritic === true,
             tooltipKey: typeof current === "object" ? current.tooltipKey : ""
         }
@@ -101,6 +102,8 @@ Item {
             "]": "[",
             "{": "}",
             "}": "{",
+            "<": ">",
+            ">": "<",
             "«": "»",
             "»": "«"
         }
@@ -133,6 +136,7 @@ Item {
         padding: AppTheme.spacingTiny
         hoverEnabled: true
         focusPolicy: Qt.TabFocus
+        enabled: insertionText !== ""
         text: keyLabel
         Accessible.name: keyLabel
 
@@ -257,8 +261,11 @@ Item {
                     Layout.preferredWidth: 0
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    text: root.controller.uiText("keyboard.space")
-                    onClicked: root.textRequested(" ")
+                    text: root.controller.uiText(root.shiftActive ? "keyboard.zwnj" : "keyboard.space")
+                    onClicked: root.textRequested(root.shiftActive ? "‌" : " ")
+                    ToolTip.visible: hovered && root.shiftActive
+                    ToolTip.delay: 500
+                    ToolTip.text: root.controller.uiText("keyboard.zwnjTooltip")
                 }
 
                 AppButton {

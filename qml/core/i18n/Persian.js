@@ -27,6 +27,7 @@ var values = Object.freeze({
   "keyboard.toggle": "صفحه‌کلید روی صفحه",
   "keyboard.backspace": "پس‌بر",
   "keyboard.space": "فاصله",
+  "keyboard.zwnj": "فاصلهٔ مجازی",
   "keyboard.enter": "بازگشت",
   "keyboard.shift": "شیفت",
   "keyboard.zwnjTooltip": "نویسهٔ نامرئیِ فاصلهٔ مجازی (U+200C)",

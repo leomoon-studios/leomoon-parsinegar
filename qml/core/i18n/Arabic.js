@@ -27,6 +27,7 @@ var values = Object.freeze({
   "keyboard.toggle": "لوحة المفاتيح على الشاشة",
   "keyboard.backspace": "مسافة للخلف",
   "keyboard.space": "مسافة",
+  "keyboard.zwnj": "فاصل غير واصل",
   "keyboard.enter": "إدخال",
   "keyboard.shift": "تبديل",
   "keyboard.zwnjTooltip": "فاصل غير واصل بعرض صفري (U+200C)",
