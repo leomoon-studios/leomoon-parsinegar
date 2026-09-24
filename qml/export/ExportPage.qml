@@ -19,6 +19,12 @@ FocusScope {
     property url chosenDestination
     property string statusText: ""
     property string statusLevel: "info"
+    property string previewSvg: ""
+    property string previewSignature: ""
+    property string pendingPreviewSignature: ""
+    property int sourceRevision: 0
+    property int previewSourceRevision: -1
+    property int pendingPreviewSourceRevision: -1
     property var installedFontEntries: []
     property var unicodeFontEntries: []
     property var compatibilityFontEntries: []
@@ -32,6 +38,16 @@ FocusScope {
     readonly property bool fontCatalogScanning: fileBridge
         && typeof fileBridge.fontCatalogScanning === "boolean"
         && fileBridge.fontCatalogScanning
+    readonly property string previewInputSignature: JSON.stringify([
+        controller.conversionMode, currentFontPath(),
+        controller.conversionOptions(), alignment, automaticWidth, automaticHeight,
+        fontSizeField.text, lineSpacingField.text, widthField.text, heightField.text,
+        paddingField.text, precisionField.text, fontIndexField.text,
+        fillField.text, axesField.text
+    ])
+    readonly property bool previewStale: previewSvg !== ""
+        && (previewSignature !== previewInputSignature
+            || previewSourceRevision !== sourceRevision)
 
     LayoutMirroring.enabled: rightToLeft
     LayoutMirroring.childrenInherit: true
@@ -321,6 +337,25 @@ FocusScope {
             controller.conversionMode, conversionOptions)
     }
 
+    function beginPreview() {
+        if (exportController.busy || !validateBeforeSave())
+            return false
+        statusText = uiText("export.processing")
+        statusLevel = "info"
+        pendingPreviewSignature = previewInputSignature
+        pendingPreviewSourceRevision = sourceRevision
+        var options = exportOptions()
+        var conversionOptions = controller.conversionOptions()
+        if (controller.conversionMode === "unicode" && controller.unicodeFontPath === "") {
+            return exportController.previewWithBundledFont(
+                controller.sourceText, options, controller.conversionMode, conversionOptions)
+        }
+        var fontUrl = fileBridge.localFileUrl(currentFontPath())
+        return exportController.previewTo(
+            controller.sourceText, fontUrl, options,
+            controller.conversionMode, conversionOptions)
+    }
+
     Keys.onEscapePressed: function(event) {
         if (!exportController.busy)
             controller.closeExport()
@@ -335,7 +370,20 @@ FocusScope {
                 : root.uiText("export.success")
             root.statusLevel = warnings && warnings.length ? "warning" : "success"
         }
+        function onPreviewReady(svg, warnings, font) {
+            root.previewSvg = svg
+            root.previewSignature = root.pendingPreviewSignature
+            root.previewSourceRevision = root.pendingPreviewSourceRevision
+            root.pendingPreviewSignature = ""
+            root.pendingPreviewSourceRevision = -1
+            root.statusText = warnings && warnings.length
+                ? root.uiText("export.previewMissingGlyphs") + " " + root.glyphLabels(warnings)
+                : root.uiText("export.previewReady")
+            root.statusLevel = warnings && warnings.length ? "warning" : "success"
+        }
         function onFailed(code, message, details) {
+            root.pendingPreviewSignature = ""
+            root.pendingPreviewSourceRevision = -1
             root.statusText = root.errorText(code, message, details)
             root.statusLevel = "error"
         }
@@ -343,6 +391,7 @@ FocusScope {
 
     Connections {
         target: root.controller
+        function onSourceTextChanged() { root.sourceRevision++ }
         function onConversionModeChanged() { Qt.callLater(root.ensureFontSelection) }
         function onUiLanguageChanged() { root.rebuildFontEntries() }
     }
@@ -365,8 +414,16 @@ FocusScope {
             fileBridge.scanInstalledFontsAsync()
     }
     onVisibleChanged: {
-        if (!visible)
+        if (!visible) {
+            if (exportController.busy && exportController.pendingPreview)
+                exportController.cancel()
+            previewSvg = ""
+            previewSignature = ""
+            previewSourceRevision = -1
+            pendingPreviewSignature = ""
+            pendingPreviewSourceRevision = -1
             return
+        }
         if (fontCatalogReady) {
             ensureFontSelection()
         } else {
@@ -392,7 +449,6 @@ FocusScope {
             readonly property real scrollGutter: overflowing ? ScrollBar.vertical.width + 6 : 0
             Layout.fillWidth: true
             Layout.fillHeight: true
-            enabled: !root.exportController.busy
             contentWidth: availableWidth
             clip: true
             leftPadding: root.rightToLeft ? scrollGutter : 0
@@ -408,6 +464,7 @@ FocusScope {
                 Rectangle {
                     width: parent.width
                     height: modeContent.implicitHeight + AppTheme.spacingLarge * 2
+                    enabled: !root.exportController.busy
                     radius: AppTheme.cornerRadiusLarge
                     color: AppTheme.surface
                     border.color: AppTheme.border
@@ -518,6 +575,7 @@ FocusScope {
                 Rectangle {
                     width: parent.width
                     height: optionsContent.implicitHeight + AppTheme.spacingLarge * 2
+                    enabled: !root.exportController.busy
                     radius: AppTheme.cornerRadiusLarge
                     color: AppTheme.surface
                     border.color: AppTheme.border
@@ -697,13 +755,106 @@ FocusScope {
                 }
 
                 AppButton {
+                    objectName: "previewSvgButton"
+                    width: parent.width
+                    text: root.exportController.busy && root.exportController.pendingPreview
+                        ? root.uiText("button.cancel")
+                        : root.previewSvg === "" ? root.uiText("export.preview")
+                        : root.uiText("export.updatePreview")
+                    enabled: root.typography.ready && root.fontCatalogReady
+                        && (root.controller.conversionMode !== "compatibility"
+                            || root.compatibilityFontEntries.length > 0)
+                        && (!root.exportController.busy || root.exportController.pendingPreview)
+                    onClicked: {
+                        if (root.exportController.busy) {
+                            root.exportController.cancel()
+                            root.pendingPreviewSignature = ""
+                            root.pendingPreviewSourceRevision = -1
+                            root.statusText = root.uiText("export.previewCancelled")
+                            root.statusLevel = "info"
+                        } else {
+                            root.beginPreview()
+                        }
+                    }
+                }
+
+                Rectangle {
+                    objectName: "exportPreviewPanel"
+                    width: parent.width
+                    height: visible ? previewContent.implicitHeight + AppTheme.spacingLarge * 2 : 0
+                    visible: root.previewSvg !== ""
+                    radius: AppTheme.cornerRadiusLarge
+                    color: AppTheme.surface
+                    border.color: AppTheme.border
+                    border.width: AppTheme.borderWidth
+
+                    ColumnLayout {
+                        id: previewContent
+                        anchors.fill: parent
+                        anchors.margins: AppTheme.spacingLarge
+                        spacing: AppTheme.spacingSmall
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            SectionHeading { label: root.uiText("export.previewTitle") }
+                            Item { Layout.fillWidth: true }
+                            Label {
+                                visible: root.previewStale
+                                text: root.uiText("export.previewStale")
+                                font.family: AppTheme.fontFamily
+                                font.pixelSize: AppTheme.fontCaption
+                                color: AppTheme.muted
+                            }
+                        }
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 240
+                            radius: AppTheme.cornerRadius
+                            color: "#B8B8B8"
+                            clip: true
+
+                            Image {
+                                id: svgPreviewImage
+                                objectName: "exportPreviewImage"
+                                anchors.fill: parent
+                                anchors.margins: AppTheme.spacingMedium
+                                source: root.previewSvg === "" ? ""
+                                    : "data:image/svg+xml;charset=utf-8," + encodeURIComponent(root.previewSvg)
+                                sourceSize.width: 1000
+                                sourceSize.height: 400
+                                fillMode: Image.PreserveAspectFit
+                                asynchronous: true
+                                cache: false
+                                onStatusChanged: {
+                                    if (status === Image.Error && root.previewSvg !== "") {
+                                        root.statusText = root.uiText("export.previewUnavailable")
+                                        root.statusLevel = "error"
+                                    }
+                                }
+                            }
+
+                            Label {
+                                anchors.centerIn: parent
+                                visible: svgPreviewImage.status === Image.Error
+                                text: root.uiText("export.previewUnavailable")
+                                font.family: AppTheme.fontFamily
+                                color: "#202020"
+                            }
+                        }
+                    }
+                }
+
+                AppButton {
                     objectName: "saveSvgButton"
                     width: parent.width
-                    text: root.exportController.busy ? root.uiText("button.cancel") : root.uiText("export.save")
+                    text: root.exportController.busy && !root.exportController.pendingPreview
+                        ? root.uiText("button.cancel") : root.uiText("export.save")
                     accent: true
                     enabled: root.typography.ready && root.fontCatalogReady
                         && (root.controller.conversionMode !== "compatibility"
                             || root.compatibilityFontEntries.length > 0)
+                        && !(root.exportController.busy && root.exportController.pendingPreview)
                     onClicked: {
                         if (root.exportController.busy) {
                             root.exportController.cancel()

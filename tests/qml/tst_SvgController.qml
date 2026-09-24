@@ -99,6 +99,37 @@ TestCase {
         compare(controller.outputPath, "/tmp/result.svg")
     }
 
+    function test_previewProducesSvgWithoutWriting() {
+        var controller = createController()
+        var previewSvg = ""
+        var previewWarnings = []
+        controller.previewReady.connect(function(svg, warnings) {
+            previewSvg = svg
+            previewWarnings = warnings
+        })
+        verify(controller.previewTo("پارسی", "file:///tmp/font.ttf", {}, "unicode", {}))
+        compare(controller.bridgeMock.readCount, 1)
+        compare(controller.pendingPreview, true)
+        verify(!controller.previewWithBundledFont("second", {}, "unicode", {}))
+
+        var id = controller.activeRequestId
+        verify(controller.finishWorker({
+            id: id,
+            ok: true,
+            svg: "<svg><path d=\"M0 0Z\"/></svg>",
+            missingGlyphs: [{ label: "U+1F9EC" }],
+            font: { family: "LMN Test" }
+        }))
+        compare(previewSvg, "<svg><path d=\"M0 0Z\"/></svg>")
+        compare(previewWarnings.length, 1)
+        compare(controller.bridgeMock.writeCount, 0)
+        compare(controller.outputPath, "")
+        compare(controller.fontIdentity.family, "LMN Test")
+        compare(controller.pendingPreview, false)
+        compare(controller.busy, false)
+        verify(!controller.finishWorker({ id: id, ok: true, svg: "<svg/>" }))
+    }
+
     function test_oversizedTextRejectedBeforeRead() {
         var controller = createController()
         var oversized = new Array(50002).join("پ")

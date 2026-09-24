@@ -1236,6 +1236,47 @@ TestCase {
         compare(exportPage.statusText, "")
     }
 
+    function test_exportPreviewIsManualAndMarksOldResultStale() {
+        var applicationWindow = createMainWindow()
+        var controller = applicationWindow.editorController
+        var exportController = applicationWindow.svgExportController
+        var exportPage = findChild(applicationWindow, "exportPage")
+        var previewButton = findChild(applicationWindow, "previewSvgButton")
+        var previewPanel = findChild(applicationWindow, "exportPreviewPanel")
+        var saveButton = findChild(applicationWindow, "saveSvgButton")
+        var fontSize = findChild(applicationWindow, "exportFontSize")
+        verify(exportPage !== null)
+        verify(previewButton !== null)
+        verify(previewPanel !== null)
+        verify(saveButton !== null)
+        verify(fontSize !== null)
+
+        controller.sourceText = "سلام"
+        controller.openExport()
+        compare(exportController.busy, false)
+        compare(exportPage.previewSvg, "")
+        verify(!previewPanel.visible)
+        compare(previewButton.text, controller.uiText("export.preview"))
+
+        previewButton.click()
+        compare(exportController.busy, true)
+        compare(exportController.pendingPreview, true)
+        verify(!saveButton.enabled)
+        previewButton.click()
+        compare(exportController.busy, false)
+
+        exportPage.previewSvg = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"100\" height=\"50\"><path d=\"M0 0 L100 50\"/></svg>"
+        exportPage.previewSignature = exportPage.previewInputSignature
+        exportPage.previewSourceRevision = exportPage.sourceRevision
+        verify(previewPanel.visible)
+        verify(!exportPage.previewStale)
+        compare(previewButton.text, controller.uiText("export.updatePreview"))
+        fontSize.text = "72"
+        tryCompare(exportPage, "previewStale", true)
+        controller.sourceText = "سلام دنیا"
+        verify(exportPage.previewStale)
+    }
+
     function test_exportDoesNotApplyEnabledTextTools() {
         var applicationWindow = createMainWindow()
         var controller = applicationWindow.editorController

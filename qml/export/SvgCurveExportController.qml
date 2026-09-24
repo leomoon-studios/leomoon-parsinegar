@@ -23,11 +23,13 @@ Item {
     property var pendingOptions: ({})
     property string pendingConversionMode: ""
     property var pendingConversionOptions: ({})
+    property bool pendingPreview: false
     property string convertedText: ""
     property var fontByteView: null
     property int fontByteOffset: 0
 
     signal exported(string path, var warnings, var font)
+    signal previewReady(string svg, var warnings, var font)
     signal failed(string code, string message, var details)
     signal cancelled()
 
@@ -44,38 +46,29 @@ Item {
     }
 
     function exportTo(text, fontUrl, destinationUrl, options, conversionMode, conversionOptions) {
-        if (busy || !fileBridge || typeof fileBridge.readFontAsync !== "function")
-            return false
-        try {
-            Limits.ResourceLimits.assertTextLength(
-                text, Limits.ResourceLimits.values.maxSvgTextLength, "EXPORT_TEXT_TOO_LARGE")
-        } catch (error) {
-            failExport(error.code, error.message || error, error.details || [])
-            return false
-        }
-
-        busy = true
-        errorCode = ""
-        errorMessage = ""
-        outputPath = ""
-        missingGlyphs = []
-        fontIdentity = ({})
-        pendingText = text
-        pendingDestination = destinationUrl
-        pendingOptions = options || ({})
-        pendingConversionMode = conversionMode || ""
-        pendingConversionOptions = conversionOptions || ({})
-        requestId++
-        activeRequestId = requestId
-        if (!fileBridge.readFontAsync(activeRequestId, fontUrl)) {
-            failExport("FONT_READ_FAILED", "The font read could not be started.", [])
-            return false
-        }
-        return true
+        return startRequest(text, fontUrl, destinationUrl, options,
+            conversionMode, conversionOptions, false, false)
     }
 
     function exportWithBundledFont(text, destinationUrl, options, conversionMode, conversionOptions) {
-        if (busy || !fileBridge || typeof fileBridge.readBundledFontAsync !== "function")
+        return startRequest(text, "", destinationUrl, options,
+            conversionMode, conversionOptions, true, false)
+    }
+
+    function previewTo(text, fontUrl, options, conversionMode, conversionOptions) {
+        return startRequest(text, fontUrl, "", options,
+            conversionMode, conversionOptions, false, true)
+    }
+
+    function previewWithBundledFont(text, options, conversionMode, conversionOptions) {
+        return startRequest(text, "", "", options,
+            conversionMode, conversionOptions, true, true)
+    }
+
+    function startRequest(text, fontUrl, destinationUrl, options,
+                          conversionMode, conversionOptions, bundled, preview) {
+        if (busy || !fileBridge
+                || typeof fileBridge[bundled ? "readBundledFontAsync" : "readFontAsync"] !== "function")
             return false
         try {
             Limits.ResourceLimits.assertTextLength(
@@ -95,10 +88,16 @@ Item {
         pendingOptions = options || ({})
         pendingConversionMode = conversionMode || ""
         pendingConversionOptions = conversionOptions || ({})
+        pendingPreview = preview
         requestId++
         activeRequestId = requestId
-        if (!fileBridge.readBundledFontAsync(activeRequestId)) {
-            failExport("FONT_READ_FAILED", "The bundled font read could not be started.", [])
+        var started = bundled
+            ? fileBridge.readBundledFontAsync(activeRequestId)
+            : fileBridge.readFontAsync(activeRequestId, fontUrl)
+        if (!started) {
+            failExport("FONT_READ_FAILED", bundled
+                ? "The bundled font read could not be started."
+                : "The font read could not be started.", [])
             return false
         }
         return true
@@ -162,6 +161,16 @@ Item {
         fontIdentity = message.font || ({})
         convertedText = String(message.convertedText || "")
         missingGlyphs = message.missingGlyphs || []
+        if (pendingPreview) {
+            var svg = String(message.svg || "")
+            var warnings = missingGlyphs
+            var font = fontIdentity
+            resetPending()
+            activeRequestId = 0
+            busy = false
+            previewReady(svg, warnings, font)
+            return true
+        }
         if (!fileBridge || typeof fileBridge.writeSvgAsync !== "function"
                 || !fileBridge.writeSvgAsync(activeRequestId, pendingDestination, message.svg)) {
             failExport("SVG_WRITE_FAILED", "The SVG write could not be started.", [])
@@ -203,6 +212,7 @@ Item {
         pendingOptions = ({})
         pendingConversionMode = ""
         pendingConversionOptions = ({})
+        pendingPreview = false
         fontByteView = null
         fontByteOffset = 0
     }

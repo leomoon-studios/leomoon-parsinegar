@@ -12,6 +12,7 @@ TestCase {
         Item {
             id: harness
             property string capturedSvg: ""
+            property string previewSvg: ""
             property url capturedDestination
             property alias exportController: curveController
             property alias editorController: editorController
@@ -65,6 +66,24 @@ TestCase {
                 id: curveController
                 fileBridge: bridgeProxy
             }
+
+            Connections {
+                target: curveController
+                function onPreviewReady(svg, warnings, font) { harness.previewSvg = svg }
+            }
+
+            Image {
+                id: previewImage
+                objectName: "previewImage"
+                width: 400
+                height: 200
+                source: harness.previewSvg === "" ? ""
+                    : "data:image/svg+xml;charset=utf-8," + encodeURIComponent(harness.previewSvg)
+                sourceSize.width: 800
+                sourceSize.height: 400
+                fillMode: Image.PreserveAspectFit
+                asynchronous: true
+            }
         }
     }
 
@@ -98,5 +117,26 @@ TestCase {
         verify(!/(?:font-family|@font-face|data:font|\bhref\s*=)/i.test(harness.capturedSvg))
         compare(harness.exportController.outputPath, "/tmp/mock-output.svg")
         compare(harness.exportController.fontIdentity.family, "Vazirmatn")
+    }
+
+    function test_realWorkerPreviewRendersWithoutSaving() {
+        var harness = createTemporaryObject(harnessComponent, testCase)
+        verify(harness !== null)
+        tryCompare(harness.editorController, "settingsReady", true)
+        var source = "سلام."
+        harness.editorController.sourceText = source
+        verify(harness.exportController.previewWithBundledFont(
+            source, { fontSize: 48, alignment: "right", fill: "#171717" },
+            harness.editorController.conversionMode,
+            harness.editorController.conversionOptions()))
+
+        tryCompare(harness.exportController, "busy", false, 20000)
+        verify(/<svg /.test(harness.previewSvg))
+        compare(harness.capturedSvg, "")
+        compare(harness.exportController.outputPath, "")
+        compare(harness.editorController.sourceText, source)
+        var image = findChild(harness, "previewImage")
+        verify(image !== null)
+        tryCompare(image, "status", Image.Ready, 20000)
     }
 }
