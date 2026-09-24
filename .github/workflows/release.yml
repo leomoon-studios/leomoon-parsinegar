@@ -47,7 +47,7 @@ jobs:
       release_tag: ${{ steps.metadata.outputs.release_tag }}
     steps:
       - name: Check out source
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
 
       - name: Generate version and release date
         id: metadata
@@ -101,7 +101,7 @@ jobs:
 
     steps:
       - name: Check out source and tags
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           fetch-depth: 0
 
@@ -109,19 +109,19 @@ jobs:
         run: scripts/prepare-release-metadata.sh "$GITHUB_REF_NAME" "${{ needs.validate.outputs.release_date }}"
 
       - name: Download verified Linux artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
           pattern: leomoon-parsinegar-linux-*-${{ github.sha }}
           path: release-input/linux
 
       - name: Download verified Windows artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
           pattern: leomoon-parsinegar-windows-*-${{ github.sha }}
           path: release-input/windows
 
       - name: Download verified macOS artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
           name: leomoon-parsinegar-macos-${{ github.sha }}
           path: release-input/macos

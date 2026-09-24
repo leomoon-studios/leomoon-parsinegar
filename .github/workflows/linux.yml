@@ -27,6 +27,7 @@ env:
   QT_VERSION: 6.8.3
   LINUXDEPLOY_VERSION: 1-alpha-20251107-1
   LINUXDEPLOY_QT_VERSION: 1-alpha-20250213-1
+  APPIMAGE_RUNTIME_VERSION: "20251108"
 
 jobs:
   build-test-package:
@@ -40,7 +41,7 @@ jobs:
 
     steps:
       - name: Check out source
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
 
       - name: Generate release metadata
         run: scripts/prepare-release-metadata.sh "${{ inputs.release_tag }}" "${{ inputs.release_date }}"
@@ -55,7 +56,7 @@ jobs:
           sudo apt-get install --yes build-essential cmake curl dpkg-dev file "$fuse_package" libgl1-mesa-dev libwayland-client0 libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xfixes0 libxcb-xinerama0 ninja-build
 
       - name: Install pinned Qt
-        uses: jurplel/install-qt-action@v4
+        uses: jurplel/install-qt-action@a9c63c7c123f3069cff414e7e482d95dfa9d8125 # v4
         with:
           version: ${{ env.QT_VERSION }}
           host: ${{ matrix.release_arch == 'arm64' && 'linux_arm64' || 'linux' }}
@@ -66,14 +67,29 @@ jobs:
 
       - name: Install pinned Linux deployment tools
         run: |
-          mkdir -p "$RUNNER_TEMP/leomoon-parsinegar-tools"
+          tool_dir="$RUNNER_TEMP/leomoon-parsinegar-tools"
+          mkdir -p "$tool_dir"
           appimage_arch="${{ matrix.release_arch == 'arm64' && 'aarch64' || 'x86_64' }}"
-          curl --fail --location --retry 3 --output "$RUNNER_TEMP/leomoon-parsinegar-tools/linuxdeploy" "https://github.com/linuxdeploy/linuxdeploy/releases/download/$LINUXDEPLOY_VERSION/linuxdeploy-$appimage_arch.AppImage"
-          curl --fail --location --retry 3 --output "$RUNNER_TEMP/leomoon-parsinegar-tools/linuxdeploy-plugin-qt" "https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/$LINUXDEPLOY_QT_VERSION/linuxdeploy-plugin-qt-$appimage_arch.AppImage"
-          curl --fail --location --retry 3 --output "$RUNNER_TEMP/leomoon-parsinegar-tools/runtime-$appimage_arch" "https://github.com/AppImage/type2-runtime/releases/download/continuous/runtime-$appimage_arch"
-          chmod +x "$RUNNER_TEMP/leomoon-parsinegar-tools/linuxdeploy" "$RUNNER_TEMP/leomoon-parsinegar-tools/linuxdeploy-plugin-qt"
-          echo "$RUNNER_TEMP/leomoon-parsinegar-tools" >> "$GITHUB_PATH"
-          echo "LDAI_RUNTIME_FILE=$RUNNER_TEMP/leomoon-parsinegar-tools/runtime-$appimage_arch" >> "$GITHUB_ENV"
+          case "$appimage_arch" in
+            aarch64)
+              linuxdeploy_sha256=620095110d693282b8ebeb244a95b5e911cf8f65f76c88b4b47d16ae6346fcff
+              qt_plugin_sha256=bf1c24aff6d749b5cf423afad6f15abd4440f81dec1aab95706b25f6667cdcf1
+              runtime_sha256=00cbdfcf917cc6c0ff6d3347d59e0ca1f7f45a6df1a428a0d6d8a78664d87444
+              ;;
+            x86_64)
+              linuxdeploy_sha256=c20cd71e3a4e3b80c3483cef793cda3f4e990aca14014d23c544ca3ce1270b4d
+              qt_plugin_sha256=15106be885c1c48a021198e7e1e9a48ce9d02a86dd0a1848f00bdbf3c1c92724
+              runtime_sha256=2fca8b443c92510f1483a883f60061ad09b46b978b2631c807cd873a47ec260d
+              ;;
+            *) echo "Unsupported AppImage architecture: $appimage_arch" >&2; exit 1 ;;
+          esac
+          curl --fail --location --retry 3 --output "$tool_dir/linuxdeploy" "https://github.com/linuxdeploy/linuxdeploy/releases/download/$LINUXDEPLOY_VERSION/linuxdeploy-$appimage_arch.AppImage"
+          curl --fail --location --retry 3 --output "$tool_dir/linuxdeploy-plugin-qt" "https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/$LINUXDEPLOY_QT_VERSION/linuxdeploy-plugin-qt-$appimage_arch.AppImage"
+          curl --fail --location --retry 3 --output "$tool_dir/runtime-$appimage_arch" "https://github.com/AppImage/type2-runtime/releases/download/$APPIMAGE_RUNTIME_VERSION/runtime-$appimage_arch"
+          printf '%s  %s\n' "$linuxdeploy_sha256" "$tool_dir/linuxdeploy" "$qt_plugin_sha256" "$tool_dir/linuxdeploy-plugin-qt" "$runtime_sha256" "$tool_dir/runtime-$appimage_arch" | sha256sum --check
+          chmod +x "$tool_dir/linuxdeploy" "$tool_dir/linuxdeploy-plugin-qt"
+          echo "$tool_dir" >> "$GITHUB_PATH"
+          echo "LDAI_RUNTIME_FILE=$tool_dir/runtime-$appimage_arch" >> "$GITHUB_ENV"
 
       - name: Configure release build
         run: cmake -S . -B build-linux -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON
@@ -92,7 +108,7 @@ jobs:
 
       - name: Retain failure logs
         if: failure()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: linux-${{ matrix.release_arch }}-failure-logs
           path: |
@@ -103,7 +119,7 @@ jobs:
           retention-days: 14
 
       - name: Upload Linux artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: leomoon-parsinegar-linux-${{ matrix.release_arch }}-${{ github.sha }}
           path: dist/
@@ -136,13 +152,13 @@ jobs:
           DEBIAN_FRONTEND=noninteractive apt-get install --yes ca-certificates file fontconfig libdbus-1-3 libegl1 libfontconfig1 "$fuse_package" libgl1 libopengl0 libwayland-client0 libwayland-cursor0 libx11-6 libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xfixes0 libxcb-xinerama0 unzip weston xauth xvfb
 
       - name: Check out verification scripts
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
 
       - name: Generate release metadata
         run: scripts/prepare-release-metadata.sh "${{ inputs.release_tag }}" "${{ inputs.release_date }}"
 
       - name: Download Linux artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
           name: leomoon-parsinegar-linux-${{ matrix.release_arch }}-${{ github.sha }}
           path: dist
@@ -152,7 +168,7 @@ jobs:
 
       - name: Retain compositor logs
         if: failure()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: linux-${{ matrix.release_arch }}-${{ matrix.version }}-smoke-failure-logs
           path: /tmp/**/weston.log

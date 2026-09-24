@@ -43,13 +43,13 @@ jobs:
 
     steps:
       - name: Check out source
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
 
       - name: Generate release metadata
         run: scripts/prepare-release-metadata.sh "${{ inputs.release_tag }}" "${{ inputs.release_date }}"
 
       - name: Install pinned Qt
-        uses: jurplel/install-qt-action@v4
+        uses: jurplel/install-qt-action@a9c63c7c123f3069cff414e7e482d95dfa9d8125 # v4
         with:
           version: ${{ env.QT_VERSION }}
           host: mac
@@ -121,7 +121,7 @@ jobs:
 
       - name: Retain failure logs
         if: failure()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: macos-failure-logs
           path: |
@@ -132,7 +132,7 @@ jobs:
           retention-days: 14
 
       - name: Upload macOS artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: leomoon-parsinegar-macos-${{ github.sha }}
           path: dist/
@@ -147,13 +147,13 @@ jobs:
 
     steps:
       - name: Check out verification scripts
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
 
       - name: Generate release metadata
         run: scripts/prepare-release-metadata.sh "${{ inputs.release_tag }}" "${{ inputs.release_date }}"
 
       - name: Download macOS artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
           name: leomoon-parsinegar-macos-${{ github.sha }}
           path: dist
@@ -169,7 +169,7 @@ jobs:
 
       - name: Upload installer diagnostics
         if: failure()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: macos-installer-failure-logs
           path: ${{ runner.temp }}/leomoon-parsinegar-*
