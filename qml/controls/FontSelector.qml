@@ -250,7 +250,9 @@ Control {
                         width: Math.max(0, fontDelegate.width * 0.7
                             - parent.spacing - AppTheme.spacingMedium)
                         anchors.verticalCenter: parent.verticalCenter
-                        text: control.previewText
+                        text: fontDelegate.modelData.previewText === undefined
+                            ? control.previewText : fontDelegate.modelData.previewText
+                        textFormat: Text.PlainText
                         font.family: fontDelegate.modelData.family
                         font.styleName: fontDelegate.modelData.style
                         font.pixelSize: AppTheme.fontBody

@@ -94,7 +94,23 @@ bool supportedFontFile(const QFileInfo &info)
             || suffix == QStringLiteral("ttc"));
 }
 
-QVariantList buildFontCatalog()
+QString previewWithoutFallback(const QRawFont &font, const QString &sample)
+{
+    QString result;
+    result.reserve(sample.size());
+    for (const char32_t character : sample.toUcs4()) {
+        // Keep layout characters invisible even when the font has no cmap entry for them.
+        if (QChar::isSpace(character) || QChar::category(character) == QChar::Other_Format
+            || font.supportsCharacter(static_cast<uint>(character))) {
+            result.append(QString::fromUcs4(&character, 1));
+        } else {
+            result.append(QChar(0x25A1));
+        }
+    }
+    return result;
+}
+
+QVariantList buildFontCatalog(const QString &unicodePreview, const QString &compatibilityPreview)
 {
     QVariantList fonts;
     QSet<QString> paths;
@@ -131,6 +147,8 @@ QVariantList buildFontCatalog()
                 { QStringLiteral("style"), style },
                 { QStringLiteral("display"), display },
                 { QStringLiteral("path"), path },
+                { QStringLiteral("unicodePreview"), previewWithoutFallback(font, unicodePreview) },
+                { QStringLiteral("compatibilityPreview"), previewWithoutFallback(font, compatibilityPreview) },
             });
         }
     }
@@ -292,11 +310,14 @@ bool FileBridge::fontPathExists(const QString &path) const
             || suffix == QStringLiteral("ttc"));
 }
 
-bool FileBridge::scanInstalledFontsAsync()
+bool FileBridge::scanInstalledFontsAsync(const QString &unicodePreview,
+                                        const QString &compatibilityPreview)
 {
     if (m_fontCatalogScanning || m_fontCatalogReady) {
         return false;
     }
+    m_unicodePreview = unicodePreview;
+    m_compatibilityPreview = compatibilityPreview;
     return beginFontCatalogScan();
 }
 
@@ -325,7 +346,11 @@ bool FileBridge::beginFontCatalogScan()
         }
         emit fontCatalogScanningChanged();
     });
-    watcher->setFuture(QtConcurrent::run(buildFontCatalog));
+    const QString unicodePreview = m_unicodePreview;
+    const QString compatibilityPreview = m_compatibilityPreview;
+    watcher->setFuture(QtConcurrent::run([unicodePreview, compatibilityPreview]() {
+        return buildFontCatalog(unicodePreview, compatibilityPreview);
+    }));
     return true;
 }
 

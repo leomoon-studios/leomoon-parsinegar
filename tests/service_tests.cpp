@@ -15,6 +15,7 @@
 #include <QQuickItem>
 #include <QQuickTextDocument>
 #include <QQuickWindow>
+#include <QRawFont>
 #include <QSignalSpy>
 #include <QStandardPaths>
 #include <QTemporaryDir>
@@ -259,13 +260,15 @@ void ServiceTests::fileBridgeReadsExactFontBytes()
 
 void ServiceTests::fileBridgeCatalogsInstalledFonts()
 {
+    const QString unicodeSample = QStringLiteral("A\u0627\u200C");
+    const QString compatibilitySample = QStringLiteral("A\u00A9");
     FileBridge bridge;
     QSignalSpy catalogSpy(&bridge, &FileBridge::fontCatalogChanged);
     QSignalSpy readySpy(&bridge, &FileBridge::fontCatalogReadyChanged);
     QSignalSpy scanningSpy(&bridge, &FileBridge::fontCatalogScanningChanged);
     QVERIFY(!bridge.fontCatalogReady());
     QVERIFY(!bridge.fontCatalogScanning());
-    QVERIFY(bridge.scanInstalledFontsAsync());
+    QVERIFY(bridge.scanInstalledFontsAsync(unicodeSample, compatibilitySample));
     QVERIFY(bridge.fontCatalogScanning());
     QVERIFY(!bridge.scanInstalledFontsAsync());
     QTRY_COMPARE_WITH_TIMEOUT(readySpy.count(), 1, 10000);
@@ -284,6 +287,18 @@ void ServiceTests::fileBridgeCatalogsInstalledFonts()
         QVERIFY(!font.value(QStringLiteral("display")).toString().isEmpty());
         QVERIFY(bridge.fontPathExists(font.value(QStringLiteral("path")).toString()));
     }
+    const QVariantMap firstFont = fonts.first().toMap();
+    const QRawFont rawFont(firstFont.value(QStringLiteral("path")).toString(), 16);
+    QVERIFY(rawFont.isValid());
+    QString expectedUnicode;
+    expectedUnicode += rawFont.supportsCharacter(uint('A')) ? QChar('A') : QChar(0x25A1);
+    expectedUnicode += rawFont.supportsCharacter(uint(0x0627)) ? QChar(0x0627) : QChar(0x25A1);
+    expectedUnicode += QChar(0x200C);
+    QCOMPARE(firstFont.value(QStringLiteral("unicodePreview")).toString(), expectedUnicode);
+    QString expectedCompatibility;
+    expectedCompatibility += rawFont.supportsCharacter(uint('A')) ? QChar('A') : QChar(0x25A1);
+    expectedCompatibility += rawFont.supportsCharacter(uint(0x00A9)) ? QChar(0x00A9) : QChar(0x25A1);
+    QCOMPARE(firstFont.value(QStringLiteral("compatibilityPreview")).toString(), expectedCompatibility);
 
     QVERIFY(bridge.refreshInstalledFontsAsync());
     QVERIFY(bridge.fontCatalogScanning());

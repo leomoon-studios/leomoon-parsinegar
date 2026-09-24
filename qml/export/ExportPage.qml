@@ -74,6 +74,7 @@ FocusScope {
             style: "",
             display: uiText("export.bundledFont"),
             path: "",
+            previewText: unicodeFontPreview,
             bundled: true
         }]
         var compatibilityEntries = []
@@ -85,6 +86,9 @@ FocusScope {
                 style: String(raw.style || ""),
                 display: String(raw.display || raw.family),
                 path: String(raw.path),
+                previewText: legacyFamily(raw.family)
+                    ? String(raw.compatibilityPreview || compatibilityFontPreview)
+                    : String(raw.unicodePreview || unicodeFontPreview),
                 bundled: false
             }
             if (legacyFamily(entry.family))
@@ -411,7 +415,7 @@ FocusScope {
         if (fileBridge && fileBridge.fontCatalog !== undefined)
             applyFontCatalog(fileBridge.fontCatalog)
         if (fileBridge && typeof fileBridge.scanInstalledFontsAsync === "function")
-            fileBridge.scanInstalledFontsAsync()
+            fileBridge.scanInstalledFontsAsync(unicodeFontPreview, compatibilityFontPreview)
     }
     onVisibleChanged: {
         if (!visible) {

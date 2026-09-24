@@ -33,7 +33,8 @@ public:
     Q_INVOKABLE QString localFilePath(const QUrl &url);
     Q_INVOKABLE QUrl localFileUrl(const QString &path) const;
     Q_INVOKABLE bool fontPathExists(const QString &path) const;
-    Q_INVOKABLE bool scanInstalledFontsAsync();
+    Q_INVOKABLE bool scanInstalledFontsAsync(const QString &unicodePreview = {},
+                                            const QString &compatibilityPreview = {});
     Q_INVOKABLE bool refreshInstalledFontsAsync();
     Q_INVOKABLE QVariantMap readTextDocument(const QUrl &url);
     Q_INVOKABLE QVariantMap writeTextDocument(const QUrl &url, const QString &text);
@@ -63,4 +64,6 @@ private:
     QVariantList m_installedFonts;
     bool m_fontCatalogReady = false;
     bool m_fontCatalogScanning = false;
+    QString m_unicodePreview;
+    QString m_compatibilityPreview;
 };

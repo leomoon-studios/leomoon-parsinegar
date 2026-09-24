@@ -28,10 +28,10 @@ TestCase {
             textDirectionService: NativeTextDirectionBridge
             property QtObject fileMock: QtObject {
                 property var fontEntries: [
-                    { family: "Noto Sans", style: "Regular", display: "Noto Sans", path: "/fonts/noto.ttf" },
+                    { family: "Noto Sans", style: "Regular", display: "Noto Sans", path: "/fonts/noto.ttf", unicodePreview: "Latin □□□" },
                     { family: "Roboto Mono", style: "Bold", display: "Roboto Mono — Bold", path: "/fonts/roboto-mono-bold.ttf" },
                     { family: "LMU Avvali", style: "Regular", display: "LMU Avvali", path: "/fonts/lmu-avvali.ttf" },
-                    { family: "F_Test", style: "Regular", display: "F_Test", path: "/fonts/f-test.ttf" },
+                    { family: "F_Test", style: "Regular", display: "F_Test", path: "/fonts/f-test.ttf", compatibilityPreview: "0123 □□□" },
                     { family: "LMN Test", style: "Regular", display: "LMN Test", path: "/fonts/lmn-test.ttf" }
                 ]
                 property var fontCatalog: fontEntries
@@ -1153,6 +1153,7 @@ TestCase {
         compare(exportPage.fontDisplayName(), controller.uiText("export.bundledFont"))
         compare(fontSelector.searchField.font.family, AppTheme.fontFamily)
         compare(fontSelector.previewText, exportPage.unicodeFontPreview)
+        compare(exportPage.unicodeFontEntries[1].previewText, "Latin □□□")
         verify(fontSelector.previewText.indexOf("The quick brown fox") >= 0)
         verify(fontSelector.previewText.indexOf("روباه قهوه‌ای سریع") >= 0)
         verify(exportPage.validateBeforeSave())
@@ -1173,6 +1174,7 @@ TestCase {
         compare(controller.conversionMode, "compatibility")
         compare(fontSelector.searchField.font.family, AppTheme.fontFamily)
         compare(fontSelector.previewText, exportPage.compatibilityFontPreview)
+        compare(exportPage.compatibilityFontEntries[0].previewText, "0123 □□□")
         verify(fontSelector.previewText.indexOf("0123456789") === 0)
         compare(exportPage.compatibilityFontEntries.length, 2)
         tryCompare(controller, "compatibilityFontPath", "/fonts/f-test.ttf")
