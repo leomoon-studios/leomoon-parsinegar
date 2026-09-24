@@ -87,10 +87,16 @@ trap - EXIT
 rm -rf "$runtime_dir"
 
 if [[ "$expect_font_packages" == true ]]; then
+    mapfile -d '' -t packaged_font_files < <(find "$repo_dir/assets/fonts/system" -maxdepth 1 -type f \
+        \( -name '*.ttf' -o -name '*.otf' -o -name '*.ttc' \) -print0)
     dpkg --install "$fonts_deb"
-    test -d /usr/share/fonts/truetype/parsinegar
+    for font_file in "${packaged_font_files[@]}"; do
+        test -f "/usr/share/fonts/truetype/parsinegar/$(basename "$font_file")"
+    done
     dpkg --remove leomoon-parsinegar-fonts
-    test ! -e /usr/share/fonts/truetype/parsinegar
+    for font_file in "${packaged_font_files[@]}"; do
+        test ! -e "/usr/share/fonts/truetype/parsinegar/$(basename "$font_file")"
+    done
 fi
 
 echo "Linux AppImage and optional font package smoke checks passed"

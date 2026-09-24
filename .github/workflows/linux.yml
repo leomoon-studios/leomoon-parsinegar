@@ -130,7 +130,7 @@ jobs:
         run: |
           apt-get update
           fuse_package=libfuse2
-          if [[ "${{ matrix.version }}" == "24.04" ]]; then
+          if [ "${{ matrix.version }}" = "24.04" ]; then
             fuse_package=libfuse2t64
           fi
           DEBIAN_FRONTEND=noninteractive apt-get install --yes ca-certificates file fontconfig libdbus-1-3 libegl1 libfontconfig1 "$fuse_package" libgl1 libopengl0 libwayland-client0 libwayland-cursor0 libx11-6 libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xfixes0 libxcb-xinerama0 unzip weston xauth xvfb
