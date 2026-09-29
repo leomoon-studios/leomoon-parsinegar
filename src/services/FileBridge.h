@@ -15,7 +15,7 @@ class FileBridge final : public QObject
     Q_PROPERTY(bool fontCatalogScanning READ fontCatalogScanning NOTIFY fontCatalogScanningChanged)
 
 public:
-    static constexpr qint64 maximumFontBytes = 50LL * 1024 * 1024;
+    static constexpr qint64 maximumFontBytes = 5LL * 1024 * 1024;
     static constexpr qint64 maximumSvgBytes = 16LL * 1024 * 1024;
     static constexpr qint64 maximumDocumentBytes = 1LL * 1024 * 1024;
     static constexpr qsizetype maximumDocumentCharacters = 250000;
@@ -28,6 +28,7 @@ public:
     [[nodiscard]] bool fontCatalogScanning() const;
 
     Q_INVOKABLE QVariantMap readFont(const QUrl &url);
+    Q_INVOKABLE QVariantMap inspectFont(const QUrl &url);
     Q_INVOKABLE bool readFontAsync(int requestId, const QUrl &url);
     Q_INVOKABLE bool readBundledFontAsync(int requestId);
     Q_INVOKABLE QString localFilePath(const QUrl &url);

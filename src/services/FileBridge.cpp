@@ -18,6 +18,11 @@ namespace {
 
 constexpr auto bundledFontPath = ":/qt/qml/LeoMoon/ParsiNegar/assets/fonts/Vazirmatn[wght].ttf";
 
+bool supportedFontHeader(const QByteArray &header)
+{
+    return header == QByteArray::fromHex("00010000") || header == QByteArrayLiteral("OTTO");
+}
+
 QVariantMap readBundledFont()
 {
     QFile file(QString::fromUtf8(bundledFontPath));
@@ -26,6 +31,20 @@ QVariantMap readBundledFont()
             { QStringLiteral("ok"), false },
             { QStringLiteral("code"), QStringLiteral("FONT_READ_FAILED") },
             { QStringLiteral("message"), file.errorString() },
+        };
+    }
+    if (file.size() > FileBridge::maximumFontBytes) {
+        return {
+            { QStringLiteral("ok"), false },
+            { QStringLiteral("code"), QStringLiteral("FONT_TOO_LARGE") },
+            { QStringLiteral("message"), QStringLiteral("The bundled font exceeds the supported size.") },
+        };
+    }
+    if (!supportedFontHeader(file.peek(4))) {
+        return {
+            { QStringLiteral("ok"), false },
+            { QStringLiteral("code"), QStringLiteral("INVALID_FONT") },
+            { QStringLiteral("message"), QStringLiteral("The bundled font is not TrueType or OpenType.") },
         };
     }
     const QByteArray bytes = file.read(FileBridge::maximumFontBytes + 1);
@@ -89,9 +108,12 @@ QStringList fontDirectories()
 bool supportedFontFile(const QFileInfo &info)
 {
     const QString suffix = info.suffix().toLower();
-    return info.isFile() && info.isReadable()
-        && (suffix == QStringLiteral("ttf") || suffix == QStringLiteral("otf")
-            || suffix == QStringLiteral("ttc"));
+    if (!info.isFile() || !info.isReadable() || info.size() > FileBridge::maximumFontBytes
+        || (suffix != QStringLiteral("ttf") && suffix != QStringLiteral("otf"))) {
+        return false;
+    }
+    QFile file(info.absoluteFilePath());
+    return file.open(QIODevice::ReadOnly) && supportedFontHeader(file.peek(4));
 }
 
 QString previewWithoutFallback(const QRawFont &font, const QString &sample)
@@ -195,7 +217,7 @@ bool FileBridge::fontCatalogScanning() const
     return m_fontCatalogScanning;
 }
 
-QVariantMap FileBridge::readFont(const QUrl &url)
+QVariantMap FileBridge::inspectFont(const QUrl &url)
 {
     QString path;
     QVariantMap pathError;
@@ -205,8 +227,8 @@ QVariantMap FileBridge::readFont(const QUrl &url)
 
     const QFileInfo info(path);
     const QString suffix = info.suffix().toLower();
-    if (suffix != QStringLiteral("ttf") && suffix != QStringLiteral("otf") && suffix != QStringLiteral("ttc")) {
-        return failure(QStringLiteral("UNSUPPORTED_FONT_TYPE"), QStringLiteral("The selected file must be TTF, OTF, or TTC."));
+    if (suffix != QStringLiteral("ttf") && suffix != QStringLiteral("otf")) {
+        return failure(QStringLiteral("UNSUPPORTED_FONT_TYPE"), QStringLiteral("The selected file must be TTF or OTF."));
     }
     if (!info.exists() || !info.isFile()) {
         return failure(QStringLiteral("FONT_NOT_FOUND"), QStringLiteral("The selected font file does not exist."));
@@ -214,10 +236,35 @@ QVariantMap FileBridge::readFont(const QUrl &url)
     if (info.size() > maximumFontBytes) {
         return failure(QStringLiteral("FONT_TOO_LARGE"), QStringLiteral("The selected font exceeds the supported size."));
     }
-
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly)) {
         return failure(QStringLiteral("FONT_READ_FAILED"), file.errorString());
+    }
+    if (file.size() > maximumFontBytes) {
+        return failure(QStringLiteral("FONT_TOO_LARGE"), QStringLiteral("The selected font exceeds the supported size."));
+    }
+    if (!supportedFontHeader(file.peek(4))) {
+        return failure(QStringLiteral("INVALID_FONT"), QStringLiteral("The selected file is not TrueType or OpenType."));
+    }
+    return success({ { QStringLiteral("path"), path }, { QStringLiteral("byteCount"), file.size() } });
+}
+
+QVariantMap FileBridge::readFont(const QUrl &url)
+{
+    const QVariantMap inspection = inspectFont(url);
+    if (!inspection.value(QStringLiteral("ok")).toBool()) {
+        return inspection;
+    }
+    const QString path = inspection.value(QStringLiteral("path")).toString();
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly)) {
+        return failure(QStringLiteral("FONT_READ_FAILED"), file.errorString());
+    }
+    if (file.size() > maximumFontBytes) {
+        return failure(QStringLiteral("FONT_TOO_LARGE"), QStringLiteral("The selected font exceeds the supported size."));
+    }
+    if (!supportedFontHeader(file.peek(4))) {
+        return failure(QStringLiteral("INVALID_FONT"), QStringLiteral("The selected file is not TrueType or OpenType."));
     }
     const QByteArray bytes = file.read(maximumFontBytes + 1);
     if (bytes.size() > maximumFontBytes) {
@@ -306,8 +353,7 @@ bool FileBridge::fontPathExists(const QString &path) const
     const QFileInfo info(path);
     const QString suffix = info.suffix().toLower();
     return info.isAbsolute() && info.isFile() && info.isReadable()
-        && (suffix == QStringLiteral("ttf") || suffix == QStringLiteral("otf")
-            || suffix == QStringLiteral("ttc"));
+        && (suffix == QStringLiteral("ttf") || suffix == QStringLiteral("otf"));
 }
 
 bool FileBridge::scanInstalledFontsAsync(const QString &unicodePreview,

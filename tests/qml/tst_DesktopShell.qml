@@ -37,10 +37,12 @@ TestCase {
                 property var fontCatalog: fontEntries
                 property bool fontCatalogReady: true
                 property bool fontCatalogScanning: false
+                property var fontInspection: ({ ok: true })
                 function readBundledFontAsync(requestId) { return true }
                 function readFontAsync(requestId, url) { return true }
                 function writeSvgAsync(requestId, destination, svg) { return true }
                 function localFileUrl(path) { return "file://" + path }
+                function inspectFont(url) { return fontInspection }
                 function localFilePath(url) { return String(url) }
                 function scanInstalledFontsAsync() { return false }
                 function refreshInstalledFontsAsync() {
@@ -1205,6 +1207,7 @@ TestCase {
         applicationWindow.fileMock.fontEntries = [
             { family: "Noto Sans", style: "Regular", display: "Noto Sans", path: "/fonts/noto.ttf" }
         ]
+        controller.setFontPath("compatibility", "")
         exportPage.applyFontCatalog(applicationWindow.fileMock.fontEntries)
         compare(exportPage.compatibilityFontEntries.length, 0)
         verify(!saveButton.enabled)
@@ -1214,6 +1217,28 @@ TestCase {
         headerBackButton.click()
         compare(controller.page, "editor")
         compare(controller.sourceText, "draft متن")
+    }
+
+    function test_exportRejectsInvalidSelectedFontAndRechecksOnOpen() {
+        var applicationWindow = createMainWindow()
+        var controller = applicationWindow.editorController
+        var exportPage = findChild(applicationWindow, "exportPage")
+        var saveButton = findChild(applicationWindow, "saveSvgButton")
+        var previewButton = findChild(applicationWindow, "previewSvgButton")
+        controller.sourceText = "سلام"
+        controller.openExport()
+        controller.setFontPath("unicode", "/fonts/noto.ttf")
+        verify(saveButton.enabled)
+        applicationWindow.fileMock.fontInspection = { ok: false, code: "FONT_TOO_LARGE" }
+        exportPage.refreshFontValidation()
+        verify(!saveButton.enabled)
+        verify(!previewButton.enabled)
+        compare(exportPage.statusText, controller.uiText("export.error.fontTooLarge"))
+        controller.closeExport()
+        applicationWindow.fileMock.fontInspection = { ok: true }
+        controller.openExport()
+        verify(saveButton.enabled)
+        verify(previewButton.enabled)
     }
 
     function test_exportPageShowsAsyncFontCatalogState() {

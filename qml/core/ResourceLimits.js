@@ -6,7 +6,7 @@ var ResourceLimits = (function () {
     var values = Object.freeze({
         maxConversionTextLength: 250000,
         maxSvgTextLength: 50000,
-        maxFontBytes: 50 * 1024 * 1024,
+        maxFontBytes: 5 * 1024 * 1024,
         maxSvgBytes: 16 * 1024 * 1024,
         maxSettingsBytes: 1024 * 1024,
         maxFontSize: 4096,

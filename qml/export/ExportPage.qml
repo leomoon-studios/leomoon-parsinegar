@@ -28,6 +28,8 @@ FocusScope {
     property var installedFontEntries: []
     property var unicodeFontEntries: []
     property var compatibilityFontEntries: []
+    property string fontValidationCode: ""
+    property string fontValidationKey: ""
     readonly property string unicodeFontPreview: "The quick brown fox jumps over the lazy dog · روباه قهوه‌ای سریع از روی سگ تنبل می‌پرد · 0123456789 · ۰۱۲۳۴۵۶۷۸۹"
     // Converted from the Persian pangram and digits with compatibility mapping and visual bidi ordering.
     readonly property string compatibilityFontPreview: "0123456789 joQÂ¶ ®L¹U ªw Á»n pH ÍÄow ÁH½¼¿¤ ½IM»n"
@@ -48,6 +50,10 @@ FocusScope {
     readonly property bool previewStale: previewSvg !== ""
         && (previewSignature !== previewInputSignature
             || previewSourceRevision !== sourceRevision)
+    readonly property bool fontSelectionValid: fontValidationCode === ""
+        && fontValidationKey === currentFontKey()
+        && (controller.conversionMode !== "compatibility"
+            || compatibilityFontEntries.length > 0 || currentFontPath() !== "")
 
     LayoutMirroring.enabled: rightToLeft
     LayoutMirroring.childrenInherit: true
@@ -107,6 +113,7 @@ FocusScope {
             if (!exportController.busy && statusLevel === "info")
                 statusText = ""
             ensureFontSelection()
+            if (visible) refreshFontValidation()
         }
         return true
     }
@@ -145,11 +152,15 @@ FocusScope {
         if (!fontCatalogReady)
             return
         if (controller.conversionMode === "unicode") {
-            if (controller.unicodeFontPath !== "" && !entryForKey(controller.unicodeFontPath))
+            if (controller.unicodeFontPath !== "" && !entryForKey(controller.unicodeFontPath)
+                    && (!fileBridge || !fileBridge.fontPathExists(controller.unicodeFontPath)))
                 controller.setFontPath("unicode", "")
             return
         }
         if (compatibilityFontEntries.length === 0) {
+            if (controller.compatibilityFontPath !== "" && fileBridge
+                    && fileBridge.fontPathExists(controller.compatibilityFontPath))
+                return
             controller.setFontPath("compatibility", "")
             if (visible) {
                 statusText = uiText("export.error.noCompatibilityFonts")
@@ -157,7 +168,8 @@ FocusScope {
             }
             return
         }
-        if (!entryForKey(controller.compatibilityFontPath))
+        if (!entryForKey(controller.compatibilityFontPath)
+                && (!fileBridge || !fileBridge.fontPathExists(controller.compatibilityFontPath)))
             controller.setFontPath("compatibility", compatibilityFontEntries[0].path)
         if (statusText === uiText("export.error.noCompatibilityFonts"))
             statusText = ""
@@ -166,7 +178,27 @@ FocusScope {
     function selectFont(entry) {
         if (!entry || !controller.setFontPath(controller.conversionMode, String(entry.path)))
             return false
-        statusText = ""
+        return refreshFontValidation()
+    }
+
+    function refreshFontValidation() {
+        var key = currentFontKey()
+        var previousCode = fontValidationCode
+        fontValidationKey = key
+        fontValidationCode = ""
+        if (!(controller.conversionMode === "unicode" && currentFontPath() === "")) {
+            var result = fileBridge && fileBridge.inspectFont(fileBridge.localFileUrl(currentFontPath()))
+            fontValidationCode = result && result.ok === true ? "" : String(result && result.code || "INVALID_FONT")
+        }
+        if (fontValidationCode !== "") {
+            statusText = errorText(fontValidationCode, "", [])
+            statusLevel = "error"
+            return false
+        }
+        if (previousCode !== "" && statusText === errorText(previousCode, "", [])) {
+            statusText = ""
+            statusLevel = "info"
+        }
         return true
     }
 
@@ -286,6 +318,8 @@ FocusScope {
     }
 
     function validateBeforeSave() {
+        if (!refreshFontValidation())
+            return false
         statusText = ""
         if (controller.sourceText === "") {
             statusText = uiText("export.error.noText")
@@ -297,7 +331,8 @@ FocusScope {
             statusLevel = "info"
             return false
         }
-        if (controller.conversionMode === "compatibility" && compatibilityFontEntries.length === 0) {
+        if (controller.conversionMode === "compatibility" && compatibilityFontEntries.length === 0
+                && controller.compatibilityFontPath === "") {
             statusText = uiText("export.error.noCompatibilityFonts")
             statusLevel = "error"
             return false
@@ -396,8 +431,15 @@ FocusScope {
     Connections {
         target: root.controller
         function onSourceTextChanged() { root.sourceRevision++ }
-        function onConversionModeChanged() { Qt.callLater(root.ensureFontSelection) }
+        function onConversionModeChanged() {
+            Qt.callLater(function() {
+                root.ensureFontSelection()
+                if (root.visible) root.refreshFontValidation()
+            })
+        }
         function onUiLanguageChanged() { root.rebuildFontEntries() }
+        function onUnicodeFontPathChanged() { if (root.visible) root.refreshFontValidation() }
+        function onCompatibilityFontPathChanged() { if (root.visible) root.refreshFontValidation() }
     }
 
     Connections {
@@ -430,6 +472,7 @@ FocusScope {
         }
         if (fontCatalogReady) {
             ensureFontSelection()
+            refreshFontValidation()
         } else {
             statusText = uiText("export.loadingFonts")
             statusLevel = "info"
@@ -766,8 +809,8 @@ FocusScope {
                         : root.previewSvg === "" ? root.uiText("export.preview")
                         : root.uiText("export.updatePreview")
                     enabled: root.typography.ready && root.fontCatalogReady
-                        && (root.controller.conversionMode !== "compatibility"
-                            || root.compatibilityFontEntries.length > 0)
+                        && (root.fontSelectionValid
+                            || root.exportController.busy && root.exportController.pendingPreview)
                         && (!root.exportController.busy || root.exportController.pendingPreview)
                     onClicked: {
                         if (root.exportController.busy) {
@@ -856,8 +899,8 @@ FocusScope {
                         ? root.uiText("button.cancel") : root.uiText("export.save")
                     accent: true
                     enabled: root.typography.ready && root.fontCatalogReady
-                        && (root.controller.conversionMode !== "compatibility"
-                            || root.compatibilityFontEntries.length > 0)
+                        && (root.fontSelectionValid
+                            || root.exportController.busy && !root.exportController.pendingPreview)
                         && !(root.exportController.busy && root.exportController.pendingPreview)
                     onClicked: {
                         if (root.exportController.busy) {
