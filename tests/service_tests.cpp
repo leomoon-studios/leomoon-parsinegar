@@ -260,7 +260,7 @@ void ServiceTests::fileBridgeReadsExactFontBytes()
 
 void ServiceTests::fileBridgeCatalogsInstalledFonts()
 {
-    const QString unicodeSample = QStringLiteral("A\u0627\u200C");
+    const QString unicodeSample = QStringLiteral("A · \u0627\u200C · 12 · \u06F1\u06F2");
     const QString compatibilitySample = QStringLiteral("A\u00A9");
     FileBridge bridge;
     QSignalSpy catalogSpy(&bridge, &FileBridge::fontCatalogChanged);
@@ -290,11 +290,20 @@ void ServiceTests::fileBridgeCatalogsInstalledFonts()
     const QVariantMap firstFont = fonts.first().toMap();
     const QRawFont rawFont(firstFont.value(QStringLiteral("path")).toString(), 16);
     QVERIFY(rawFont.isValid());
-    QString expectedUnicode;
-    expectedUnicode += rawFont.supportsCharacter(uint('A')) ? QChar('A') : QChar(0x25A1);
-    expectedUnicode += rawFont.supportsCharacter(uint(0x0627)) ? QChar(0x0627) : QChar(0x25A1);
-    expectedUnicode += QChar(0x200C);
-    QCOMPARE(firstFont.value(QStringLiteral("unicodePreview")).toString(), expectedUnicode);
+    const auto expectedPreview = [&rawFont](const QString &sample) {
+        QString result;
+        for (const QChar character : sample) {
+            result += character.isSpace() || character.category() == QChar::Other_Format
+                    || rawFont.supportsCharacter(character.unicode())
+                ? character : QChar(0x25A1);
+        }
+        return result;
+    };
+    QCOMPARE(firstFont.value(QStringLiteral("unicodePreview")).toString(), expectedPreview(unicodeSample));
+    QCOMPARE(firstFont.value(QStringLiteral("englishPreview")).toString(),
+             expectedPreview(QStringLiteral("A · 12")));
+    QCOMPARE(firstFont.value(QStringLiteral("persianPreview")).toString(),
+             expectedPreview(QStringLiteral("\u0627\u200C · \u06F1\u06F2")));
     QString expectedCompatibility;
     expectedCompatibility += rawFont.supportsCharacter(uint('A')) ? QChar('A') : QChar(0x25A1);
     expectedCompatibility += rawFont.supportsCharacter(uint(0x00A9)) ? QChar(0x00A9) : QChar(0x25A1);

@@ -28,7 +28,7 @@ TestCase {
             textDirectionService: NativeTextDirectionBridge
             property QtObject fileMock: QtObject {
                 property var fontEntries: [
-                    { family: "Noto Sans", style: "Regular", display: "Noto Sans", path: "/fonts/noto.ttf", unicodePreview: "Latin □□□" },
+                    { family: "Noto Sans", style: "Regular", display: "Noto Sans", path: "/fonts/noto.ttf", unicodePreview: "Latin □□□", englishPreview: "Latin 0123", persianPreview: "□□□ ۱۲۳" },
                     { family: "Roboto Mono", style: "Bold", display: "Roboto Mono — Bold", path: "/fonts/roboto-mono-bold.ttf" },
                     { family: "LMU Avvali", style: "Regular", display: "LMU Avvali", path: "/fonts/lmu-avvali.ttf" },
                     { family: "F_Test", style: "Regular", display: "F_Test", path: "/fonts/f-test.ttf", compatibilityPreview: "0123 □□□" },
@@ -1155,7 +1155,12 @@ TestCase {
         compare(exportPage.fontDisplayName(), controller.uiText("export.bundledFont"))
         compare(fontSelector.searchField.font.family, AppTheme.fontFamily)
         compare(fontSelector.previewText, exportPage.unicodeFontPreview)
+        compare(fontSelector.mode, "unicode")
         compare(exportPage.unicodeFontEntries[1].previewText, "Latin □□□")
+        compare(exportPage.unicodeFontEntries[1].englishPreview, "Latin 0123")
+        compare(exportPage.unicodeFontEntries[1].persianPreview, "□□□ ۱۲۳")
+        compare(exportPage.unicodeFontEntries[0].englishPreview, exportPage.englishFontPreview)
+        compare(exportPage.unicodeFontEntries[0].persianPreview, exportPage.persianFontPreview)
         verify(fontSelector.previewText.indexOf("The quick brown fox") >= 0)
         verify(fontSelector.previewText.indexOf("روباه قهوه‌ای سریع") >= 0)
         verify(exportPage.validateBeforeSave())

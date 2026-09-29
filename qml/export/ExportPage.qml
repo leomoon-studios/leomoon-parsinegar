@@ -31,6 +31,8 @@ FocusScope {
     property string fontValidationCode: ""
     property string fontValidationKey: ""
     readonly property string unicodeFontPreview: "The quick brown fox jumps over the lazy dog · روباه قهوه‌ای سریع از روی سگ تنبل می‌پرد · 0123456789 · ۰۱۲۳۴۵۶۷۸۹"
+    readonly property string englishFontPreview: "The quick brown fox jumps over the lazy dog · 0123456789"
+    readonly property string persianFontPreview: "روباه قهوه‌ای سریع از روی سگ تنبل می‌پرد · ۰۱۲۳۴۵۶۷۸۹"
     // Converted from the Persian pangram and digits with compatibility mapping and visual bidi ordering.
     readonly property string compatibilityFontPreview: "0123456789 joQÂ¶ ®L¹U ªw Á»n pH ÍÄow ÁH½¼¿¤ ½IM»n"
     readonly property bool rightToLeft: controller.uiLanguage === "fa" || controller.uiLanguage === "ar"
@@ -81,6 +83,8 @@ FocusScope {
             display: uiText("export.bundledFont"),
             path: "",
             previewText: unicodeFontPreview,
+            englishPreview: englishFontPreview,
+            persianPreview: persianFontPreview,
             bundled: true
         }]
         var compatibilityEntries = []
@@ -95,6 +99,8 @@ FocusScope {
                 previewText: legacyFamily(raw.family)
                     ? String(raw.compatibilityPreview || compatibilityFontPreview)
                     : String(raw.unicodePreview || unicodeFontPreview),
+                englishPreview: String(raw.englishPreview || ""),
+                persianPreview: String(raw.persianPreview || ""),
                 bundled: false
             }
             if (legacyFamily(entry.family))
@@ -570,6 +576,7 @@ FocusScope {
                                     Layout.fillWidth: true
                                     fonts: root.currentFontEntries()
                                     selectedKey: root.currentFontKey()
+                                    mode: root.controller.conversionMode
                                     placeholderText: root.uiText("export.searchFonts")
                                     emptyText: !root.fontCatalogReady
                                         ? root.uiText("export.loadingFonts")

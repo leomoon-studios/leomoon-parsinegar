@@ -12,6 +12,7 @@ Control {
     property string placeholderText: ""
     property string emptyText: ""
     property string previewText: ""
+    property string mode: "unicode"
     property var filteredFonts: []
     property bool updatingText: false
     readonly property alias searchField: searchField
@@ -215,8 +216,10 @@ Control {
                 id: fontDelegate
                 required property var modelData
                 required property int index
+                readonly property bool twoLinePreview: control.mode === "unicode"
+                    && !!modelData.englishPreview && !!modelData.persianPreview
                 width: resultList.width
-                height: 46
+                height: twoLinePreview ? 58 : 46
                 highlighted: ListView.isCurrentItem
                 hoverEnabled: true
                 onHoveredChanged: {
@@ -233,32 +236,73 @@ Control {
 
                 contentItem: Row {
                     spacing: AppTheme.spacingMedium
+                    layoutDirection: Qt.LeftToRight
+                    LayoutMirroring.enabled: false
 
                     Text {
-                        width: Math.max(0, fontDelegate.width * 0.3 - AppTheme.spacingMedium)
+                        width: Math.max(0, fontDelegate.availableWidth * 0.34 - parent.spacing)
                         anchors.verticalCenter: parent.verticalCenter
                         text: fontDelegate.modelData.display
+                        textFormat: Text.PlainText
                         font.family: AppTheme.fontFamily
                         font.styleName: ""
                         font.pixelSize: AppTheme.fontControl
                         color: AppTheme.foreground
+                        horizontalAlignment: Text.AlignLeft
                         elide: Text.ElideRight
                     }
 
-                    Text {
-                        id: previewText
-                        width: Math.max(0, fontDelegate.width * 0.7
-                            - parent.spacing - AppTheme.spacingMedium)
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: fontDelegate.modelData.previewText === undefined
-                            ? control.previewText : fontDelegate.modelData.previewText
-                        textFormat: Text.PlainText
-                        font.family: fontDelegate.modelData.family
-                        font.styleName: fontDelegate.modelData.style
-                        font.pixelSize: AppTheme.fontBody
-                        color: AppTheme.muted
-                        horizontalAlignment: Text.AlignRight
-                        elide: Text.ElideRight
+                    Item {
+                        width: Math.max(0, fontDelegate.availableWidth * 0.66 - parent.spacing)
+                        height: fontDelegate.availableHeight
+                        LayoutMirroring.enabled: false
+                        LayoutMirroring.childrenInherit: false
+
+                        Column {
+                            width: parent.width
+                            anchors.verticalCenter: parent.verticalCenter
+                            spacing: AppTheme.spacingTiny
+                            visible: fontDelegate.twoLinePreview
+
+                            Text {
+                                width: parent.width
+                                text: fontDelegate.modelData.englishPreview || ""
+                                textFormat: Text.PlainText
+                                font.family: fontDelegate.modelData.family
+                                font.styleName: fontDelegate.modelData.style
+                                font.pixelSize: AppTheme.fontBody
+                                color: AppTheme.muted
+                                horizontalAlignment: Text.AlignLeft
+                                elide: Text.ElideRight
+                            }
+
+                            Text {
+                                width: parent.width
+                                text: fontDelegate.modelData.persianPreview || ""
+                                textFormat: Text.PlainText
+                                font.family: fontDelegate.modelData.family
+                                font.styleName: fontDelegate.modelData.style
+                                font.pixelSize: AppTheme.fontBody
+                                color: AppTheme.muted
+                                horizontalAlignment: Text.AlignRight
+                                elide: Text.ElideRight
+                            }
+                        }
+
+                        Text {
+                            width: parent.width
+                            anchors.verticalCenter: parent.verticalCenter
+                            visible: !fontDelegate.twoLinePreview
+                            text: fontDelegate.modelData.previewText === undefined
+                                ? control.previewText : fontDelegate.modelData.previewText
+                            textFormat: Text.PlainText
+                            font.family: fontDelegate.modelData.family
+                            font.styleName: fontDelegate.modelData.style
+                            font.pixelSize: AppTheme.fontBody
+                            color: AppTheme.muted
+                            horizontalAlignment: Text.AlignRight
+                            elide: Text.ElideRight
+                        }
                     }
                 }
             }

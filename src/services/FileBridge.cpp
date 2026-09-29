@@ -135,6 +135,11 @@ QString previewWithoutFallback(const QRawFont &font, const QString &sample)
 QVariantList buildFontCatalog(const QString &unicodePreview, const QString &compatibilityPreview)
 {
     QVariantList fonts;
+    const QStringList previewParts = unicodePreview.split(QStringLiteral(" · "));
+    const QString englishPreview = previewParts.value(0)
+        + (previewParts.size() > 2 ? QStringLiteral(" · ") + previewParts.value(2) : QString());
+    const QString persianPreview = previewParts.value(1)
+        + (previewParts.size() > 3 ? QStringLiteral(" · ") + previewParts.value(3) : QString());
     QSet<QString> paths;
     QSet<QString> faces;
     for (const QString &directory : fontDirectories()) {
@@ -170,6 +175,8 @@ QVariantList buildFontCatalog(const QString &unicodePreview, const QString &comp
                 { QStringLiteral("display"), display },
                 { QStringLiteral("path"), path },
                 { QStringLiteral("unicodePreview"), previewWithoutFallback(font, unicodePreview) },
+                { QStringLiteral("englishPreview"), previewWithoutFallback(font, englishPreview) },
+                { QStringLiteral("persianPreview"), previewWithoutFallback(font, persianPreview) },
                 { QStringLiteral("compatibilityPreview"), previewWithoutFallback(font, compatibilityPreview) },
             });
         }
