@@ -15,10 +15,10 @@ ParsiNegar editor in English with the light theme
 ParsiNegar editor in Persian with the dark theme
 ![ParsiNegar editor in Persian with the dark theme](preview_dark-theme-persian.png)
 
-ParsiNegar settings page in Persian
+ParsiNegar settings page in Persian with the dark theme
 ![ParsiNegar settings page in Persian](preview_settings-persian.png)
 
-ParsiNegar text tools page in Persian
+ParsiNegar text tools page in Persian with the dark theme
 ![ParsiNegar text tools page in Persian](preview_text-tools-persian.png)
 
 ## Features
