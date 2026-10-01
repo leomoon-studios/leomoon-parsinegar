@@ -3,6 +3,7 @@ var SafeTypr = (function () {
     "use strict";
 
     var MAX_FONT_BYTES = 5 * 1024 * 1024;
+    var MAX_GVAR_VARIATION_RECORDS = 65536;
     var guarded = [];
 
     function invalid(message) {
@@ -125,6 +126,44 @@ var SafeTypr = (function () {
         }
     }
 
+    function validateGvar(data) {
+        range(data, 0, 20);
+        var axisCount = ushort(data, 4);
+        var sharedTupleCount = ushort(data, 6);
+        var sharedTuplesOffset = uint(data, 8);
+        var glyphCount = ushort(data, 12);
+        var offsetSize = (ushort(data, 14) & 1) !== 0 ? 4 : 2;
+        var glyphDataOffset = uint(data, 16);
+        if (glyphCount + 1 > Math.floor((data.length - 20) / offsetSize))
+            invalid("Truncated gvar glyph offsets");
+        range(data, sharedTuplesOffset, sharedTupleCount * axisCount * 2);
+        range(data, glyphDataOffset, 0);
+
+        function glyphOffset(index) {
+            var position = 20 + index * offsetSize;
+            return offsetSize === 4 ? uint(data, position) : ushort(data, position) * 2;
+        }
+
+        var previous = glyphOffset(0);
+        if (previous > data.length - glyphDataOffset) invalid("Invalid gvar glyph offset");
+        var variationRecords = 0;
+        for (var glyph = 0; glyph < glyphCount; glyph++) {
+            var next = glyphOffset(glyph + 1);
+            if (next < previous || next > data.length - glyphDataOffset)
+                invalid("Invalid gvar glyph offset");
+            // Typr reads this header even when consecutive glyph offsets are equal.
+            var record = glyphDataOffset + previous;
+            range(data, record, 4);
+            var count = ushort(data, record) & 0x0fff;
+            if (count > Math.floor((data.length - record - 4) / 4))
+                invalid("Truncated gvar tuple headers");
+            variationRecords += count;
+            if (variationRecords > MAX_GVAR_VARIATION_RECORDS)
+                invalid("Too many gvar variation records");
+            previous = next;
+        }
+    }
+
     function validate(input) {
         var data = bytesOf(input);
         if (data.length > MAX_FONT_BYTES) invalid("Font exceeds the 5 MiB limit");
@@ -141,6 +180,7 @@ var SafeTypr = (function () {
         var cff = null;
         var cmap = null;
         var svg = null;
+        var gvar = null;
         for (var item = 0; item < count; item++) {
             var entry = 12 + item * 16;
             var name = tag(data, entry);
@@ -153,6 +193,7 @@ var SafeTypr = (function () {
             if (name === "CFF ") cff = { start: start, length: length };
             if (name === "cmap") cmap = { start: start, length: length };
             if (name === "SVG ") svg = { start: start, length: length };
+            if (name === "gvar") gvar = { start: start, length: length };
         }
         spans.sort(function (left, right) { return left.start - right.start; });
         for (var span = 1; span < spans.length; span++) {
@@ -165,6 +206,7 @@ var SafeTypr = (function () {
         }
         if (cmap) validateCmap(data.subarray(cmap.start, cmap.start + cmap.length));
         if (svg) validateSvg(data.subarray(svg.start, svg.start + svg.length));
+        if (gvar) validateGvar(data.subarray(gvar.start, gvar.start + gvar.length));
         return data;
     }
 

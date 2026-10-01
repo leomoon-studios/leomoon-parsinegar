@@ -66,6 +66,29 @@ function svgFont(ranges) {
     return font;
 }
 
+function gvarFont(glyphCount, tupleCount, longOffsets = false) {
+    const offsetSize = longOffsets ? 4 : 2;
+    const glyphDataOffset = 20 + (glyphCount + 1) * offsetSize;
+    const sharedTuplesOffset = glyphDataOffset + 4 + tupleCount * 4;
+    const table = Buffer.alloc(sharedTuplesOffset + 2);
+    table.writeUInt16BE(1, 4);
+    table.writeUInt16BE(1, 6);
+    table.writeUInt32BE(sharedTuplesOffset, 8);
+    table.writeUInt16BE(glyphCount, 12);
+    table.writeUInt16BE(longOffsets ? 1 : 0, 14);
+    table.writeUInt32BE(glyphDataOffset, 16);
+    table.writeUInt16BE(tupleCount, glyphDataOffset);
+    table.writeUInt16BE(4 + tupleCount * 4, glyphDataOffset + 2);
+    const font = Buffer.alloc(28 + table.length);
+    font.writeUInt32BE(0x00010000, 0);
+    font.writeUInt16BE(1, 4);
+    font.write('gvar', 12, 'ascii');
+    font.writeUInt32BE(28, 20);
+    font.writeUInt32BE(table.length, 24);
+    table.copy(font, 28);
+    return font;
+}
+
 const header = Buffer.from([1, 0, 4, 1]);
 const name = Buffer.from([0, 1, 1, 1, 2, 65]);
 const topDict = Buffer.from([0, 1, 1, 1, 2, 139]);
@@ -146,6 +169,21 @@ invalid(() => safe.validate(truncatedSvgIndex));
 const invalidSvgIndexOffset = svgFont([[0, 1]]);
 invalidSvgIndexOffset.writeUInt32BE(0xffffffff, 30);
 invalid(() => safe.validate(invalidSvgIndexOffset));
+
+assert.ok(safe.parse(typr, gvarFont(2, 1)).length > 0);
+assert.ok(safe.parse(typr, gvarFont(2, 1, true)).length > 0);
+const repeatedGvar = gvarFont(65535, 4095);
+assert.ok(repeatedGvar.length < 150 * 1024);
+invalid(() => safe.validate(repeatedGvar));
+parserCalls = 0;
+invalid(() => safe.parse({ parse() { parserCalls++; } }, repeatedGvar));
+assert.equal(parserCalls, 0, 'repeated gvar tuples must be rejected before calling Typr');
+const invalidGvarOffsets = gvarFont(2, 1);
+invalidGvarOffsets.writeUInt16BE(100, 48);
+invalid(() => safe.validate(invalidGvarOffsets));
+const invalidGvarDataOffset = gvarFont(2, 1);
+invalidGvarDataOffset.writeUInt32BE(0xffffffff, 44);
+invalid(() => safe.validate(invalidGvarDataOffset));
 
 safe.installGuards(typr);
 safe.installGuards(typr);
