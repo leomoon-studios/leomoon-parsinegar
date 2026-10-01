@@ -40,6 +40,8 @@ ParsiNegar text tools page in Persian with the dark theme
 
 To create an SVG instead, enter your source text and open **Export SVG**. Select the conversion mode and a suitable font, adjust size, spacing, and alignment, then click **Preview** to inspect the result. Use **Update preview** after making changes. If the preview reports missing glyphs, choose another font before clicking **Save SVG**. SVG export creates curves, so the lettering remains visually consistent without requiring the font on the receiving computer.
 
+SVG export accepts TrueType and OpenType/CFF fonts up to 5 MiB. Before the unchanged bundled Typr.js parser runs, application-owned `qml/core/SafeTypr.js` checks the font table directory, CFF INDEX offsets, and parser byte-read ranges. A malformed font is rejected as `INVALID_FONT` without saving an SVG. These checks target out-of-bounds and oversized reads, but they are not a complete font-format validator or a substitute for using fonts from trusted sources.
+
 The compatibility fonts are optional. The Windows and macOS installers offer font installation by default. Linux AppImages do not install fonts system-wide; Ubuntu users can install the separate font `.deb`, while users of other Linux distributions can use the font ZIP and its included instructions. You only need these fonts when using compatibility output or when you want to use them for SVG export.
 
 ## Keyboard shortcuts

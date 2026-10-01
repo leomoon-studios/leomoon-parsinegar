@@ -100,6 +100,17 @@ void CoreTests::exactFontSvgSuite()
     engine.globalObject().setProperty(
         QStringLiteral("TestFontBytes"), engine.toScriptValue(font.readAll()));
 
+    const QString otfPath = qEnvironmentVariable("SAFE_TYPR_OTF_FIXTURE",
+                                                 QStringLiteral("/usr/share/fonts/gsfonts/NimbusSans-Regular.otf"));
+    QFile otf(otfPath);
+    if (otf.exists()) {
+        QVERIFY2(otf.open(QIODevice::ReadOnly), qPrintable(otf.errorString()));
+        engine.globalObject().setProperty(
+            QStringLiteral("TestOtfBytes"), engine.toScriptValue(otf.readAll()));
+    } else {
+        engine.globalObject().setProperty(QStringLiteral("TestOtfBytes"), QJSValue(QJSValue::NullValue));
+    }
+
     const QString maryamPath = qEnvironmentVariable("PARSINEGAR_MARYAM_TEST_FONT");
     if (!maryamPath.isEmpty()) {
         QFile maryam(maryamPath);

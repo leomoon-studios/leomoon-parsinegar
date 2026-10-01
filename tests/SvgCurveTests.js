@@ -43,16 +43,43 @@ var SvgCurveTestResults = (function () {
         check(!/(?:font-family|@font-face|data:font|\bhref\s*=)/i.test(svg), "SVG embeds or references a font");
     }
 
-    function maliciousCffFont() {
-        var bytes = new Uint8Array(43);
+    function ottoWithCff(cff) {
+        var bytes = new Uint8Array(28 + cff.length);
         bytes[0] = 79; bytes[1] = 84; bytes[2] = 84; bytes[3] = 79;
         bytes[5] = 1;
         bytes[12] = 67; bytes[13] = 70; bytes[14] = 70; bytes[15] = 32;
         bytes[23] = 28;
-        bytes[27] = 15;
-        var cff = [1, 0, 4, 1, 0, 1, 4, 0, 0, 0, 1, 255, 255, 255, 255];
+        bytes[27] = cff.length;
         for (var index = 0; index < cff.length; index++) bytes[28 + index] = cff[index];
         return bytes;
+    }
+
+    function malformedCffFonts() {
+        var header = [1, 0, 4, 1];
+        var indexes = [[0, 1, 1, 1, 2, 65], [0, 1, 1, 1, 2, 139], [0, 0], [0, 0]];
+        var malformed = [
+            [0, 1, 1, 0, 1, 65],
+            [0, 1, 1, 2, 1, 65],
+            [0, 1, 4, 0, 0, 0, 1],
+            [0, 1, 1, 1, 32, 65],
+            [0, 1, 4, 0, 0, 0, 1, 255, 255, 255, 255]
+        ];
+        var fonts = [ottoWithCff([])];
+        for (var required = 0; required < 2; required++) {
+            var emptyRequired = header.slice();
+            for (var requiredItem = 0; requiredItem < indexes.length; requiredItem++)
+                emptyRequired = emptyRequired.concat(requiredItem === required ? [0, 0] : indexes[requiredItem]);
+            fonts.push(ottoWithCff(emptyRequired));
+        }
+        for (var position = 0; position < indexes.length; position++) {
+            for (var variant = 0; variant < malformed.length; variant++) {
+                var cff = header.slice();
+                for (var item = 0; item < indexes.length; item++)
+                    cff = cff.concat(item === position ? malformed[variant] : indexes[item]);
+                fonts.push(ottoWithCff(cff));
+            }
+        }
+        return fonts;
     }
 
     try {
@@ -96,8 +123,19 @@ var SvgCurveTestResults = (function () {
         throwsCode(function () { SvgCurveExporter.exportSvg(text, TestFontBytes, { bounds: { padding: ResourceLimits.values.maxPadding + 1 } }, Typr, ResourceLimits, SafeTypr); }, "INVALID_OPTION");
         throwsCode(function () { SvgCurveExporter.inspect(new Array(ResourceLimits.values.maxSvgTextLength + 2).join("پ"), TestFontBytes, {}, Typr, ResourceLimits, SafeTypr); }, "EXPORT_TEXT_TOO_LARGE");
         throwsCode(function () { SvgCurveExporter.inspect("پ", new Uint8Array([0, 1, 2, 3]), {}, Typr, ResourceLimits, SafeTypr); }, "INVALID_FONT");
-        throwsCode(function () { SvgCurveExporter.inspect("پ", maliciousCffFont(), {}, Typr, ResourceLimits, SafeTypr); }, "INVALID_FONT");
-        throwsCode(function () { SvgCurveExporter.exportSvg("پ", maliciousCffFont(), {}, Typr, ResourceLimits, SafeTypr); }, "INVALID_FONT");
+        var malformedFonts = malformedCffFonts();
+        for (var malformedIndex = 0; malformedIndex < malformedFonts.length; malformedIndex++) {
+            (function (font) {
+                throwsCode(function () { SvgCurveExporter.inspect("پ", font, {}, Typr, ResourceLimits, SafeTypr); }, "INVALID_FONT");
+                throwsCode(function () { SvgCurveExporter.exportSvg("پ", font, {}, Typr, ResourceLimits, SafeTypr); }, "INVALID_FONT");
+            }(malformedFonts[malformedIndex]));
+        }
+
+        if (typeof TestOtfBytes !== "undefined" && TestOtfBytes !== null) {
+            check(SvgCurveExporter.inspect("A", TestOtfBytes, {}, Typr, ResourceLimits, SafeTypr).missingGlyphs.length === 0,
+                "OpenType/CFF inspection failed");
+            curveOnly(SvgCurveExporter.exportSvg("A", TestOtfBytes, options("left"), Typr, ResourceLimits, SafeTypr));
+        }
 
         var originalShapeToPath = Typr.U.shapeToPath;
         try {
