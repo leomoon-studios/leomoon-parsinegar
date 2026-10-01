@@ -104,6 +104,27 @@ var SafeTypr = (function () {
         }
     }
 
+    function validateSvg(data) {
+        range(data, 0, 10);
+        var listOffset = uint(data, 2);
+        range(data, listOffset, 2);
+        var count = ushort(data, listOffset);
+        if (count === 0 || count > Math.floor((data.length - listOffset - 2) / 12))
+            invalid("Invalid SVG document index");
+        var previousEnd = -1;
+        var totalGlyphs = 0;
+        for (var item = 0; item < count; item++) {
+            var entry = listOffset + 2 + item * 12;
+            var start = ushort(data, entry);
+            var end = ushort(data, entry + 2);
+            if (start > end || start <= previousEnd)
+                invalid("Overlapping or unordered SVG glyph ranges");
+            totalGlyphs += end - start + 1;
+            if (totalGlyphs > 65536) invalid("Too many SVG glyph assignments");
+            previousEnd = end;
+        }
+    }
+
     function validate(input) {
         var data = bytesOf(input);
         if (data.length > MAX_FONT_BYTES) invalid("Font exceeds the 5 MiB limit");
@@ -119,6 +140,7 @@ var SafeTypr = (function () {
         var spans = [];
         var cff = null;
         var cmap = null;
+        var svg = null;
         for (var item = 0; item < count; item++) {
             var entry = 12 + item * 16;
             var name = tag(data, entry);
@@ -130,6 +152,7 @@ var SafeTypr = (function () {
             if (length > 0) spans.push({ start: start, end: start + length });
             if (name === "CFF ") cff = { start: start, length: length };
             if (name === "cmap") cmap = { start: start, length: length };
+            if (name === "SVG ") svg = { start: start, length: length };
         }
         spans.sort(function (left, right) { return left.start - right.start; });
         for (var span = 1; span < spans.length; span++) {
@@ -141,6 +164,7 @@ var SafeTypr = (function () {
             validateCff(data.subarray(cff.start, cff.start + cff.length));
         }
         if (cmap) validateCmap(data.subarray(cmap.start, cmap.start + cmap.length));
+        if (svg) validateSvg(data.subarray(svg.start, svg.start + svg.length));
         return data;
     }
 

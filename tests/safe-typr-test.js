@@ -43,6 +43,29 @@ function format12Font(groups, subtableLength = 16, tableLength = 28) {
     return font;
 }
 
+function svgFont(ranges) {
+    const document = Buffer.from('<svg/>');
+    const table = Buffer.alloc(12 + ranges.length * 12 + document.length);
+    table.writeUInt32BE(10, 2);
+    table.writeUInt16BE(ranges.length, 10);
+    for (let item = 0; item < ranges.length; item++) {
+        const entry = 12 + item * 12;
+        table.writeUInt16BE(ranges[item][0], entry);
+        table.writeUInt16BE(ranges[item][1], entry + 2);
+        table.writeUInt32BE(2 + ranges.length * 12, entry + 4);
+        table.writeUInt32BE(document.length, entry + 8);
+    }
+    document.copy(table, 12 + ranges.length * 12);
+    const font = Buffer.alloc(28 + table.length);
+    font.writeUInt32BE(0x00010000, 0);
+    font.writeUInt16BE(1, 4);
+    font.write('SVG ', 12, 'ascii');
+    font.writeUInt32BE(28, 20);
+    font.writeUInt32BE(table.length, 24);
+    table.copy(font, 28);
+    return font;
+}
+
 const header = Buffer.from([1, 0, 4, 1]);
 const name = Buffer.from([0, 1, 1, 1, 2, 65]);
 const topDict = Buffer.from([0, 1, 1, 1, 2, 139]);
@@ -105,6 +128,24 @@ invalid(() => safe.validate(invalidSubtableOffset));
 const truncatedEncodingRecords = format12Font(0);
 truncatedEncodingRecords.writeUInt16BE(4, 30);
 invalid(() => safe.validate(truncatedEncodingRecords));
+
+const validSvg = svgFont([[0, 1], [3, 4]]);
+assert.ok(safe.validate(validSvg).length > 0);
+assert.ok(safe.parse(typr, validSvg).length > 0);
+const overlappingSvg = svgFont([[0, 65535], [0, 65535]]);
+assert.ok(overlappingSvg.length < 100);
+invalid(() => safe.validate(overlappingSvg));
+parserCalls = 0;
+invalid(() => safe.parse({ parse() { parserCalls++; } }, overlappingSvg));
+assert.equal(parserCalls, 0, 'repeated SVG glyph ranges must be rejected before calling Typr');
+invalid(() => safe.validate(svgFont([[5, 4]])));
+invalid(() => safe.validate(svgFont([[3, 4], [1, 2]])));
+const truncatedSvgIndex = svgFont([[0, 1]]);
+truncatedSvgIndex.writeUInt16BE(2, 38);
+invalid(() => safe.validate(truncatedSvgIndex));
+const invalidSvgIndexOffset = svgFont([[0, 1]]);
+invalidSvgIndexOffset.writeUInt32BE(0xffffffff, 30);
+invalid(() => safe.validate(invalidSvgIndexOffset));
 
 safe.installGuards(typr);
 safe.installGuards(typr);
