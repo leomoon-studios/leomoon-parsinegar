@@ -43,15 +43,27 @@ var SvgCurveTestResults = (function () {
         check(!/(?:font-family|@font-face|data:font|\bhref\s*=)/i.test(svg), "SVG embeds or references a font");
     }
 
+    function maliciousCffFont() {
+        var bytes = new Uint8Array(43);
+        bytes[0] = 79; bytes[1] = 84; bytes[2] = 84; bytes[3] = 79;
+        bytes[5] = 1;
+        bytes[12] = 67; bytes[13] = 70; bytes[14] = 70; bytes[15] = 32;
+        bytes[23] = 28;
+        bytes[27] = 15;
+        var cff = [1, 0, 4, 1, 0, 1, 4, 0, 0, 0, 1, 255, 255, 255, 255];
+        for (var index = 0; index < cff.length; index++) bytes[28 + index] = cff[index];
+        return bytes;
+    }
+
     try {
         var text = "پارسی نگار ریال ۱۲۳\nمتن دوم";
-        var left = SvgCurveExporter.exportSvg(text, TestFontBytes, options("left"), Typr, ResourceLimits);
-        var center = SvgCurveExporter.exportSvg(text, TestFontBytes, options("center"), Typr, ResourceLimits);
-        var right = SvgCurveExporter.exportSvg(text, TestFontBytes, options("right"), Typr, ResourceLimits);
+        var left = SvgCurveExporter.exportSvg(text, TestFontBytes, options("left"), Typr, ResourceLimits, SafeTypr);
+        var center = SvgCurveExporter.exportSvg(text, TestFontBytes, options("center"), Typr, ResourceLimits, SafeTypr);
+        var right = SvgCurveExporter.exportSvg(text, TestFontBytes, options("right"), Typr, ResourceLimits, SafeTypr);
         curveOnly(left);
         curveOnly(center);
         curveOnly(right);
-        check(left === SvgCurveExporter.exportSvg(text, TestFontBytes, options("left"), Typr, ResourceLimits), "Output is not deterministic");
+        check(left === SvgCurveExporter.exportSvg(text, TestFontBytes, options("left"), Typr, ResourceLimits, SafeTypr), "Output is not deterministic");
         check((left.match(/<path /g) || []).length === 2, "Multiline output must contain one path per non-empty line");
 
         var leftPositions = transforms(left);
@@ -64,7 +76,7 @@ var SvgCurveTestResults = (function () {
             check(centerPositions[index].x < rightPositions[index].x, "Right alignment is not after center alignment");
         }
 
-        var inspection = SvgCurveExporter.inspect(text, TestFontBytes, {}, Typr, ResourceLimits);
+        var inspection = SvgCurveExporter.inspect(text, TestFontBytes, {}, Typr, ResourceLimits, SafeTypr);
         check(inspection.font.family === "Vazirmatn", "Bundled font identity was not inspected");
         check(inspection.font.style === "Regular", "Variable font did not select its default instance");
         check(inspection.missingGlyphs.length === 0, "Bundled font unexpectedly lacks Persian glyphs");
@@ -72,38 +84,38 @@ var SvgCurveTestResults = (function () {
         explicitDefault.fontIndex = 3;
         var explicitThin = options("left");
         explicitThin.fontIndex = 0;
-        check(left === SvgCurveExporter.exportSvg(text, TestFontBytes, explicitDefault, Typr, ResourceLimits), "Default instance differs from Regular");
-        check(left !== SvgCurveExporter.exportSvg(text, TestFontBytes, explicitThin, Typr, ResourceLimits), "Variable instances produced identical paths");
+        check(left === SvgCurveExporter.exportSvg(text, TestFontBytes, explicitDefault, Typr, ResourceLimits, SafeTypr), "Default instance differs from Regular");
+        check(left !== SvgCurveExporter.exportSvg(text, TestFontBytes, explicitThin, Typr, ResourceLimits, SafeTypr), "Variable instances produced identical paths");
 
-        var missing = SvgCurveExporter.inspect(text + "🧬", TestFontBytes, {}, Typr, ResourceLimits).missingGlyphs;
+        var missing = SvgCurveExporter.inspect(text + "🧬", TestFontBytes, {}, Typr, ResourceLimits, SafeTypr).missingGlyphs;
         check(missing.length === 1 && missing[0].label === "U+1F9EC", "Missing glyph inspection is incorrect");
-        throwsCode(function () { SvgCurveExporter.exportSvg(text, TestFontBytes, { bounds: { width: 10, height: 10 } }, Typr, ResourceLimits); }, "BOUNDS_TOO_SMALL");
-        throwsCode(function () { SvgCurveExporter.exportSvg(text, TestFontBytes, { fontSize: ResourceLimits.values.maxFontSize + 1 }, Typr, ResourceLimits); }, "INVALID_OPTION");
-        throwsCode(function () { SvgCurveExporter.exportSvg(text, TestFontBytes, { lineSpacing: ResourceLimits.values.maxLineSpacing + 1 }, Typr, ResourceLimits); }, "INVALID_OPTION");
-        throwsCode(function () { SvgCurveExporter.exportSvg(text, TestFontBytes, { bounds: { width: ResourceLimits.values.maxDimension + 1 } }, Typr, ResourceLimits); }, "INVALID_OPTION");
-        throwsCode(function () { SvgCurveExporter.exportSvg(text, TestFontBytes, { bounds: { padding: ResourceLimits.values.maxPadding + 1 } }, Typr, ResourceLimits); }, "INVALID_OPTION");
-        throwsCode(function () { SvgCurveExporter.inspect(new Array(ResourceLimits.values.maxSvgTextLength + 2).join("پ"), TestFontBytes, {}, Typr, ResourceLimits); }, "EXPORT_TEXT_TOO_LARGE");
-        throwsCode(function () { SvgCurveExporter.inspect("پ", new Uint8Array([0, 1, 2, 3]), {}, Typr, ResourceLimits); }, "INVALID_FONT");
+        throwsCode(function () { SvgCurveExporter.exportSvg(text, TestFontBytes, { bounds: { width: 10, height: 10 } }, Typr, ResourceLimits, SafeTypr); }, "BOUNDS_TOO_SMALL");
+        throwsCode(function () { SvgCurveExporter.exportSvg(text, TestFontBytes, { fontSize: ResourceLimits.values.maxFontSize + 1 }, Typr, ResourceLimits, SafeTypr); }, "INVALID_OPTION");
+        throwsCode(function () { SvgCurveExporter.exportSvg(text, TestFontBytes, { lineSpacing: ResourceLimits.values.maxLineSpacing + 1 }, Typr, ResourceLimits, SafeTypr); }, "INVALID_OPTION");
+        throwsCode(function () { SvgCurveExporter.exportSvg(text, TestFontBytes, { bounds: { width: ResourceLimits.values.maxDimension + 1 } }, Typr, ResourceLimits, SafeTypr); }, "INVALID_OPTION");
+        throwsCode(function () { SvgCurveExporter.exportSvg(text, TestFontBytes, { bounds: { padding: ResourceLimits.values.maxPadding + 1 } }, Typr, ResourceLimits, SafeTypr); }, "INVALID_OPTION");
+        throwsCode(function () { SvgCurveExporter.inspect(new Array(ResourceLimits.values.maxSvgTextLength + 2).join("پ"), TestFontBytes, {}, Typr, ResourceLimits, SafeTypr); }, "EXPORT_TEXT_TOO_LARGE");
+        throwsCode(function () { SvgCurveExporter.inspect("پ", new Uint8Array([0, 1, 2, 3]), {}, Typr, ResourceLimits, SafeTypr); }, "INVALID_FONT");
+        throwsCode(function () { SvgCurveExporter.inspect("پ", maliciousCffFont(), {}, Typr, ResourceLimits, SafeTypr); }, "INVALID_FONT");
+        throwsCode(function () { SvgCurveExporter.exportSvg("پ", maliciousCffFont(), {}, Typr, ResourceLimits, SafeTypr); }, "INVALID_FONT");
 
-        var unsupportedTypr = {
-            parse: function () { return [{ head: { unitsPerEm: 1000 }, hhea: { ascender: 800, descender: -200 }, name: {} }]; },
-            U: {
-                codeToGlyph: function () { return 1; },
-                shape: function () { return [{ ax: 500 }]; },
-                shapeToPath: function () { return { cmds: ["X"], crds: [] }; },
-                pathToSVG: function () { return ""; }
-            }
-        };
-        throwsCode(function () { SvgCurveExporter.exportSvg("پ", new Uint8Array([0]), {}, unsupportedTypr, ResourceLimits); }, "UNSUPPORTED_GLYPH");
+        var originalShapeToPath = Typr.U.shapeToPath;
+        try {
+            Typr.U.shapeToPath = function () { return { cmds: ["X"], crds: [] }; };
+            throwsCode(function () { SvgCurveExporter.exportSvg("پ", TestFontBytes, {}, Typr, ResourceLimits, SafeTypr); }, "UNSUPPORTED_GLYPH");
+        } finally {
+            Typr.U.shapeToPath = originalShapeToPath;
+        }
+        throwsCode(function () { SvgCurveExporter.inspect("پ", TestFontBytes, {}, Typr, ResourceLimits); }, "MISSING_ENGINE");
 
         if (typeof MaryamFontBytes !== "undefined" && MaryamFontBytes !== null) {
             var compatibilityText = ParsiNegar.convert("پارسی نگار ریال ۱۲۳", "compatibility", {
                 reverseWords: true,
                 reshaperOptions: { ligatures: { "RIAL SIGN": true } }
             }, JsBidi, JsParsiReshaper);
-            check(SvgCurveExporter.inspect(compatibilityText, MaryamFontBytes, {}, Typr, ResourceLimits).missingGlyphs.length === 0,
+            check(SvgCurveExporter.inspect(compatibilityText, MaryamFontBytes, {}, Typr, ResourceLimits, SafeTypr).missingGlyphs.length === 0,
                 "The optional Maryam fixture is missing compatibility glyphs");
-            curveOnly(SvgCurveExporter.exportSvg(compatibilityText, MaryamFontBytes, options("right"), Typr, ResourceLimits));
+            curveOnly(SvgCurveExporter.exportSvg(compatibilityText, MaryamFontBytes, options("right"), Typr, ResourceLimits, SafeTypr));
         }
     } catch (error) {
         failures.push(String(error && error.stack || error));

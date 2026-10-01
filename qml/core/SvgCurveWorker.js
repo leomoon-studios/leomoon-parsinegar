@@ -1,5 +1,6 @@
 // Font parsing and SVG outline generation run outside the QML scene thread.
 Qt.include("vendor/typr.js");
+Qt.include("qml/core/SafeTypr.js");
 Qt.include("vendor/js-bidi.js");
 Qt.include("vendor/js-parsi-reshaper.js");
 Qt.include("qml/core/ParsiNegar.js");
@@ -21,10 +22,10 @@ function processJob(message) {
         var bytes = new Uint8Array(currentJob.fontBytes);
         ResourceLimits.assertFontBytes(bytes);
         var inspection = SvgCurveExporter.inspect(
-            text, bytes, currentJob.options, Typr, ResourceLimits
+            text, bytes, currentJob.options, Typr, ResourceLimits, SafeTypr
         );
         var svg = SvgCurveExporter.exportSvg(
-            text, bytes, currentJob.options, Typr, ResourceLimits
+            text, bytes, currentJob.options, Typr, ResourceLimits, SafeTypr
         );
         currentJob = null;
         WorkerScript.sendMessage({

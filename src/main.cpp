@@ -50,6 +50,7 @@ bool verifyEmbeddedResources()
         ":/qt/qml/LeoMoon/ParsiNegar/vendor/js-bidi.js",
         ":/qt/qml/LeoMoon/ParsiNegar/vendor/js-parsi-reshaper.js",
         ":/qt/qml/LeoMoon/ParsiNegar/vendor/typr.js",
+        ":/qt/qml/LeoMoon/ParsiNegar/qml/core/SafeTypr.js",
         ":/qt/qml/LeoMoon/ParsiNegar/qml/core/InterfaceStrings.js",
         ":/qt/qml/LeoMoon/ParsiNegar/ConversionWorker.js",
         ":/qt/qml/LeoMoon/ParsiNegar/SvgCurveWorker.js",

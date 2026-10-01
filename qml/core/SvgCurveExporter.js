@@ -75,11 +75,13 @@ var SvgCurveExporter = (function () {
         return bestIndex;
     }
 
-    function parseFont(bytes, fontIndex, typr) {
+    function parseFont(bytes, fontIndex, typr, safeTypr) {
         if (!typr || typeof typr.parse !== "function" || !typr.U)
             fail("MISSING_ENGINE", "A loaded Typr.js API is required");
+        if (!safeTypr || typeof safeTypr.parse !== "function")
+            fail("MISSING_ENGINE", "The guarded font parser is required");
         var fonts;
-        try { fonts = typr.parse(fontBuffer(bytes)); }
+        try { fonts = safeTypr.parse(typr, fontBuffer(bytes)); }
         catch (error) { fail("INVALID_FONT", "The selected font could not be read: " + error); }
         var selectedIndex = fontIndex === null ? defaultFontIndex(fonts || []) : fontIndex;
         if (!fonts || !fonts.length || !fonts[selectedIndex])
@@ -218,13 +220,13 @@ var SvgCurveExporter = (function () {
         };
     }
 
-    function inspect(text, bytes, options, typr, limits) {
+    function inspect(text, bytes, options, typr, limits, safeTypr) {
         limits = requireLimits(limits);
         limits.assertTextLength(text, limits.values.maxSvgTextLength, "EXPORT_TEXT_TOO_LARGE");
         limits.assertFontBytes(bytes);
         var normalized = normalizedOptions(options, limits);
         try {
-            var font = parseFont(bytes, normalized.fontIndex, typr);
+            var font = parseFont(bytes, normalized.fontIndex, typr, safeTypr);
             validateAxes(font, normalized.axes);
             return { font: fontIdentity(font), missingGlyphs: missingGlyphs(font, text, typr) };
         } catch (error) {
@@ -233,21 +235,21 @@ var SvgCurveExporter = (function () {
         }
     }
 
-    function exportSvg(text, bytes, options, typr, limits) {
+    function exportSvg(text, bytes, options, typr, limits, safeTypr) {
         limits = requireLimits(limits);
         limits.assertTextLength(text, limits.values.maxSvgTextLength, "EXPORT_TEXT_TOO_LARGE");
         limits.assertFontBytes(bytes);
         var normalized = normalizedOptions(options, limits);
         try {
-            return exportWithFont(text, bytes, normalized, typr, limits);
+            return exportWithFont(text, bytes, normalized, typr, limits, safeTypr);
         } catch (error) {
             if (error && error.code) throw error;
             fail("INVALID_FONT", "The selected font could not be read: " + error);
         }
     }
 
-    function exportWithFont(text, bytes, normalized, typr, limits) {
-        var font = parseFont(bytes, normalized.fontIndex, typr);
+    function exportWithFont(text, bytes, normalized, typr, limits, safeTypr) {
+        var font = parseFont(bytes, normalized.fontIndex, typr, safeTypr);
         validateAxes(font, normalized.axes);
 
         var lines = text.replace(/\r\n?/g, "\n").split("\n");

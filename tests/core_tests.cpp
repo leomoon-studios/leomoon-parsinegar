@@ -114,6 +114,7 @@ void CoreTests::exactFontSvgSuite()
         QStringLiteral(":/vendor/js-bidi.js"),
         QStringLiteral(":/vendor/js-parsi-reshaper.js"),
         QStringLiteral(":/vendor/typr.js"),
+        QStringLiteral(":/qml/core/SafeTypr.js"),
         QStringLiteral(":/qml/core/ParsiNegar.js"),
         QStringLiteral(":/qml/core/ResourceLimits.js"),
         QStringLiteral(":/qml/core/SvgCurveExporter.js"),

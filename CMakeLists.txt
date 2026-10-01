@@ -149,6 +149,7 @@ qt_add_qml_module(parsinegar_ui
         vendor/js-bidi.js
         vendor/js-parsi-reshaper.js
         vendor/typr.js
+        qml/core/SafeTypr.js
         qml/core/InterfaceStrings.js
         qml/core/i18n/English.js
         qml/core/i18n/Persian.js
@@ -275,6 +276,7 @@ if(BUILD_TESTING)
             vendor/js-bidi.js
             vendor/js-parsi-reshaper.js
             vendor/typr.js
+            qml/core/SafeTypr.js
             "assets/fonts/Vazirmatn[wght].ttf"
             qml/core/InterfaceStrings.js
             qml/core/i18n/English.js
