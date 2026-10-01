@@ -1,5 +1,16 @@
 # Changelog
 
+## 3.0.2 (2026-09-29)
+
+- Added Cut, Copy, and Paste to the Document menu.
+- Combined the on-screen keyboard layouts with Shift controls, including temporary switching with the physical Shift key and ZWNJ on Shift+Space.
+- Expanded the on-screen keyboard's punctuation and symbols, removed duplicate keys, and fixed the editor caret position after on-screen input.
+- Added an on-demand SVG export preview before saving.
+- Improved font selector previews with missing-glyph boxes and separate English and Persian lines for Unicode fonts, while keeping compatibility-font previews on one line.
+- Limited SVG export fonts to 5 MiB and checked TrueType or OpenType headers before reading font data.
+- Kept Linux application downloads as AppImages, removed application DEB packages, and added a font ZIP alongside the optional Ubuntu font DEB.
+- Strengthened release checks with pinned actions, AppImage tool validation, and font package install and removal smoke tests.
+
 ## 3.0.1 (2026-09-22)
 
 - Added persistent accent-color presets in Settings, including a neutral option.
