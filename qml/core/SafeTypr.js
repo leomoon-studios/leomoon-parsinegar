@@ -86,6 +86,24 @@ var SafeTypr = (function () {
         index(data, strings.end, data.length);
     }
 
+    function validateCmap(data) {
+        range(data, 0, 4);
+        var count = ushort(data, 2);
+        if (count > Math.floor((data.length - 4) / 8))
+            invalid("Truncated cmap encoding records");
+        for (var item = 0; item < count; item++) {
+            var subtableOffset = uint(data, 4 + item * 8 + 4);
+            range(data, subtableOffset, 2);
+            if (ushort(data, subtableOffset) !== 12) continue;
+            range(data, subtableOffset, 16);
+            var length = uint(data, subtableOffset + 4);
+            var groups = uint(data, subtableOffset + 12);
+            if (length < 16 || length > data.length - subtableOffset ||
+                groups > Math.floor((length - 16) / 12))
+                invalid("Invalid cmap format 12 group count or length");
+        }
+    }
+
     function validate(input) {
         var data = bytesOf(input);
         if (data.length > MAX_FONT_BYTES) invalid("Font exceeds the 5 MiB limit");
@@ -100,6 +118,7 @@ var SafeTypr = (function () {
         var seen = Object.create(null);
         var spans = [];
         var cff = null;
+        var cmap = null;
         for (var item = 0; item < count; item++) {
             var entry = 12 + item * 16;
             var name = tag(data, entry);
@@ -110,6 +129,7 @@ var SafeTypr = (function () {
             range(data, start, length);
             if (length > 0) spans.push({ start: start, end: start + length });
             if (name === "CFF ") cff = { start: start, length: length };
+            if (name === "cmap") cmap = { start: start, length: length };
         }
         spans.sort(function (left, right) { return left.start - right.start; });
         for (var span = 1; span < spans.length; span++) {
@@ -120,6 +140,7 @@ var SafeTypr = (function () {
             if (!cff || cff.length < 4) invalid("OpenType font is missing a CFF table");
             validateCff(data.subarray(cff.start, cff.start + cff.length));
         }
+        if (cmap) validateCmap(data.subarray(cmap.start, cmap.start + cmap.length));
         return data;
     }
 

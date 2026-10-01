@@ -82,6 +82,23 @@ var SvgCurveTestResults = (function () {
         return fonts;
     }
 
+    function malformedFormat12Font() {
+        var bytes = new Uint8Array(56);
+        bytes[1] = 1;
+        bytes[5] = 1;
+        bytes[12] = 99; bytes[13] = 109; bytes[14] = 97; bytes[15] = 112;
+        bytes[23] = 28;
+        bytes[27] = 28;
+        bytes[31] = 1;
+        bytes[33] = 3;
+        bytes[35] = 10;
+        bytes[39] = 12;
+        bytes[41] = 12;
+        bytes[47] = 16;
+        bytes[52] = 4;
+        return bytes;
+    }
+
     try {
         var text = "پارسی نگار ریال ۱۲۳\nمتن دوم";
         var left = SvgCurveExporter.exportSvg(text, TestFontBytes, options("left"), Typr, ResourceLimits, SafeTypr);
@@ -107,6 +124,17 @@ var SvgCurveTestResults = (function () {
         check(inspection.font.family === "Vazirmatn", "Bundled font identity was not inspected");
         check(inspection.font.style === "Regular", "Variable font did not select its default instance");
         check(inspection.missingGlyphs.length === 0, "Bundled font unexpectedly lacks Persian glyphs");
+        var combinedParseCount = 0;
+        var countingSafeTypr = {
+            parse: function (parser, data) {
+                combinedParseCount++;
+                return SafeTypr.parse(parser, data);
+            }
+        };
+        var combined = SvgCurveExporter.inspectAndExport(text, TestFontBytes, options("left"), Typr, ResourceLimits, countingSafeTypr);
+        check(combinedParseCount === 1, "Inspection and SVG generation must share one guarded parse");
+        check(combined.svg === left, "Combined export differs from the existing SVG output");
+        check(JSON.stringify(combined.inspection) === JSON.stringify(inspection), "Combined inspection differs from the existing result");
         var explicitDefault = options("left");
         explicitDefault.fontIndex = 3;
         var explicitThin = options("left");
@@ -124,10 +152,12 @@ var SvgCurveTestResults = (function () {
         throwsCode(function () { SvgCurveExporter.inspect(new Array(ResourceLimits.values.maxSvgTextLength + 2).join("پ"), TestFontBytes, {}, Typr, ResourceLimits, SafeTypr); }, "EXPORT_TEXT_TOO_LARGE");
         throwsCode(function () { SvgCurveExporter.inspect("پ", new Uint8Array([0, 1, 2, 3]), {}, Typr, ResourceLimits, SafeTypr); }, "INVALID_FONT");
         var malformedFonts = malformedCffFonts();
+        malformedFonts.push(malformedFormat12Font());
         for (var malformedIndex = 0; malformedIndex < malformedFonts.length; malformedIndex++) {
             (function (font) {
                 throwsCode(function () { SvgCurveExporter.inspect("پ", font, {}, Typr, ResourceLimits, SafeTypr); }, "INVALID_FONT");
                 throwsCode(function () { SvgCurveExporter.exportSvg("پ", font, {}, Typr, ResourceLimits, SafeTypr); }, "INVALID_FONT");
+                throwsCode(function () { SvgCurveExporter.inspectAndExport("پ", font, {}, Typr, ResourceLimits, SafeTypr); }, "INVALID_FONT");
             }(malformedFonts[malformedIndex]));
         }
 

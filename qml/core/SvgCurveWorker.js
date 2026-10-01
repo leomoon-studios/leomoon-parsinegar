@@ -21,19 +21,16 @@ function processJob(message) {
             : currentJob.text;
         var bytes = new Uint8Array(currentJob.fontBytes);
         ResourceLimits.assertFontBytes(bytes);
-        var inspection = SvgCurveExporter.inspect(
-            text, bytes, currentJob.options, Typr, ResourceLimits, SafeTypr
-        );
-        var svg = SvgCurveExporter.exportSvg(
+        var result = SvgCurveExporter.inspectAndExport(
             text, bytes, currentJob.options, Typr, ResourceLimits, SafeTypr
         );
         currentJob = null;
         WorkerScript.sendMessage({
             id: message.id,
             ok: true,
-            svg: svg,
-            font: inspection.font,
-            missingGlyphs: inspection.missingGlyphs,
+            svg: result.svg,
+            font: result.inspection.font,
+            missingGlyphs: result.inspection.missingGlyphs,
             convertedText: text
         });
     } catch (error) {

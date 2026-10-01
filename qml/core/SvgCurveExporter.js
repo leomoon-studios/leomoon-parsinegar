@@ -241,16 +241,32 @@ var SvgCurveExporter = (function () {
         limits.assertFontBytes(bytes);
         var normalized = normalizedOptions(options, limits);
         try {
-            return exportWithFont(text, bytes, normalized, typr, limits, safeTypr);
+            var font = parseFont(bytes, normalized.fontIndex, typr, safeTypr);
+            validateAxes(font, normalized.axes);
+            return exportWithFont(text, font, normalized, typr, limits);
         } catch (error) {
             if (error && error.code) throw error;
             fail("INVALID_FONT", "The selected font could not be read: " + error);
         }
     }
 
-    function exportWithFont(text, bytes, normalized, typr, limits, safeTypr) {
-        var font = parseFont(bytes, normalized.fontIndex, typr, safeTypr);
-        validateAxes(font, normalized.axes);
+    function inspectAndExport(text, bytes, options, typr, limits, safeTypr) {
+        limits = requireLimits(limits);
+        limits.assertTextLength(text, limits.values.maxSvgTextLength, "EXPORT_TEXT_TOO_LARGE");
+        limits.assertFontBytes(bytes);
+        var normalized = normalizedOptions(options, limits);
+        try {
+            var font = parseFont(bytes, normalized.fontIndex, typr, safeTypr);
+            validateAxes(font, normalized.axes);
+            var inspection = { font: fontIdentity(font), missingGlyphs: missingGlyphs(font, text, typr) };
+            return { inspection: inspection, svg: exportWithFont(text, font, normalized, typr, limits) };
+        } catch (error) {
+            if (error && error.code) throw error;
+            fail("INVALID_FONT", "The selected font could not be read: " + error);
+        }
+    }
+
+    function exportWithFont(text, font, normalized, typr, limits) {
 
         var lines = text.replace(/\r\n?/g, "\n").split("\n");
         var outlined = [];
@@ -314,5 +330,5 @@ var SvgCurveExporter = (function () {
         return limits.assertSvgSize(svg);
     }
 
-    return { exportSvg: exportSvg, inspect: inspect };
+    return { exportSvg: exportSvg, inspect: inspect, inspectAndExport: inspectAndExport };
 })();

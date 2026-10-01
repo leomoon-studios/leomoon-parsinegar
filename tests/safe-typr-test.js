@@ -26,6 +26,23 @@ function otto(cff) {
     return result;
 }
 
+function format12Font(groups, subtableLength = 16, tableLength = 28) {
+    const font = Buffer.alloc(28 + tableLength);
+    font.writeUInt32BE(0x00010000, 0);
+    font.writeUInt16BE(1, 4);
+    font.write('cmap', 12, 'ascii');
+    font.writeUInt32BE(28, 20);
+    font.writeUInt32BE(tableLength, 24);
+    font.writeUInt16BE(1, 30);
+    font.writeUInt16BE(3, 32);
+    font.writeUInt16BE(10, 34);
+    font.writeUInt32BE(12, 36);
+    font.writeUInt16BE(12, 40);
+    font.writeUInt32BE(subtableLength, 44);
+    font.writeUInt32BE(groups, 52);
+    return font;
+}
+
 const header = Buffer.from([1, 0, 4, 1]);
 const name = Buffer.from([0, 1, 1, 1, 2, 65]);
 const topDict = Buffer.from([0, 1, 1, 1, 2, 139]);
@@ -68,6 +85,26 @@ for (const entry of [12, 28]) {
 }
 validCff.copy(duplicateTable, 44);
 invalid(() => safe.validate(duplicateTable));
+
+const validFormat12 = format12Font(1, 28, 40);
+validFormat12.writeUInt32BE(65, 56);
+validFormat12.writeUInt32BE(65, 60);
+validFormat12.writeUInt32BE(1, 64);
+assert.ok(safe.validate(validFormat12).length > 0);
+const hugeGroups = format12Font(0x04000000);
+assert.ok(hugeGroups.length < 100);
+invalid(() => safe.validate(hugeGroups));
+parserCalls = 0;
+invalid(() => safe.parse({ parse() { parserCalls++; } }, hugeGroups));
+assert.equal(parserCalls, 0, 'malformed cmap must be rejected before calling Typr');
+invalid(() => safe.validate(format12Font(1)));
+invalid(() => safe.validate(format12Font(0, 0xffffffff)));
+const invalidSubtableOffset = format12Font(0);
+invalidSubtableOffset.writeUInt32BE(0xffffffff, 36);
+invalid(() => safe.validate(invalidSubtableOffset));
+const truncatedEncodingRecords = format12Font(0);
+truncatedEncodingRecords.writeUInt16BE(4, 30);
+invalid(() => safe.validate(truncatedEncodingRecords));
 
 safe.installGuards(typr);
 safe.installGuards(typr);
