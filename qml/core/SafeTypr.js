@@ -4,6 +4,7 @@ var SafeTypr = (function () {
 
     var MAX_FONT_BYTES = 5 * 1024 * 1024;
     var MAX_GVAR_VARIATION_RECORDS = 65536;
+    var MAX_GVAR_DELTA_ENTRIES = 1000000;
     var guarded = [];
 
     function invalid(message) {
@@ -144,9 +145,70 @@ var SafeTypr = (function () {
             return offsetSize === 4 ? uint(data, position) : ushort(data, position) * 2;
         }
 
+        function skipPointNumbers(offset) {
+            range(data, offset, 1);
+            var count = data[offset++];
+            if (count === 0) return offset;
+            if (count > 127) {
+                range(data, offset, 1);
+                count = ((count & 127) << 8) | data[offset++];
+            }
+            var points = 0;
+            while (points < count) {
+                range(data, offset, 1);
+                var control = data[offset++];
+                var run = (control & 127) + 1;
+                var width = (control & 128) !== 0 ? 2 : 1;
+                range(data, offset, run * width);
+                offset += run * width;
+                points += run;
+            }
+            return offset;
+        }
+
+        function expandedDeltas(record, tupleCount) {
+            var header = record + 4;
+            var sizes = [];
+            var privatePoints = [];
+            for (var tuple = 0; tuple < tupleCount; tuple++) {
+                range(data, header, 4);
+                sizes.push(ushort(data, header));
+                var flags = ushort(data, header + 2);
+                privatePoints.push((flags & 0x2000) !== 0);
+                header += 4;
+                if (flags & 0x8000) header += axisCount * 2;
+                if (flags & 0x4000) header += axisCount * 4;
+                range(data, header, 0);
+            }
+
+            var offset = record + ushort(data, record + 2);
+            range(data, offset, 0);
+            if (ushort(data, record) & 0x8000) offset = skipPointNumbers(offset);
+            var deltas = 0;
+            for (tuple = 0; tuple < tupleCount; tuple++) {
+                var end = offset + sizes[tuple];
+                range(data, offset, sizes[tuple]);
+                if (privatePoints[tuple]) offset = skipPointNumbers(offset);
+                if (offset > end) invalid("Invalid gvar tuple data");
+                while (offset < end) {
+                    var control = data[offset++];
+                    var run = (control & 63) + 1;
+                    deltas += run;
+                    if (deltas > MAX_GVAR_DELTA_ENTRIES)
+                        invalid("Too many expanded gvar deltas");
+                    var width = (control & 128) !== 0 ? 0 : (control & 64) !== 0 ? 2 : 1;
+                    range(data, offset, run * width);
+                    offset += run * width;
+                }
+            }
+            return deltas;
+        }
+
         var previous = glyphOffset(0);
         if (previous > data.length - glyphDataOffset) invalid("Invalid gvar glyph offset");
         var variationRecords = 0;
+        var deltaEntries = 0;
+        var expandedByOffset = Object.create(null);
         for (var glyph = 0; glyph < glyphCount; glyph++) {
             var next = glyphOffset(glyph + 1);
             if (next < previous || next > data.length - glyphDataOffset)
@@ -160,6 +222,14 @@ var SafeTypr = (function () {
             variationRecords += count;
             if (variationRecords > MAX_GVAR_VARIATION_RECORDS)
                 invalid("Too many gvar variation records");
+            var expanded = expandedByOffset[previous];
+            if (expanded === undefined) {
+                expanded = expandedDeltas(record, count);
+                expandedByOffset[previous] = expanded;
+            }
+            deltaEntries += expanded;
+            if (deltaEntries > MAX_GVAR_DELTA_ENTRIES)
+                invalid("Too many expanded gvar deltas");
             previous = next;
         }
     }

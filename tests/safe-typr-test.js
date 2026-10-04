@@ -89,6 +89,29 @@ function gvarFont(glyphCount, tupleCount, longOffsets = false) {
     return font;
 }
 
+function repeatedGvarDeltas(glyphCount, zeroRuns) {
+    const glyphDataOffset = 20 + (glyphCount + 1) * 2;
+    const sharedTuplesOffset = glyphDataOffset + 8 + zeroRuns;
+    const table = Buffer.alloc(sharedTuplesOffset + 2);
+    table.writeUInt16BE(1, 4);
+    table.writeUInt16BE(1, 6);
+    table.writeUInt32BE(sharedTuplesOffset, 8);
+    table.writeUInt16BE(glyphCount, 12);
+    table.writeUInt32BE(glyphDataOffset, 16);
+    table.writeUInt16BE(1, glyphDataOffset);
+    table.writeUInt16BE(8, glyphDataOffset + 2);
+    table.writeUInt16BE(zeroRuns, glyphDataOffset + 4);
+    table.fill(0xbf, glyphDataOffset + 8, sharedTuplesOffset);
+    const font = Buffer.alloc(28 + table.length);
+    font.writeUInt32BE(0x00010000, 0);
+    font.writeUInt16BE(1, 4);
+    font.write('gvar', 12, 'ascii');
+    font.writeUInt32BE(28, 20);
+    font.writeUInt32BE(table.length, 24);
+    table.copy(font, 28);
+    return font;
+}
+
 const header = Buffer.from([1, 0, 4, 1]);
 const name = Buffer.from([0, 1, 1, 1, 2, 65]);
 const topDict = Buffer.from([0, 1, 1, 1, 2, 139]);
@@ -184,6 +207,25 @@ invalid(() => safe.validate(invalidGvarOffsets));
 const invalidGvarDataOffset = gvarFont(2, 1);
 invalidGvarDataOffset.writeUInt32BE(0xffffffff, 44);
 invalid(() => safe.validate(invalidGvarDataOffset));
+assert.ok(safe.parse(typr, repeatedGvarDeltas(3, 2)).length > 0);
+const cumulativeGvar = repeatedGvarDeltas(64, 256);
+invalid(() => safe.validate(cumulativeGvar));
+const singleGlyphDeltaOffset = 28 + 20 + 2 * 2 + 8;
+const byteDeltas = repeatedGvarDeltas(1, 2);
+byteDeltas[singleGlyphDeltaOffset] = 0;
+byteDeltas[singleGlyphDeltaOffset + 1] = 127;
+assert.ok(safe.parse(typr, byteDeltas).length > 0);
+const wordDeltas = repeatedGvarDeltas(1, 3);
+wordDeltas[singleGlyphDeltaOffset] = 0x40;
+wordDeltas[singleGlyphDeltaOffset + 1] = 0;
+wordDeltas[singleGlyphDeltaOffset + 2] = 1;
+assert.ok(safe.parse(typr, wordDeltas).length > 0);
+const expandedGvar = repeatedGvarDeltas(64, 65535);
+assert.ok(expandedGvar.length < 67 * 1024);
+invalid(() => safe.validate(expandedGvar));
+parserCalls = 0;
+invalid(() => safe.parse({ parse() { parserCalls++; } }, expandedGvar));
+assert.equal(parserCalls, 0, 'expanded gvar deltas must be limited before calling Typr');
 
 safe.installGuards(typr);
 safe.installGuards(typr);
