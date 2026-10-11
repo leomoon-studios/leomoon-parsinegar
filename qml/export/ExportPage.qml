@@ -12,6 +12,7 @@ FocusScope {
     required property var exportController
     required property Typography typography
     property var fileBridge: null
+    property string exportMode: controller.conversionMode
     property bool advancedVisible: controller.exportSettings.advancedVisible
     property string alignment: controller.exportSettings.alignment
     property bool automaticWidth: controller.exportSettings.automaticWidth
@@ -42,8 +43,9 @@ FocusScope {
     readonly property bool fontCatalogScanning: fileBridge
         && typeof fileBridge.fontCatalogScanning === "boolean"
         && fileBridge.fontCatalogScanning
+    readonly property bool modeFontReady: fontCatalogReady
     readonly property string previewInputSignature: JSON.stringify([
-        controller.conversionMode, currentFontPath(),
+        exportMode, currentFontPath(),
         controller.conversionOptions(), alignment, automaticWidth, automaticHeight,
         fontSizeField.text, lineSpacingField.text, widthField.text, heightField.text,
         paddingField.text, precisionField.text, fontIndexField.text,
@@ -54,7 +56,7 @@ FocusScope {
             || previewSourceRevision !== sourceRevision)
     readonly property bool fontSelectionValid: fontValidationCode === ""
         && fontValidationKey === currentFontKey()
-        && (controller.conversionMode !== "compatibility"
+        && (exportMode !== "compatibility"
             || compatibilityFontEntries.length > 0 || currentFontPath() !== "")
 
     LayoutMirroring.enabled: rightToLeft
@@ -64,15 +66,24 @@ FocusScope {
         return controller.uiText(key)
     }
 
+    function selectExportMode(mode) {
+        if (!controller.setConversionMode(mode))
+            return false
+        exportMode = mode
+        ensureFontSelection()
+        refreshFontValidation()
+        return true
+    }
+
     function currentFontPath() {
-        return controller.conversionMode === "unicode"
-            ? controller.unicodeFontPath
+        return exportMode === "unicode" ? controller.unicodeFontPath
             : controller.compatibilityFontPath
     }
 
     function legacyFamily(family) {
         var name = String(family)
-        return name.indexOf("F_") === 0 || name.indexOf("LMN ") === 0
+        return name.indexOf("F_") === 0 || name.indexOf("LMN_") === 0
+            || name.indexOf("LMN ") === 0
     }
 
     function rebuildFontEntries() {
@@ -87,6 +98,15 @@ FocusScope {
             persianPreview: persianFontPreview,
             bundled: true
         }]
+        unicodeEntries.push({
+            key: "bundled:IranNastaliq",
+            family: "IranNastaliq",
+            style: "",
+            display: "IranNastaliq",
+            path: "",
+            previewText: "متن نمونه. سلام دنیا",
+            bundled: true
+        })
         var compatibilityEntries = []
         for (var index = 0; index < installedFontEntries.length; index++) {
             var raw = installedFontEntries[index]
@@ -135,14 +155,12 @@ FocusScope {
     }
 
     function currentFontEntries() {
-        return controller.conversionMode === "unicode"
-            ? unicodeFontEntries : compatibilityFontEntries
+        return exportMode === "unicode" ? unicodeFontEntries : compatibilityFontEntries
     }
 
     function currentFontKey() {
         var path = currentFontPath()
-        return path === "" && controller.conversionMode === "unicode"
-            ? "bundled:Vazirmatn" : path
+        return path === "" && exportMode === "unicode" ? "bundled:Vazirmatn" : path
     }
 
     function entryForKey(key) {
@@ -157,7 +175,7 @@ FocusScope {
     function ensureFontSelection() {
         if (!fontCatalogReady)
             return
-        if (controller.conversionMode === "unicode") {
+        if (exportMode === "unicode") {
             if (controller.unicodeFontPath !== "" && !entryForKey(controller.unicodeFontPath)
                     && (!fileBridge || !fileBridge.fontPathExists(controller.unicodeFontPath)))
                 controller.setFontPath("unicode", "")
@@ -182,7 +200,8 @@ FocusScope {
     }
 
     function selectFont(entry) {
-        if (!entry || !controller.setFontPath(controller.conversionMode, String(entry.path)))
+        if (!entry || !controller.setFontPath(exportMode,
+                entry.bundled && entry.key === "bundled:IranNastaliq" ? entry.key : String(entry.path)))
             return false
         return refreshFontValidation()
     }
@@ -192,9 +211,15 @@ FocusScope {
         var previousCode = fontValidationCode
         fontValidationKey = key
         fontValidationCode = ""
-        if (!(controller.conversionMode === "unicode" && currentFontPath() === "")) {
+        if (exportMode === "unicode" && key.indexOf("bundled:") === 0) {
+            fontValidationCode = !entryForKey(key)
+                || (fileBridge && fileBridge.bundledUnicodeFontsReady === false)
+                ? "INVALID_FONT" : ""
+        } else {
             var result = fileBridge && fileBridge.inspectFont(fileBridge.localFileUrl(currentFontPath()))
             fontValidationCode = result && result.ok === true ? "" : String(result && result.code || "INVALID_FONT")
+            if (fontValidationCode === "" && exportMode === "unicode" && !entryForKey(key))
+                fontValidationCode = "INVALID_FONT"
         }
         if (fontValidationCode !== "") {
             statusText = errorText(fontValidationCode, "", [])
@@ -241,8 +266,9 @@ FocusScope {
         var padding = numberValue(paddingField)
         var precision = numberValue(precisionField)
         if (!fontSizeField.acceptableNumber || !lineSpacingField.acceptableNumber
-                || !paddingField.acceptableNumber || !precisionField.acceptableNumber
-                || Math.floor(precision) !== precision) {
+                || !paddingField.acceptableNumber
+                || (exportMode === "compatibility" && (!precisionField.acceptableNumber
+                    || Math.floor(precision) !== precision))) {
             throw new Error("INVALID_OPTION")
         }
         var fill = fillField.text.trim()
@@ -266,16 +292,17 @@ FocusScope {
             lineSpacing: lineSpacing,
             alignment: alignment,
             bounds: bounds,
-            fill: fill,
-            precision: precision
+            fill: fill
         }
-        if (fontIndexField.text.trim() !== "") {
+        if (exportMode === "compatibility")
+            result.precision = precision
+        if (exportMode === "compatibility" && fontIndexField.text.trim() !== "") {
             var fontIndex = numberValue(fontIndexField)
             if (!fontIndexField.acceptableNumber || Math.floor(fontIndex) !== fontIndex)
                 throw new Error("INVALID_OPTION")
             result.fontIndex = fontIndex
         }
-        if (axesField.text.trim() !== "") {
+        if (exportMode === "compatibility" && axesField.text.trim() !== "") {
             var parts = axesField.text.split(",")
             var axes = []
             for (var index = 0; index < parts.length; index++) {
@@ -332,18 +359,18 @@ FocusScope {
             statusLevel = "error"
             return false
         }
-        if (!fontCatalogReady) {
+        if (!modeFontReady) {
             statusText = uiText("export.loadingFonts")
             statusLevel = "info"
             return false
         }
-        if (controller.conversionMode === "compatibility" && compatibilityFontEntries.length === 0
+        if (exportMode === "compatibility" && compatibilityFontEntries.length === 0
                 && controller.compatibilityFontPath === "") {
             statusText = uiText("export.error.noCompatibilityFonts")
             statusLevel = "error"
             return false
         }
-        if (controller.conversionMode === "compatibility" && controller.compatibilityFontPath === "") {
+        if (exportMode === "compatibility" && controller.compatibilityFontPath === "") {
             statusText = uiText("export.error.fontRequired")
             statusLevel = "error"
             return false
@@ -370,16 +397,14 @@ FocusScope {
         statusText = uiText("export.processing")
         statusLevel = "info"
         var options = exportOptions()
+        if (exportMode === "unicode")
+            return exportController.exportUnicode(controller.sourceText, chosenDestination,
+                options, entryForKey(currentFontKey()))
         var conversionOptions = controller.conversionOptions()
-        if (controller.conversionMode === "unicode" && controller.unicodeFontPath === "") {
-            return exportController.exportWithBundledFont(
-                controller.sourceText, chosenDestination, options,
-                controller.conversionMode, conversionOptions)
-        }
         var fontUrl = fileBridge.localFileUrl(currentFontPath())
         return exportController.exportTo(
             controller.sourceText, fontUrl, chosenDestination, options,
-            controller.conversionMode, conversionOptions)
+            exportMode, conversionOptions)
     }
 
     function beginPreview() {
@@ -390,15 +415,14 @@ FocusScope {
         pendingPreviewSignature = previewInputSignature
         pendingPreviewSourceRevision = sourceRevision
         var options = exportOptions()
+        if (exportMode === "unicode")
+            return exportController.previewUnicode(controller.sourceText,
+                options, entryForKey(currentFontKey()))
         var conversionOptions = controller.conversionOptions()
-        if (controller.conversionMode === "unicode" && controller.unicodeFontPath === "") {
-            return exportController.previewWithBundledFont(
-                controller.sourceText, options, controller.conversionMode, conversionOptions)
-        }
         var fontUrl = fileBridge.localFileUrl(currentFontPath())
         return exportController.previewTo(
             controller.sourceText, fontUrl, options,
-            controller.conversionMode, conversionOptions)
+            exportMode, conversionOptions)
     }
 
     Keys.onEscapePressed: function(event) {
@@ -438,6 +462,7 @@ FocusScope {
         target: root.controller
         function onSourceTextChanged() { root.sourceRevision++ }
         function onConversionModeChanged() {
+            root.exportMode = root.controller.conversionMode
             Qt.callLater(function() {
                 root.ensureFontSelection()
                 if (root.visible) root.refreshFontValidation()
@@ -476,7 +501,8 @@ FocusScope {
             pendingPreviewSourceRevision = -1
             return
         }
-        if (fontCatalogReady) {
+        exportMode = controller.conversionMode
+        if (modeFontReady) {
             ensureFontSelection()
             refreshFontValidation()
         } else {
@@ -543,8 +569,8 @@ FocusScope {
                                 Layout.fillWidth: true
                                 Layout.preferredWidth: 0
                                 text: root.uiText("mode.unicode")
-                                selected: root.controller.conversionMode === "unicode"
-                                onClicked: root.controller.setConversionMode("unicode")
+                                selected: root.exportMode === "unicode"
+                                onClicked: root.selectExportMode("unicode")
                             }
 
                             AppButton {
@@ -552,10 +578,11 @@ FocusScope {
                                 Layout.fillWidth: true
                                 Layout.preferredWidth: 0
                                 text: root.uiText("mode.compatibility")
-                                selected: root.controller.conversionMode === "compatibility"
+                                selected: root.exportMode === "compatibility"
                                 enabled: !root.controller.hebrewProfile
-                                onClicked: root.controller.setConversionMode("compatibility")
+                                onClicked: root.selectExportMode("compatibility")
                             }
+
                         }
 
                         SectionHeading {
@@ -576,16 +603,16 @@ FocusScope {
                                     Layout.fillWidth: true
                                     fonts: root.currentFontEntries()
                                     selectedKey: root.currentFontKey()
-                                    mode: root.controller.conversionMode
+                                    mode: root.exportMode
                                     placeholderText: root.uiText("export.searchFonts")
-                                    emptyText: !root.fontCatalogReady
+                                    emptyText: !root.modeFontReady
                                         ? root.uiText("export.loadingFonts")
-                                        : root.controller.conversionMode === "compatibility"
+                                        : root.exportMode === "compatibility"
                                         ? root.uiText("export.noCompatibilityFonts")
                                         : root.uiText("export.noFonts")
-                                    previewText: root.controller.conversionMode === "compatibility"
+                                    previewText: root.exportMode === "compatibility"
                                         ? root.compatibilityFontPreview : root.unicodeFontPreview
-                                    enabled: root.fontCatalogReady && !root.exportController.busy
+                                    enabled: root.modeFontReady && !root.exportController.busy
                                         && fonts.length > 0
                                     onFontSelected: function(fontEntry) { root.selectFont(fontEntry) }
                                 }
@@ -604,7 +631,7 @@ FocusScope {
                                 objectName: "exportFontCatalogError"
                                 Layout.fillWidth: true
                                 visible: root.fontCatalogReady
-                                    && root.controller.conversionMode === "compatibility"
+                                    && root.exportMode === "compatibility"
                                     && root.compatibilityFontEntries.length === 0
                                 text: root.uiText("export.error.noCompatibilityFonts")
                                 font.family: AppTheme.fontFamily
@@ -616,7 +643,7 @@ FocusScope {
                             Label {
                                 objectName: "exportFontCatalogLoading"
                                 Layout.fillWidth: true
-                                visible: !root.fontCatalogReady
+                                visible: !root.modeFontReady
                                 text: root.uiText("export.loadingFonts")
                                 font.family: AppTheme.fontFamily
                                 font.pixelSize: AppTheme.fontCaption
@@ -735,11 +762,13 @@ FocusScope {
                                     NumericField { id: paddingField; objectName: "exportPadding"; Layout.fillWidth: true; minimumValue: 0; maximumValue: 100000; text: root.controller.exportSettings.padding; onEditingFinished: root.persistExportSettings() }
                                 }
                                 ColumnLayout {
+                                    visible: root.exportMode === "compatibility"
                                     Layout.fillWidth: true
                                     Label { text: root.uiText("export.precision"); font.family: AppTheme.fontFamily; color: AppTheme.muted }
                                     NumericField { id: precisionField; objectName: "exportPrecision"; Layout.fillWidth: true; minimumValue: 0; maximumValue: 8; text: root.controller.exportSettings.precision; onEditingFinished: root.persistExportSettings() }
                                 }
                                 ColumnLayout {
+                                    visible: root.exportMode === "compatibility"
                                     Layout.fillWidth: true
                                     Label { text: root.uiText("export.fontIndex"); font.family: AppTheme.fontFamily; color: AppTheme.muted }
                                     NumericField { id: fontIndexField; objectName: "exportFontIndex"; Layout.fillWidth: true; minimumValue: 0; maximumValue: 1000000; text: root.controller.exportSettings.fontIndex; placeholderText: root.uiText("export.default"); onEditingFinished: root.persistExportSettings() }
@@ -776,9 +805,10 @@ FocusScope {
                                 }
                             }
 
-                            Label { text: root.uiText("export.axes"); font.family: AppTheme.fontFamily; color: AppTheme.muted }
+                            Label { visible: root.exportMode === "compatibility"; text: root.uiText("export.axes"); font.family: AppTheme.fontFamily; color: AppTheme.muted }
                             TextField {
                                 id: axesField
+                                visible: root.exportMode === "compatibility"
                                 objectName: "exportAxes"
                                 Layout.fillWidth: true
                                 LayoutMirroring.enabled: false
@@ -815,7 +845,7 @@ FocusScope {
                         ? root.uiText("button.cancel")
                         : root.previewSvg === "" ? root.uiText("export.preview")
                         : root.uiText("export.updatePreview")
-                    enabled: root.typography.ready && root.fontCatalogReady
+                    enabled: root.typography.ready && root.modeFontReady
                         && (root.fontSelectionValid
                             || root.exportController.busy && root.exportController.pendingPreview)
                         && (!root.exportController.busy || root.exportController.pendingPreview)
@@ -905,7 +935,7 @@ FocusScope {
                     text: root.exportController.busy && !root.exportController.pendingPreview
                         ? root.uiText("button.cancel") : root.uiText("export.save")
                     accent: true
-                    enabled: root.typography.ready && root.fontCatalogReady
+                    enabled: root.typography.ready && root.modeFontReady
                         && (root.fontSelectionValid
                             || root.exportController.busy && !root.exportController.pendingPreview)
                         && !(root.exportController.busy && root.exportController.pendingPreview)

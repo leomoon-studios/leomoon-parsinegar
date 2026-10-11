@@ -10,6 +10,7 @@ LeoMoon ParsiNegar begins from the tested host-independent components bundled wi
 | `vendor/js-parsi-reshaper.js` | JsParsiReshaper v0.1.0, commit `9f7a6b36f639ccd569598ba386f2576e5e33dbe3` | `1834aeb06c640950836a63581e36f4233a6c858acab9fc40f41ae6ec448cf1e0` |
 | `vendor/typr.js` | Typr.js commit `02c121057750d8ab607873c1b369e717e858a643` with the documented QML compatibility changes | `35ce7c53430510efdd18475fae79719985bc98e99c96fafe852e89dbd2a2dee1` |
 | `assets/fonts/Vazirmatn[wght].ttf` | Vazirmatn v33.003, commit `83629f877e8f084cc07b47030b5d3a0ff06c76ec` | `696249a2c74b39ffdef55de4df2809c5b639d3ff80d618d8160a095d2fd49dca` |
+| `assets/fonts/IranNastaliq.ttf` | IranNastaliq 1.5, commit `89078bd44af0639c1a6775708fb18d255da63067` | `e6472c605bba519b25456f044df4215958ab1800ef349e5d674ab5d9cf5bf698` |
 | `assets/fonts/MaterialSymbolsRounded.ttf` | Material Symbols Rounded commit `40a7a292a79d9394157e1ea24f83d52d5e17c556`, subset to sixteen documented glyphs | `c741278830e2210e57d0a63c85e21a03ad348c05f5854974b8a7a2bbe7331110` |
 
 The fonts under `assets/fonts/system/` are first-party LeoMoon ParsiNegar compatibility fonts distributed as an optional system-wide installer component. They are not application resources.

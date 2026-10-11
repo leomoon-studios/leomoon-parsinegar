@@ -1,6 +1,6 @@
 # Third-party notices
 
-LeoMoon ParsiNegar embeds independently replaceable JavaScript libraries, a UI font, and an icon font. It performs no runtime downloads. The root [MIT license](LICENSE) covers original LeoMoon Studios desktop code, while the components below retain their own terms.
+LeoMoon ParsiNegar embeds independently replaceable JavaScript libraries, UI and export fonts, and an icon font. It performs no runtime downloads. The root [MIT license](LICENSE) covers original LeoMoon Studios desktop code, while the components below retain their own terms.
 
 ## JsBidi
 
@@ -21,6 +21,10 @@ The vendored Typr.js file is copied from Omarchy ParsiNegar Express and retains 
 The application bundles the unchanged variable font from [Vazirmatn v33.003](https://github.com/rastikerdar/vazirmatn/releases/tag/v33.003), source commit `83629f877e8f084cc07b47030b5d3a0ff06c76ec`. Copyright 2015 The Vazirmatn Project Authors. The complete SIL Open Font License 1.1 is retained at `assets/fonts/OFL.txt`.
 
 Bundled file: `assets/fonts/Vazirmatn[wght].ttf`. The font supports regular, medium, and semibold UI weights from one resource and does not need to be installed on the user's system.
+
+## IranNastaliq
+
+The Nastaliq SVG export mode bundles the unchanged IranNastaliq 1.5 TrueType font from [farsi-fonts/fonts-irannastaliq](https://github.com/farsi-fonts/fonts-irannastaliq), commit `89078bd44af0639c1a6775708fb18d255da63067`. The font is distributed under the SIL Open Font License 1.1, retained at `assets/fonts/IranNastaliq-OFL.txt`. IranNastaliq is a reserved font name in that license. The bundled file is `assets/fonts/IranNastaliq.ttf`; no font outlines or metadata were modified.
 
 ## Material Symbols
 

@@ -1,4 +1,5 @@
 #include "services/FileBridge.h"
+#include "services/UnicodeSvgExporter.h"
 #include "services/TextDirectionBridge.h"
 
 #include <QtQuickTest/quicktest.h>
@@ -11,6 +12,7 @@ class ParsiNegarTestSetup final : public QObject
 public slots:
     void applicationAvailable()
     {
+        UnicodeSvgExporter::initialize();
         qmlRegisterSingletonInstance(
             "LeoMoon.ParsiNegar.Test", 1, 0, "NativeFileBridge", &m_fileBridge);
         qmlRegisterSingletonInstance(

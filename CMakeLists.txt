@@ -33,6 +33,7 @@ find_package(Qt6 6.5 REQUIRED COMPONENTS
     Core
     Concurrent
     Gui
+    Svg
     Qml
     Quick
     QuickControls2
@@ -51,6 +52,8 @@ target_sources(parsinegar_native_services PRIVATE
     src/services/ClipboardKeeper.h
     src/services/FileBridge.cpp
     src/services/FileBridge.h
+    src/services/UnicodeSvgExporter.cpp
+    src/services/UnicodeSvgExporter.h
     src/services/KeyboardModifierBridge.cpp
     src/services/KeyboardModifierBridge.h
     src/services/SettingsStore.cpp
@@ -67,6 +70,7 @@ target_link_libraries(parsinegar_native_services PUBLIC
     Qt6::Core
     Qt6::Concurrent
     Qt6::Gui
+    Qt6::Svg
     Qt6::Quick
 )
 
@@ -144,6 +148,8 @@ qt_add_qml_module(parsinegar_ui
         assets/app-icon.svg
         "assets/fonts/Vazirmatn[wght].ttf"
         assets/fonts/OFL.txt
+        assets/fonts/IranNastaliq.ttf
+        assets/fonts/IranNastaliq-OFL.txt
         assets/fonts/MaterialSymbolsRounded.ttf
         assets/fonts/MaterialSymbols-LICENSE.txt
         vendor/js-bidi.js
@@ -321,6 +327,7 @@ if(BUILD_TESTING)
         PREFIX /qt/qml/LeoMoon/ParsiNegar
         FILES
             "assets/fonts/Vazirmatn[wght].ttf"
+            assets/fonts/IranNastaliq.ttf
     )
 
     add_test(

@@ -2,6 +2,7 @@
 #include "services/ClipboardKeeper.h"
 #include "services/FileBridge.h"
 #include "services/KeyboardModifierBridge.h"
+#include "services/UnicodeSvgExporter.h"
 #include "services/SettingsStore.h"
 #include "services/TextDirectionBridge.h"
 
@@ -13,6 +14,7 @@
 #include <QRawFont>
 #include <QQmlApplicationEngine>
 #include <QQuickStyle>
+#include <QThreadPool>
 #include <QTimer>
 #include <QVariant>
 #include <qqml.h>
@@ -46,6 +48,8 @@ bool verifyEmbeddedResources()
     constexpr std::array resources {
         ":/qt/qml/LeoMoon/ParsiNegar/assets/fonts/Vazirmatn[wght].ttf",
         ":/qt/qml/LeoMoon/ParsiNegar/assets/fonts/MaterialSymbolsRounded.ttf",
+        ":/qt/qml/LeoMoon/ParsiNegar/assets/fonts/IranNastaliq.ttf",
+        ":/qt/qml/LeoMoon/ParsiNegar/assets/fonts/IranNastaliq-OFL.txt",
         ":/qt/qml/LeoMoon/ParsiNegar/assets/app-icon.svg",
         ":/qt/qml/LeoMoon/ParsiNegar/vendor/js-bidi.js",
         ":/qt/qml/LeoMoon/ParsiNegar/vendor/js-parsi-reshaper.js",
@@ -131,6 +135,10 @@ int main(int argc, char *argv[])
     if (!verifyEmbeddedResources()) {
         return EXIT_FAILURE;
     }
+    if (!UnicodeSvgExporter::initialize()) {
+        qCritical("Bundled Unicode SVG fonts could not be registered");
+        return EXIT_FAILURE;
+    }
 
     ClipboardBridge clipboardBridge;
     SettingsStore settingsStore;
@@ -201,5 +209,8 @@ int main(int argc, char *argv[])
         timer->start();
     }
 
-    return application.exec();
+    const int result = application.exec();
+    // Font catalog and export jobs must finish before Qt tears down fontconfig.
+    QThreadPool::globalInstance()->waitForDone();
+    return result;
 }

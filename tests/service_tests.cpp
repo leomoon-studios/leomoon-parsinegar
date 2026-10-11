@@ -1,6 +1,7 @@
 #include "services/ClipboardBridge.h"
 #include "services/ClipboardKeeper.h"
 #include "services/FileBridge.h"
+#include "services/UnicodeSvgExporter.h"
 #include "services/KeyboardModifierBridge.h"
 #include "services/SettingsStore.h"
 #include "services/TextDirectionBridge.h"
@@ -17,6 +18,7 @@
 #include <QQuickWindow>
 #include <QRawFont>
 #include <QSignalSpy>
+#include <QSvgRenderer>
 #include <QStandardPaths>
 #include <QTemporaryDir>
 #include <QTest>
@@ -49,6 +51,10 @@ private slots:
     void fileBridgeWritesSvgAtomically();
     void fileBridgeReportsWriteFailuresAndLimits();
     void fileBridgeCompletesFontAndSvgWorkAsynchronously();
+    void nastaliqExporterPreservesSourceAndProducesOutlines();
+    void nastaliqLinesUseOutlinedHeightForSpacing();
+    void nastaliqExporterUsesSelectedFontFile();
+    void nastaliqExporterUsesInstalledMatchingFonts();
     void textDirectionBridgeAlignsRenderedParagraphs();
 };
 
@@ -79,6 +85,119 @@ void ServiceTests::initTestCase()
     QCoreApplication::setOrganizationName(QStringLiteral("LeoMoon Studios"));
     QCoreApplication::setOrganizationDomain(QStringLiteral("leomoon-studios.com"));
     QCoreApplication::setApplicationName(QStringLiteral("LeoMoon ParsiNegar Tests"));
+    QVERIFY(UnicodeSvgExporter::initialize());
+}
+
+void ServiceTests::nastaliqExporterPreservesSourceAndProducesOutlines()
+{
+    const QString source = QStringLiteral("متن نمونه.\nنیم‌فاصله سلام دنیا");
+    const QVariantMap options {
+        {QStringLiteral("fontSize"), 72},
+        {QStringLiteral("lineSpacing"), 1.5},
+        {QStringLiteral("alignment"), QStringLiteral("right")},
+        {QStringLiteral("fill"), QStringLiteral("#123456")},
+        {QStringLiteral("bounds"), QVariantMap {{QStringLiteral("padding"), 20}}},
+    };
+    const QVariantMap result = UnicodeSvgExporter::render(source, options);
+    QVERIFY2(succeeded(result), qPrintable(result.value(QStringLiteral("message")).toString()));
+    QCOMPARE(result.value(QStringLiteral("convertedText")).toString(), source);
+    QVERIFY(result.value(QStringLiteral("missingGlyphs")).toList().isEmpty());
+    QCOMPARE(result.value(QStringLiteral("font")).toMap().value(QStringLiteral("family")).toString(),
+             QStringLiteral("IranNastaliq"));
+    const QString svg = result.value(QStringLiteral("svg")).toString();
+    QVERIFY(svg.contains(QStringLiteral("<svg")));
+    QVERIFY(svg.contains(QStringLiteral("<path")));
+    QVERIFY(!svg.contains(QStringLiteral("<text")));
+    QVERIFY(!svg.contains(QStringLiteral("متن")));
+}
+
+void ServiceTests::nastaliqLinesUseOutlinedHeightForSpacing()
+{
+    const QVariantMap options {
+        {QStringLiteral("fontSize"), 72},
+        {QStringLiteral("lineSpacing"), 1.2},
+        {QStringLiteral("bounds"), QVariantMap {{QStringLiteral("padding"), 0}}},
+    };
+    const QVariantMap oneLine = UnicodeSvgExporter::render(QStringLiteral("سلام"), options);
+    const QVariantMap twoLines = UnicodeSvgExporter::render(QStringLiteral("سلام\nسلام"), options);
+    QVERIFY(succeeded(oneLine));
+    QVERIFY(succeeded(twoLines));
+    QSvgRenderer singleSvg(oneLine.value(QStringLiteral("svg")).toString().toUtf8());
+    QSvgRenderer doubleSvg(twoLines.value(QStringLiteral("svg")).toString().toUtf8());
+    QVERIFY(singleSvg.isValid());
+    QVERIFY(doubleSvg.isValid());
+    QVERIFY2(doubleSvg.viewBoxF().height() >= singleSvg.viewBoxF().height() * 2.1,
+             "Nastaliq lines must have a visible gap based on their outlined height");
+
+    QVariantMap widerOptions = options;
+    widerOptions.insert(QStringLiteral("lineSpacing"), 1.6);
+    const QVariantMap widerLines = UnicodeSvgExporter::render(QStringLiteral("سلام\nسلام"), widerOptions);
+    QVERIFY(succeeded(widerLines));
+    QSvgRenderer widerSvg(widerLines.value(QStringLiteral("svg")).toString().toUtf8());
+    QVERIFY(widerSvg.isValid());
+    QVERIFY(widerSvg.viewBoxF().height() > doubleSvg.viewBoxF().height());
+}
+
+void ServiceTests::nastaliqExporterUsesSelectedFontFile()
+{
+    QTemporaryDir directory;
+    QVERIFY(directory.isValid());
+    QFile bundled(QStringLiteral(":/qt/qml/LeoMoon/ParsiNegar/assets/fonts/IranNastaliq.ttf"));
+    QVERIFY(bundled.open(QIODevice::ReadOnly));
+    const QString path = directory.filePath(QStringLiteral("selected.ttf"));
+    writeBytes(path, bundled.readAll());
+
+    const QString sample = QStringLiteral("متن نمونه");
+    const QVariantMap result = UnicodeSvgExporter::render(sample, {}, path,
+        QStringLiteral("IranNastaliq"), QStringLiteral("Regular"));
+    QVERIFY2(succeeded(result), qPrintable(result.value(QStringLiteral("message")).toString()));
+    QCOMPARE(result.value(QStringLiteral("font")).toMap().value(QStringLiteral("family")).toString(),
+             QStringLiteral("IranNastaliq"));
+    QCOMPARE(result.value(QStringLiteral("convertedText")).toString(), sample);
+
+    FileBridge bridge;
+    QSignalSpy rendered(&bridge, &FileBridge::unicodeSvgCompleted);
+    QVERIFY(bridge.renderUnicodeSvgAsync(42, sample, {}, path,
+        QStringLiteral("IranNastaliq"), QStringLiteral("Regular")));
+    QTRY_COMPARE_WITH_TIMEOUT(rendered.count(), 1, 10000);
+    QCOMPARE(rendered.first().at(0).toInt(), 42);
+    QVERIFY(succeeded(rendered.first().at(1).toMap()));
+
+    const QVariantMap changed = UnicodeSvgExporter::render(sample, {}, path,
+        QStringLiteral("Different Font"), QStringLiteral("Regular"));
+    QCOMPARE(errorCode(changed), QStringLiteral("INVALID_FONT"));
+    const QString invalidPath = directory.filePath(QStringLiteral("invalid.ttf"));
+    writeBytes(invalidPath, QByteArrayLiteral("not a font"));
+    const QVariantMap invalid = UnicodeSvgExporter::render(sample, {}, invalidPath,
+        QStringLiteral("IranNastaliq"), QStringLiteral("Regular"));
+    QCOMPARE(errorCode(invalid), QStringLiteral("INVALID_FONT"));
+}
+
+void ServiceTests::nastaliqExporterUsesInstalledMatchingFonts()
+{
+    FileBridge bridge;
+    QVERIFY(bridge.scanInstalledFontsAsync());
+    QTRY_VERIFY_WITH_TIMEOUT(bridge.fontCatalogReady(), 10000);
+
+    int matchingFonts = 0;
+    for (const QVariant &value : bridge.fontCatalog()) {
+        const QVariantMap entry = value.toMap();
+        const QString family = entry.value(QStringLiteral("family")).toString();
+        if (family.compare(QStringLiteral("IranNastaliq"), Qt::CaseInsensitive) == 0
+            || (!family.contains(QStringLiteral("Nastaliq"), Qt::CaseInsensitive)
+                && !family.startsWith(QStringLiteral("wm_Mirza"), Qt::CaseInsensitive))) {
+            continue;
+        }
+        const QVariantMap result = UnicodeSvgExporter::render(
+            QStringLiteral("سلام"), {}, entry.value(QStringLiteral("path")).toString(),
+            family, entry.value(QStringLiteral("style")).toString());
+        QVERIFY2(succeeded(result), qPrintable(family + QStringLiteral(": ")
+            + result.value(QStringLiteral("message")).toString()));
+        QCOMPARE(result.value(QStringLiteral("font")).toMap().value(QStringLiteral("family")).toString(), family);
+        ++matchingFonts;
+    }
+    if (matchingFonts == 0)
+        QSKIP("No matching installed Nastaliq fonts were found on this test system");
 }
 
 void ServiceTests::clipboardRoundTrip()

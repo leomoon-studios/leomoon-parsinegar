@@ -7,6 +7,8 @@ set(required_files
     SOURCES.md
     THIRD_PARTY_NOTICES.md
     assets/fonts/OFL.txt
+    assets/fonts/IranNastaliq.ttf
+    assets/fonts/IranNastaliq-OFL.txt
     "assets/fonts/Vazirmatn[wght].ttf"
     assets/fonts/MaterialSymbols-LICENSE.txt
     assets/fonts/MaterialSymbolsRounded.ttf
@@ -37,7 +39,7 @@ foreach(relative_path IN LISTS required_files)
 endforeach()
 
 file(READ "${SOURCE_DIR}/THIRD_PARTY_NOTICES.md" notices)
-foreach(dependency IN ITEMS JsBidi JsParsiReshaper Typr.js Vazirmatn "Material Symbols")
+foreach(dependency IN ITEMS JsBidi JsParsiReshaper Typr.js Vazirmatn IranNastaliq "Material Symbols")
     string(FIND "${notices}" "${dependency}" match_position)
     if(match_position EQUAL -1)
         message(FATAL_ERROR "THIRD_PARTY_NOTICES.md does not identify ${dependency}")

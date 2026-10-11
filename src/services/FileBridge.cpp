@@ -1,4 +1,5 @@
 #include "FileBridge.h"
+#include "UnicodeSvgExporter.h"
 
 #include <QDir>
 #include <QDirIterator>
@@ -334,6 +335,31 @@ bool FileBridge::readBundledFontAsync(int requestId)
         emit fontReadCompleted(requestId, result);
     });
     watcher->setFuture(QtConcurrent::run(readBundledFont));
+    return true;
+}
+
+bool FileBridge::bundledUnicodeFontsReady() const
+{
+    return UnicodeSvgExporter::isReady();
+}
+
+bool FileBridge::renderUnicodeSvgAsync(int requestId, const QString &text,
+                                        const QVariantMap &options,
+                                        const QString &fontPath,
+                                        const QString &fontFamily,
+                                        const QString &fontStyle)
+{
+    if (requestId <= 0 || !bundledUnicodeFontsReady())
+        return false;
+    auto *watcher = new QFutureWatcher<QVariantMap>(this);
+    connect(watcher, &QFutureWatcher<QVariantMap>::finished, this, [this, watcher, requestId]() {
+        const QVariantMap result = watcher->result();
+        watcher->deleteLater();
+        emit unicodeSvgCompleted(requestId, result);
+    });
+    watcher->setFuture(QtConcurrent::run([text, options, fontPath, fontFamily, fontStyle]() {
+        return UnicodeSvgExporter::render(text, options, fontPath, fontFamily, fontStyle);
+    }));
     return true;
 }
 

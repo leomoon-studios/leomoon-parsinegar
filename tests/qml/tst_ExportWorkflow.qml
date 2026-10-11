@@ -31,7 +31,13 @@ TestCase {
             QtObject {
                 id: bridgeProxy
                 signal fontReadCompleted(int requestId, var result)
+                signal unicodeSvgCompleted(int requestId, var result)
                 signal svgWriteCompleted(int requestId, var result)
+
+                function renderUnicodeSvgAsync(id, text, options, path, family, style) {
+                    return NativeFileBridge.renderUnicodeSvgAsync(id, text, options,
+                        path, family, style)
+                }
 
                 function readBundledFontAsync(id) {
                     return NativeFileBridge.readBundledFontAsync(id)
@@ -60,6 +66,9 @@ TestCase {
                 function onFontReadCompleted(id, result) {
                     bridgeProxy.fontReadCompleted(id, result)
                 }
+                function onUnicodeSvgCompleted(id, result) {
+                    bridgeProxy.unicodeSvgCompleted(id, result)
+                }
             }
 
             SvgCurveExportController {
@@ -85,6 +94,44 @@ TestCase {
                 asynchronous: true
             }
         }
+    }
+
+    function test_unicodeUsesQtOutlinesAndKeepsSourceUnchanged() {
+        var harness = createTemporaryObject(harnessComponent, testCase)
+        verify(harness !== null)
+        var source = "متن نمونه.\nسلام دنیا"
+        harness.editorController.sourceText = source
+        verify(harness.exportController.exportUnicode(source,
+            "file:///tmp/mock-output.svg", {
+                fontSize: 72,
+                lineSpacing: 1.5,
+                alignment: "right",
+                bounds: { padding: 20 },
+                fill: "#123456"
+            }, { key: "bundled:IranNastaliq", family: "IranNastaliq", style: "", path: "", bundled: true }))
+        tryCompare(harness.exportController, "busy", false, 20000)
+        compare(harness.exportController.errorCode, "")
+        compare(harness.editorController.sourceText, source)
+        compare(harness.exportController.convertedText, source)
+        compare(harness.exportController.fontIdentity.family, "IranNastaliq")
+        verify(/<svg\b/.test(harness.capturedSvg))
+        verify(/<path\b/.test(harness.capturedSvg))
+        verify(!/<(?:text|tspan|image|foreignObject)\b/i.test(harness.capturedSvg))
+    }
+
+    function test_unicodeRegularFontKeepsLatinAndPersianSourceUnchanged() {
+        var harness = createTemporaryObject(harnessComponent, testCase)
+        verify(harness !== null)
+        var source = "Hello سلام 123\nسلام Hello ۱۲۳"
+        verify(harness.exportController.previewUnicode(source, {
+            fontSize: 48, lineSpacing: 1.2, alignment: "left",
+            bounds: { padding: 12 }, fill: "#123456"
+        }, { key: "bundled:Vazirmatn", family: "Vazirmatn", style: "", path: "", bundled: true }))
+        tryCompare(harness.exportController, "busy", false, 20000)
+        compare(harness.exportController.errorCode, "")
+        compare(harness.exportController.convertedText, source)
+        compare(harness.exportController.fontIdentity.family, "Vazirmatn")
+        verify(/<path\b/.test(harness.previewSvg))
     }
 
     function test_realWorkerConvertsAndOutlinesWithoutChangingSource() {

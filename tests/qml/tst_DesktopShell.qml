@@ -38,6 +38,7 @@ TestCase {
                 property bool fontCatalogReady: true
                 property bool fontCatalogScanning: false
                 property var fontInspection: ({ ok: true })
+                function renderUnicodeSvgAsync(requestId, text, options, path, family, style) { return true }
                 function readBundledFontAsync(requestId) { return true }
                 function readFontAsync(requestId, url) { return true }
                 function writeSvgAsync(requestId, destination, svg) { return true }
@@ -1056,6 +1057,45 @@ TestCase {
         verify(typography.errorMessage.length > 0)
     }
 
+    function test_unicodeExportListsBundledNastaliqAndRegularFonts() {
+        var applicationWindow = createMainWindow()
+        var controller = applicationWindow.editorController
+        var exportPage = findChild(applicationWindow, "exportPage")
+        var unicodeButton = findChild(applicationWindow, "exportUnicodeButton")
+        var fontSelector = findChild(applicationWindow, "exportFontSelector")
+        var refreshButton = findChild(applicationWindow, "refreshExportFontsButton")
+        var axesField = findChild(applicationWindow, "exportAxes")
+        verify(exportPage !== null)
+        verify(unicodeButton !== null)
+        verify(fontSelector !== null)
+        controller.setConversionMode("unicode")
+        controller.openExport()
+        unicodeButton.click()
+        exportPage.applyFontCatalog([
+            { family: "Noto Nastaliq Urdu", style: "Regular", path: "/fonts/noto.ttf" },
+            { family: "wm_Mirza", style: "Regular", path: "/fonts/Mirza.ttf" },
+            { family: "Another Font", style: "Regular", path: "/fonts/FancyNastaliq.ttf" },
+            { family: "Plain Sans", style: "Regular", path: "/fonts/plain.ttf" },
+            { family: "F_Legacy", style: "Regular", path: "/fonts/legacy.ttf" },
+            { family: "LMN_Legacy", style: "Regular", path: "/fonts/lmn.ttf" }
+        ])
+        compare(exportPage.exportMode, "unicode")
+        compare(controller.conversionMode, "unicode")
+        compare(fontSelector.fonts.length, 6)
+        compare(fontSelector.fonts[0].family, "Vazirmatn")
+        compare(fontSelector.fonts[1].family, "IranNastaliq")
+        compare(fontSelector.fonts[2].family, "Noto Nastaliq Urdu")
+        compare(fontSelector.fonts[5].family, "Plain Sans")
+        compare(fontSelector.selectedKey, "bundled:Vazirmatn")
+        verify(exportPage.selectFont(fontSelector.fonts[1]))
+        compare(fontSelector.selectedKey, "bundled:IranNastaliq")
+        compare(controller.unicodeFontPath, "bundled:IranNastaliq")
+        verify(refreshButton.visible)
+        verify(!axesField.visible)
+        exportPage.applyFontCatalog([])
+        compare(fontSelector.selectedKey, "bundled:IranNastaliq")
+    }
+
     function test_exportPageNavigationAndResponsiveControls() {
         var applicationWindow = createMainWindow()
         var controller = applicationWindow.editorController
@@ -1156,9 +1196,9 @@ TestCase {
         compare(fontSelector.searchField.font.family, AppTheme.fontFamily)
         compare(fontSelector.previewText, exportPage.unicodeFontPreview)
         compare(fontSelector.mode, "unicode")
-        compare(exportPage.unicodeFontEntries[1].previewText, "Latin □□□")
-        compare(exportPage.unicodeFontEntries[1].englishPreview, "Latin 0123")
-        compare(exportPage.unicodeFontEntries[1].persianPreview, "□□□ ۱۲۳")
+        compare(exportPage.unicodeFontEntries[2].previewText, "Latin □□□")
+        compare(exportPage.unicodeFontEntries[2].englishPreview, "Latin 0123")
+        compare(exportPage.unicodeFontEntries[2].persianPreview, "□□□ ۱۲۳")
         compare(exportPage.unicodeFontEntries[0].englishPreview, exportPage.englishFontPreview)
         compare(exportPage.unicodeFontEntries[0].persianPreview, exportPage.persianFontPreview)
         verify(fontSelector.previewText.indexOf("The quick brown fox") >= 0)
@@ -1293,6 +1333,7 @@ TestCase {
         previewButton.click()
         compare(exportController.busy, true)
         compare(exportController.pendingPreview, true)
+        compare(exportController.pendingNative, true)
         verify(!saveButton.enabled)
         previewButton.click()
         compare(exportController.busy, false)
@@ -1325,6 +1366,7 @@ TestCase {
 
         verify(exportPage.beginExport())
         compare(exportController.pendingText, source)
+        compare(exportController.pendingNative, true)
         compare(controller.sourceText, source)
         compare(controller.sourceHistory.undo.length, historyLength)
         verify(exportController.cancel())

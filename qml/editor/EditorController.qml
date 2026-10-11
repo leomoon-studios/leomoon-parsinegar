@@ -464,7 +464,7 @@ Item {
     function setFontPath(mode, path) {
         if (mode !== "unicode" && mode !== "compatibility")
             return false
-        var nextPath = validFontPath(path) ? path : ""
+        var nextPath = validFontPath(path, mode) ? path : ""
         if (mode === "unicode")
             unicodeFontPath = nextPath
         else
@@ -473,9 +473,11 @@ Item {
         return nextPath !== "" || path === ""
     }
 
-    function validFontPath(path) {
+    function validFontPath(path, mode) {
         if (typeof path !== "string" || path === "")
             return false
+        if (mode === "unicode" && path === "bundled:IranNastaliq")
+            return !fileBridge || fileBridge.bundledUnicodeFontsReady !== false
         return fileBridge && typeof fileBridge.fontPathExists === "function"
             ? fileBridge.fontPathExists(path)
             : false
@@ -566,8 +568,8 @@ Item {
         keyboardDrawerOpen = desktop.keyboardDrawerOpen
         accentPreset = desktop.accentPreset
         exportSettings = Settings.ReshaperSettings.sanitizeExportSettings(desktop.exportSettings)
-        unicodeFontPath = validFontPath(desktop.fontPaths.unicode) ? desktop.fontPaths.unicode : ""
-        compatibilityFontPath = validFontPath(desktop.fontPaths.compatibility) ? desktop.fontPaths.compatibility : ""
+        unicodeFontPath = validFontPath(desktop.fontPaths.unicode, "unicode") ? desktop.fontPaths.unicode : ""
+        compatibilityFontPath = validFontPath(desktop.fontPaths.compatibility, "compatibility") ? desktop.fontPaths.compatibility : ""
         return unicodeFontPath !== desktop.fontPaths.unicode
             || compatibilityFontPath !== desktop.fontPaths.compatibility
             || state.conversionMode !== desktop.conversionMode

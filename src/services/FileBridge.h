@@ -13,6 +13,7 @@ class FileBridge final : public QObject
     Q_PROPERTY(QVariantList fontCatalog READ fontCatalog NOTIFY fontCatalogChanged)
     Q_PROPERTY(bool fontCatalogReady READ fontCatalogReady NOTIFY fontCatalogReadyChanged)
     Q_PROPERTY(bool fontCatalogScanning READ fontCatalogScanning NOTIFY fontCatalogScanningChanged)
+    Q_PROPERTY(bool bundledUnicodeFontsReady READ bundledUnicodeFontsReady CONSTANT)
 
 public:
     static constexpr qint64 maximumFontBytes = 5LL * 1024 * 1024;
@@ -26,11 +27,17 @@ public:
     [[nodiscard]] QVariantList fontCatalog() const;
     [[nodiscard]] bool fontCatalogReady() const;
     [[nodiscard]] bool fontCatalogScanning() const;
+    [[nodiscard]] bool bundledUnicodeFontsReady() const;
 
     Q_INVOKABLE QVariantMap readFont(const QUrl &url);
     Q_INVOKABLE QVariantMap inspectFont(const QUrl &url);
     Q_INVOKABLE bool readFontAsync(int requestId, const QUrl &url);
     Q_INVOKABLE bool readBundledFontAsync(int requestId);
+    Q_INVOKABLE bool renderUnicodeSvgAsync(int requestId, const QString &text,
+                                           const QVariantMap &options,
+                                           const QString &fontPath,
+                                           const QString &fontFamily,
+                                           const QString &fontStyle);
     Q_INVOKABLE QString localFilePath(const QUrl &url);
     Q_INVOKABLE QUrl localFileUrl(const QString &path) const;
     Q_INVOKABLE bool fontPathExists(const QString &path) const;
@@ -48,6 +55,7 @@ signals:
     void textDocumentWritten(const QString &path, qsizetype characterCount, qint64 byteCount);
     void svgWritten(const QString &path, qint64 byteCount);
     void fontReadCompleted(int requestId, const QVariantMap &result);
+    void unicodeSvgCompleted(int requestId, const QVariantMap &result);
     void svgWriteCompleted(int requestId, const QVariantMap &result);
     void operationFailed(const QString &code, const QString &message);
     void lastErrorChanged();

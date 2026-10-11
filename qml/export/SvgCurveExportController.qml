@@ -24,6 +24,7 @@ Item {
     property string pendingConversionMode: ""
     property var pendingConversionOptions: ({})
     property bool pendingPreview: false
+    property bool pendingNative: false
     property string convertedText: ""
     property var fontByteView: null
     property int fontByteOffset: 0
@@ -36,7 +37,8 @@ Item {
     function cancel() {
         if (!busy)
             return false
-        curveWorker.sendMessage({ action: "cancel", id: activeRequestId })
+        if (!pendingNative)
+            curveWorker.sendMessage({ action: "cancel", id: activeRequestId })
         requestId++
         activeRequestId = 0
         resetPending()
@@ -65,6 +67,54 @@ Item {
             conversionMode, conversionOptions, true, true)
     }
 
+    function exportUnicode(text, destinationUrl, options, fontEntry) {
+        return startUnicode(text, destinationUrl, options, fontEntry, false)
+    }
+
+    function previewUnicode(text, options, fontEntry) {
+        return startUnicode(text, "", options, fontEntry, true)
+    }
+
+    function startUnicode(text, destinationUrl, options, fontEntry, preview) {
+        if (busy || !fileBridge || typeof fileBridge.renderUnicodeSvgAsync !== "function")
+            return false
+        if (!fontEntry) {
+            failExport("INVALID_FONT", "Choose a Unicode font before exporting.", [])
+            return false
+        }
+        try {
+            Limits.ResourceLimits.assertTextLength(
+                text, Limits.ResourceLimits.values.maxSvgTextLength, "EXPORT_TEXT_TOO_LARGE")
+        } catch (error) {
+            failExport(error.code, error.message || error, error.details || [])
+            return false
+        }
+        busy = true
+        errorCode = ""
+        errorMessage = ""
+        outputPath = ""
+        missingGlyphs = []
+        fontIdentity = ({})
+        pendingText = text
+        pendingDestination = destinationUrl
+        pendingOptions = options || ({})
+        pendingConversionMode = ""
+        pendingConversionOptions = ({})
+        pendingPreview = preview
+        pendingNative = true
+        requestId++
+        activeRequestId = requestId
+        var selected = fontEntry
+        var fontSource = selected.bundled ? String(selected.key || "bundled:Vazirmatn") : String(selected.path || "")
+        if (!fileBridge.renderUnicodeSvgAsync(activeRequestId, text, pendingOptions,
+                fontSource, String(selected.family || ""),
+                String(selected.style || ""))) {
+            failExport("INVALID_FONT", "The selected Unicode font is unavailable.", [])
+            return false
+        }
+        return true
+    }
+
     function startRequest(text, fontUrl, destinationUrl, options,
                           conversionMode, conversionOptions, bundled, preview) {
         if (busy || !fileBridge
@@ -89,6 +139,7 @@ Item {
         pendingConversionMode = conversionMode || ""
         pendingConversionOptions = conversionOptions || ({})
         pendingPreview = preview
+        pendingNative = false
         requestId++
         activeRequestId = requestId
         var started = bundled
@@ -127,6 +178,13 @@ Item {
             failExport(error.code, error.message || error, error.details || [])
         }
         return true
+    }
+
+    function finishUnicodeRender(id, result) {
+        if (!busy || !pendingNative || id !== activeRequestId)
+            return false
+        return finishWorker(Object.assign({ id: id }, result || ({ ok: false,
+            code: "EXPORT_FAILED", message: "Unicode SVG rendering failed." })))
     }
 
     function copyFontChunk() {
@@ -195,7 +253,7 @@ Item {
     }
 
     function failExport(code, message, details) {
-        if (activeRequestId !== 0)
+        if (activeRequestId !== 0 && !pendingNative)
             curveWorker.sendMessage({ action: "cancel", id: activeRequestId })
         requestId++
         activeRequestId = 0
@@ -213,6 +271,7 @@ Item {
         pendingConversionMode = ""
         pendingConversionOptions = ({})
         pendingPreview = false
+        pendingNative = false
         fontByteView = null
         fontByteOffset = 0
     }
@@ -228,5 +287,6 @@ Item {
         ignoreUnknownSignals: true
         function onFontReadCompleted(id, result) { root.finishFontRead(id, result) }
         function onSvgWriteCompleted(id, result) { root.finishWrite(id, result) }
+        function onUnicodeSvgCompleted(id, result) { root.finishUnicodeRender(id, result) }
     }
 }
