@@ -1,5 +1,7 @@
 # LeoMoon ParsiNegar
 
+**Language:** English | [پارسی](README.fa.md)
+
 ## Introduction
 
 > Without a free and easy way to type, Persian culture cannot advance.
