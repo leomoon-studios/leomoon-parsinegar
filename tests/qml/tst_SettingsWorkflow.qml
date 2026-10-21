@@ -108,6 +108,12 @@ TestCase {
             clipboardService: clipboardMock
             settingsService: settingsStoreMock
             fileService: fileBridgeMock
+            property QtObject updateMock: QtObject {
+                signal updateAvailable(string version)
+                property int checkCount: 0
+                function checkForUpdates() { checkCount++ }
+            }
+            updateService: updateMock
         }
     }
 
@@ -301,6 +307,64 @@ TestCase {
         compare(restored.sourceText, "")
         compare(restored.lastOutput, "")
         compare(restored.statusText, "")
+    }
+
+    function test_updateNoticeCanBeDismissedAndDisabledAcrossLaunches() {
+        settingsStoreMock.exists = true
+        settingsStoreMock.data = JSON.stringify({
+            schemaVersion: 1, settings: {},
+            desktop: { updateNotificationsDisabled: true }
+        })
+
+        var disabledWindow = createTemporaryObject(mainWindowComponent, null)
+        verify(disabledWindow !== null)
+        var disabledController = disabledWindow.editorController
+        tryCompare(disabledController, "settingsReady", true)
+        wait(0)
+        compare(disabledWindow.updateMock.checkCount, 0)
+        disabledController.openSettings()
+        var automaticCheck = findChild(disabledWindow, "automaticUpdateCheckToggle")
+        verify(automaticCheck !== null)
+        compare(automaticCheck.checked, false)
+        automaticCheck.click()
+        compare(disabledController.updateNotificationsDisabled, false)
+        compare(JSON.parse(settingsStoreMock.data).desktop.updateNotificationsDisabled, false)
+
+        var availableWindow = createTemporaryObject(mainWindowComponent, null)
+        verify(availableWindow !== null)
+        tryCompare(availableWindow.updateMock, "checkCount", 1)
+        var dialog = findChild(availableWindow, "updateAvailableDialog")
+        var optOut = findChild(availableWindow, "suppressUpdatesCheckBox")
+        var cancel = findChild(availableWindow, "cancelUpdateButton")
+        var openDownloads = findChild(availableWindow, "openUpdateDownloadsButton")
+        verify(dialog !== null)
+        verify(optOut !== null)
+        verify(cancel !== null)
+        verify(openDownloads !== null)
+        compare(dialog.visible, false)
+        availableWindow.updateMock.updateAvailable("3.1.0")
+        tryCompare(dialog, "visible", true)
+        compare(availableWindow.availableUpdateVersion, "3.1.0")
+        compare(optOut.checked, false)
+        compare(openDownloads.text, availableWindow.editorController.uiText("updates.openDownloads"))
+        cancel.click()
+        tryCompare(dialog, "visible", false)
+        compare(availableWindow.editorController.updateNotificationsDisabled, false)
+
+        availableWindow.updateMock.updateAvailable("3.1.0")
+        tryCompare(dialog, "visible", true)
+        optOut.click()
+        compare(availableWindow.editorController.updateNotificationsDisabled, true)
+        compare(JSON.parse(settingsStoreMock.data).desktop.updateNotificationsDisabled, true)
+        cancel.click()
+        tryCompare(dialog, "visible", false)
+
+        var nextWindow = createTemporaryObject(mainWindowComponent, null)
+        verify(nextWindow !== null)
+        tryCompare(nextWindow.editorController, "settingsReady", true)
+        wait(0)
+        compare(nextWindow.updateMock.checkCount, 0)
+        compare(findChild(nextWindow, "updateAvailableDialog").visible, false)
     }
 
     function test_invalidAndOversizedSettingsRecoverAtomically() {

@@ -59,7 +59,7 @@ FocusScope {
         },
         {
             heading: "Settings and privacy",
-            body: "Desktop saves interface preferences, editor font size, shaping options, Text tool toggles, and SVG export choices in this platform-specific settings file:",
+            body: "Desktop saves interface preferences, editor font size, shaping options, Text tool toggles, SVG export choices, and the update-check preference in this platform-specific settings file:\n\nOn startup, the app checks GitHub's latest published release. If a newer version exists, it offers to open the downloads page. You can disable future checks in the update dialog and re-enable them in Settings. No editor text or settings are sent with the request.",
             path: root.displayedSettingsFilePath,
             footer: "It does not save the editor draft, converted output, clipboard contents, status messages, or undo history in that settings file."
         }
@@ -104,7 +104,7 @@ FocusScope {
         },
         {
             heading: "تنظیمات و حریم خصوصی",
-            body: "برنامه زبان رابط، اندازهٔ فونت ویرایشگر، گزینه‌های شکل‌دهی، کلیدهای ابزار متن و انتخاب‌های SVG را در پروندهٔ تنظیمات ویژهٔ این سیستم ذخیره می‌کند:",
+            body: "برنامه زبان رابط، اندازهٔ فونت ویرایشگر، گزینه‌های شکل‌دهی، کلیدهای ابزار متن، انتخاب‌های SVG و ترجیح بررسی نسخهٔ تازه را در پروندهٔ تنظیمات ویژهٔ این سیستم ذخیره می‌کند:\n\nبرنامه هنگام اجرا تازه‌ترین نسخهٔ منتشرشده را در گیت‌هاب بررسی می‌کند. اگر نسخهٔ تازه‌تری باشد، باز کردن صفحهٔ دریافت را پیشنهاد می‌دهد. می‌توانید بررسی‌های بعدی را در پنجرهٔ اعلان غیرفعال و در تنظیمات دوباره فعال کنید. متن و تنظیمات شما با این درخواست فرستاده نمی‌شوند.",
             path: root.displayedSettingsFilePath,
             footer: "متن مبدأ، خروجی تبدیل‌شده، کلیپ‌بورد، پیام‌های وضعیت و تاریخچهٔ واگردانی در این پرونده ذخیره نمی‌شوند."
         }
@@ -149,7 +149,7 @@ FocusScope {
         },
         {
             heading: "الإعدادات والخصوصية",
-            body: "يحفظ سطح المكتب تفضيلات الواجهة وحجم خط المحرر وخيارات التشكيل ومفاتيح أدوات النص وخيارات تصدير SVG في ملف الإعدادات الخاص بهذه المنصة:",
+            body: "يحفظ سطح المكتب تفضيلات الواجهة وحجم خط المحرر وخيارات التشكيل ومفاتيح أدوات النص وخيارات تصدير SVG وتفضيل التحقق من التحديثات في ملف الإعدادات الخاص بهذه المنصة:\n\nيتحقق التطبيق عند بدء التشغيل من أحدث إصدار منشور على GitHub. إذا توفر إصدار أحدث، يعرض فتح صفحة التنزيلات. يمكنك تعطيل التحقق اللاحق في مربع التحديث وإعادة تفعيله من الإعدادات. لا يُرسل نص المحرر أو الإعدادات مع هذا الطلب.",
             path: root.displayedSettingsFilePath,
             footer: "لا يحفظ مسودة المحرر أو الناتج المحوّل أو محتويات الحافظة أو رسائل الحالة أو محفوظات التراجع في ملف الإعدادات هذا."
         }

@@ -515,6 +515,7 @@ var CoreTestResults;
             editorFontSize: 14,
             keyboardDrawerOpen: true,
             accentPreset: "purple",
+            updateNotificationsDisabled: false,
             fontPaths: { unicode: "/fonts/unicode.ttf", compatibility: "/fonts/maryam.otf" },
             unicodeFontStyle: "",
             exportSettings: settings.desktopDefaults().exportSettings

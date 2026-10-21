@@ -2,6 +2,7 @@
 #include "services/ClipboardKeeper.h"
 #include "services/FileBridge.h"
 #include "services/KeyboardModifierBridge.h"
+#include "services/ReleaseChecker.h"
 #include "services/UnicodeSvgExporter.h"
 #include "services/SettingsStore.h"
 #include "services/TextDirectionBridge.h"
@@ -143,6 +144,7 @@ int main(int argc, char *argv[])
     ClipboardBridge clipboardBridge;
     SettingsStore settingsStore;
     FileBridge fileBridge;
+    ReleaseChecker releaseChecker;
     KeyboardModifierBridge keyboardModifierBridge;
     TextDirectionBridge textDirectionBridge;
     qmlRegisterSingletonInstance("LeoMoon.ParsiNegar.Native", 1, 0, "ClipboardBridge", &clipboardBridge);
@@ -163,6 +165,7 @@ int main(int argc, char *argv[])
         {QStringLiteral("clipboardService"), QVariant::fromValue(&clipboardBridge)},
         {QStringLiteral("settingsService"), QVariant::fromValue(&settingsStore)},
         {QStringLiteral("fileService"), QVariant::fromValue(&fileBridge)},
+        {QStringLiteral("updateService"), QVariant::fromValue(&releaseChecker)},
         {QStringLiteral("modifierService"), QVariant::fromValue(&keyboardModifierBridge)},
         {QStringLiteral("textDirectionService"), QVariant::fromValue(&textDirectionBridge)},
     });

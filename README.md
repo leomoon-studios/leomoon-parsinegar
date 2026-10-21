@@ -126,6 +126,8 @@ The macOS workflow creates a universal Intel and Apple Silicon bundle with Qt 6.
 
 Language, editor size, shaping choices, text-tool settings, conversion preferences, selected fonts, and SVG export options persist between launches. Draft text, converted output, clipboard contents, status messages, and undo history are never written to the settings file.
 
+At startup, ParsiNegar checks GitHub's latest published release and offers to open its downloads page when a newer version is available. The "Don't show update notices again" checkbox disables future automatic checks; you can turn them back on in Settings. The check does not send your text or settings to GitHub.
+
 Settings are stored below the platform's generic configuration directory in `leomoon-parsinegar/settings.json`. On Linux this is `~/.config/leomoon-parsinegar/settings.json`.
 
 ## Remove

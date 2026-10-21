@@ -33,6 +33,7 @@ find_package(Qt6 6.5 REQUIRED COMPONENTS
     Core
     Concurrent
     Gui
+    Network
     Svg
     Qml
     Quick
@@ -52,6 +53,8 @@ target_sources(parsinegar_native_services PRIVATE
     src/services/ClipboardKeeper.h
     src/services/FileBridge.cpp
     src/services/FileBridge.h
+    src/services/ReleaseChecker.cpp
+    src/services/ReleaseChecker.h
     src/services/UnicodeSvgExporter.cpp
     src/services/UnicodeSvgExporter.h
     src/services/KeyboardModifierBridge.cpp
@@ -70,6 +73,7 @@ target_link_libraries(parsinegar_native_services PUBLIC
     Qt6::Core
     Qt6::Concurrent
     Qt6::Gui
+    Qt6::Network
     Qt6::Svg
     Qt6::Quick
 )

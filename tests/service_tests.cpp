@@ -3,6 +3,7 @@
 #include "services/FileBridge.h"
 #include "services/UnicodeSvgExporter.h"
 #include "services/KeyboardModifierBridge.h"
+#include "services/ReleaseChecker.h"
 #include "services/SettingsStore.h"
 #include "services/TextDirectionBridge.h"
 
@@ -46,6 +47,7 @@ private slots:
     void fileBridgeReadsExactFontBytes();
     void fileBridgeCatalogsInstalledFonts();
     void variableFontInstancesAreSelectable();
+    void releaseCheckerAcceptsOnlyNewerStableVersions();
     void fileBridgeRejectsInvalidAndOversizedFonts();
     void fileBridgeReadsAndWritesExactUtf8Documents();
     void fileBridgeRejectsUnsafeDocuments();
@@ -496,6 +498,28 @@ void ServiceTests::variableFontInstancesAreSelectable()
     QCOMPARE(asyncResult.value(QStringLiteral("font")).toMap().value(QStringLiteral("style")).toString(),
              QStringLiteral("Bold"));
     QVERIFY(asyncResult.value(QStringLiteral("svg")) != lightResult.value(QStringLiteral("svg")));
+}
+
+void ServiceTests::releaseCheckerAcceptsOnlyNewerStableVersions()
+{
+    const auto release = [](const QByteArray &tag, bool draft = false, bool prerelease = false) {
+        return QByteArrayLiteral("{\"tag_name\":\"") + tag
+            + QByteArrayLiteral("\",\"draft\":") + (draft ? "true" : "false")
+            + QByteArrayLiteral(",\"prerelease\":") + (prerelease ? "true}" : "false}");
+    };
+    const QString current = QStringLiteral("3.0.0");
+    QCOMPARE(ReleaseChecker::newerVersion(release("v3.1.0"), current), QStringLiteral("3.1.0"));
+    QCOMPARE(ReleaseChecker::newerVersion(release("4.0.0"), current), QStringLiteral("4.0.0"));
+    QVERIFY(ReleaseChecker::newerVersion(release("v3.0.0"), current).isEmpty());
+    QVERIFY(ReleaseChecker::newerVersion(release("v2.9.9"), current).isEmpty());
+    QVERIFY(ReleaseChecker::newerVersion(release("v3.1.0", true), current).isEmpty());
+    QVERIFY(ReleaseChecker::newerVersion(release("v3.1.0", false, true), current).isEmpty());
+    QVERIFY(ReleaseChecker::newerVersion(release("v3.1.0-beta"), current).isEmpty());
+    QVERIFY(ReleaseChecker::newerVersion(release("malformed"), current).isEmpty());
+    QVERIFY(ReleaseChecker::newerVersion(release("v999999999999.0.0"), current).isEmpty());
+    QVERIFY(ReleaseChecker::newerVersion(release("v3.1.0"), QStringLiteral("unknown")).isEmpty());
+    QVERIFY(ReleaseChecker::newerVersion(QByteArrayLiteral("not JSON"), current).isEmpty());
+    QVERIFY(ReleaseChecker::newerVersion(QByteArray(1024 * 1024 + 1, 'x'), current).isEmpty());
 }
 
 void ServiceTests::fileBridgeRejectsInvalidAndOversizedFonts()

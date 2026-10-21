@@ -21,6 +21,7 @@ Item {
     property int editorFontSize: Settings.ReshaperSettings.desktopDefaults().editorFontSize
     property bool keyboardDrawerOpen: Settings.ReshaperSettings.desktopDefaults().keyboardDrawerOpen
     property string accentPreset: Settings.ReshaperSettings.desktopDefaults().accentPreset
+    property bool updateNotificationsDisabled: Settings.ReshaperSettings.desktopDefaults().updateNotificationsDisabled
     onAccentPresetChanged: AppTheme.accentPreset = accentPreset
     property string uiLanguage: "en"
     property string unicodeFontPath: ""
@@ -494,6 +495,15 @@ Item {
         return true
     }
 
+    function setUpdateNotificationsDisabled(disabled) {
+        var next = disabled === true
+        if (updateNotificationsDisabled === next)
+            return false
+        updateNotificationsDisabled = next
+        saveSettings()
+        return true
+    }
+
     function adjustEditorFontSize(delta) {
         return setEditorFontSize(editorFontSize + (delta < 0 ? -1 : 1))
     }
@@ -523,6 +533,7 @@ Item {
             editorFontSize: editorFontSize,
             keyboardDrawerOpen: keyboardDrawerOpen,
             accentPreset: accentPreset,
+            updateNotificationsDisabled: updateNotificationsDisabled,
             fontPaths: {
                 unicode: unicodeFontPath,
                 compatibility: compatibilityFontPath
@@ -570,6 +581,7 @@ Item {
         editorFontSize = desktop.editorFontSize
         keyboardDrawerOpen = desktop.keyboardDrawerOpen
         accentPreset = desktop.accentPreset
+        updateNotificationsDisabled = desktop.updateNotificationsDisabled
         exportSettings = Settings.ReshaperSettings.sanitizeExportSettings(desktop.exportSettings)
         unicodeFontPath = validFontPath(desktop.fontPaths.unicode, "unicode") ? desktop.fontPaths.unicode : ""
         unicodeFontStyle = unicodeFontPath !== "" ? desktop.unicodeFontStyle : ""

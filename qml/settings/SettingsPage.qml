@@ -214,6 +214,19 @@ FocusScope {
 
                 SectionHeading {
                     width: parent.width
+                    label: root.uiText("updates.settingsTitle")
+                }
+
+                AppToggle {
+                    objectName: "automaticUpdateCheckToggle"
+                    width: parent.width
+                    text: root.uiText("updates.checkAutomatically")
+                    checked: !root.controller.updateNotificationsDisabled
+                    onToggled: root.controller.setUpdateNotificationsDisabled(!checked)
+                }
+
+                SectionHeading {
+                    width: parent.width
                     label: root.uiText("settings.language")
                 }
 

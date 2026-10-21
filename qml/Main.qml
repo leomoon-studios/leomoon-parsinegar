@@ -16,9 +16,12 @@ ApplicationWindow {
     required property var clipboardService
     property var settingsService: null
     property var fileService: null
+    property var updateService: null
     property var modifierService: null
     property var textDirectionService: null
     property bool allowApplicationClose: false
+    property bool updateCheckStarted: false
+    property string availableUpdateVersion: ""
     readonly property bool rightToLeft: controller.uiLanguage === "fa" || controller.uiLanguage === "ar"
     readonly property int standardMinimumHeight: 450
     readonly property int keyboardMinimumHeight: 735
@@ -39,6 +42,15 @@ ApplicationWindow {
         var usableHeight = screenHeight > 0
             ? Math.min(windowHeight, screenHeight) : windowHeight
         return Math.max(0, requiredHeight - usableHeight)
+    }
+
+    function maybeCheckForUpdates() {
+        if (updateCheckStarted || !controller.settingsReady
+                || controller.updateNotificationsDisabled || !updateService
+                || typeof updateService.checkForUpdates !== "function")
+            return
+        updateCheckStarted = true
+        updateService.checkForUpdates()
     }
 
     onClosing: function(close) {
@@ -99,6 +111,10 @@ ApplicationWindow {
     Connections {
         target: controller
 
+        function onSettingsReadyChanged() {
+            root.maybeCheckForUpdates()
+        }
+
         function onOpenDocumentDialogRequested() {
             openDocumentDialog.open()
         }
@@ -114,6 +130,19 @@ ApplicationWindow {
         function onApplicationCloseApproved() {
             root.allowApplicationClose = true
             Qt.callLater(root.close)
+        }
+    }
+
+    Connections {
+        target: root.updateService
+        ignoreUnknownSignals: true
+
+        function onUpdateAvailable(version) {
+            if (root.updateCheckStarted && !controller.updateNotificationsDisabled
+                    && /^\d+\.\d+\.\d+$/.test(version)) {
+                root.availableUpdateVersion = version
+                updateAvailableDialog.open()
+            }
         }
     }
 
@@ -205,6 +234,7 @@ ApplicationWindow {
         AppTheme.fontFamily = typography.family
         if (controller.page === "editor")
             editorPage.focusEditor()
+        Qt.callLater(root.maybeCheckForUpdates)
     }
 
     ColumnLayout {
@@ -541,6 +571,75 @@ ApplicationWindow {
                     onClicked: {
                         unsavedChangesDialog.close()
                         controller.resolveUnsavedChanges("save")
+                    }
+                }
+            }
+        }
+    }
+
+    Dialog {
+        id: updateAvailableDialog
+        objectName: "updateAvailableDialog"
+        anchors.centerIn: parent
+        width: Math.min(480, root.width - AppTheme.spacingXLarge * 2)
+        modal: true
+        closePolicy: Popup.NoAutoClose
+        title: controller.uiText("updates.title")
+        standardButtons: Dialog.NoButton
+        onOpened: suppressUpdatesCheckBox.checked = false
+
+        background: Rectangle {
+            color: AppTheme.surface
+            border.color: AppTheme.border
+            border.width: AppTheme.borderWidth
+            radius: AppTheme.cornerRadiusLarge
+        }
+
+        contentItem: ColumnLayout {
+            spacing: AppTheme.spacingLarge
+            LayoutMirroring.enabled: root.rightToLeft
+            LayoutMirroring.childrenInherit: true
+
+            Label {
+                Layout.fillWidth: true
+                text: controller.uiText("updates.message")
+                    .arg(root.availableUpdateVersion).arg(Qt.application.version)
+                wrapMode: Text.Wrap
+                font.family: AppTheme.fontFamily
+                font.pixelSize: AppTheme.fontBody
+                color: AppTheme.foreground
+            }
+
+            CheckBox {
+                id: suppressUpdatesCheckBox
+                objectName: "suppressUpdatesCheckBox"
+                Layout.fillWidth: true
+                text: controller.uiText("updates.dontShowAgain")
+                font.family: AppTheme.fontFamily
+                font.pixelSize: AppTheme.fontBody
+                palette.windowText: AppTheme.foreground
+                onToggled: controller.setUpdateNotificationsDisabled(checked)
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: AppTheme.spacingSmall
+
+                Item { Layout.fillWidth: true }
+
+                AppButton {
+                    objectName: "cancelUpdateButton"
+                    text: controller.uiText("button.cancel")
+                    onClicked: updateAvailableDialog.close()
+                }
+
+                AppButton {
+                    objectName: "openUpdateDownloadsButton"
+                    text: controller.uiText("updates.openDownloads")
+                    accent: true
+                    onClicked: {
+                        updateAvailableDialog.close()
+                        Qt.openUrlExternally("https://github.com/leomoon-studios/leomoon-parsinegar/releases/latest")
                     }
                 }
             }
