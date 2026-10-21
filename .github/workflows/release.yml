@@ -148,9 +148,9 @@ jobs:
               author_name="$(git show -s --format=%an "$commit_hash")"
               author_login="$(gh api "repos/$GITHUB_REPOSITORY/commits/$commit_hash" --jq '.author.login // empty' 2>/dev/null || true)"
               if [[ -n "$author_login" ]]; then
-                printf -- '- %s (`%s` by [%s](https://github.com/%s))\n' "$subject" "${commit_hash:0:7}" "$author_name" "$author_login"
+                printf -- '- %s ([`%s`](https://github.com/%s/commit/%s) by [%s](https://github.com/%s))\n' "$subject" "${commit_hash:0:7}" "$GITHUB_REPOSITORY" "$commit_hash" "$author_name" "$author_login"
               else
-                printf -- '- %s (`%s` by %s)\n' "$subject" "${commit_hash:0:7}" "$author_name"
+                printf -- '- %s ([`%s`](https://github.com/%s/commit/%s) by %s)\n' "$subject" "${commit_hash:0:7}" "$GITHUB_REPOSITORY" "$commit_hash" "$author_name"
               fi
             done < <(git rev-list "$commit_range")
             echo
