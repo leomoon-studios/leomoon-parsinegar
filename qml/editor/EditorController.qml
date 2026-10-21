@@ -24,6 +24,7 @@ Item {
     onAccentPresetChanged: AppTheme.accentPreset = accentPreset
     property string uiLanguage: "en"
     property string unicodeFontPath: ""
+    property string unicodeFontStyle: ""
     property string compatibilityFontPath: ""
     property var reshaperSettings: Settings.ReshaperSettings.defaults(Settings.ReshaperSettings.metadata)
     property var textTools: TextTools.TextTools.defaults()
@@ -461,13 +462,14 @@ Item {
         saveSettings()
     }
 
-    function setFontPath(mode, path) {
+    function setFontPath(mode, path, style) {
         if (mode !== "unicode" && mode !== "compatibility")
             return false
         var nextPath = validFontPath(path, mode) ? path : ""
-        if (mode === "unicode")
+        if (mode === "unicode") {
             unicodeFontPath = nextPath
-        else
+            unicodeFontStyle = nextPath !== "" && typeof style === "string" ? style : ""
+        } else
             compatibilityFontPath = nextPath
         saveSettings()
         return nextPath !== "" || path === ""
@@ -525,6 +527,7 @@ Item {
                 unicode: unicodeFontPath,
                 compatibility: compatibilityFontPath
             },
+            unicodeFontStyle: unicodeFontStyle,
             exportSettings: exportSettings
         }
     }
@@ -569,6 +572,7 @@ Item {
         accentPreset = desktop.accentPreset
         exportSettings = Settings.ReshaperSettings.sanitizeExportSettings(desktop.exportSettings)
         unicodeFontPath = validFontPath(desktop.fontPaths.unicode, "unicode") ? desktop.fontPaths.unicode : ""
+        unicodeFontStyle = unicodeFontPath !== "" ? desktop.unicodeFontStyle : ""
         compatibilityFontPath = validFontPath(desktop.fontPaths.compatibility, "compatibility") ? desktop.fontPaths.compatibility : ""
         return unicodeFontPath !== desktop.fontPaths.unicode
             || compatibilityFontPath !== desktop.fontPaths.compatibility

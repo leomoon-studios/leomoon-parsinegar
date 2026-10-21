@@ -45,7 +45,7 @@ FocusScope {
         && fileBridge.fontCatalogScanning
     readonly property bool modeFontReady: fontCatalogReady
     readonly property string previewInputSignature: JSON.stringify([
-        exportMode, currentFontPath(),
+        exportMode, currentFontPath(), controller.unicodeFontStyle,
         controller.conversionOptions(), alignment, automaticWidth, automaticHeight,
         fontSizeField.text, lineSpacingField.text, widthField.text, heightField.text,
         paddingField.text, precisionField.text, fontIndexField.text,
@@ -111,9 +111,11 @@ FocusScope {
         for (var index = 0; index < installedFontEntries.length; index++) {
             var raw = installedFontEntries[index]
             var entry = {
-                key: String(raw.path),
+                key: raw.variableInstance ? String(raw.path) + "\n" + String(raw.style || "") : String(raw.path),
                 family: String(raw.family),
                 style: String(raw.style || ""),
+                variableInstance: !!raw.variableInstance,
+                defaultInstance: !!raw.defaultInstance,
                 display: String(raw.display || raw.family),
                 path: String(raw.path),
                 previewText: legacyFamily(raw.family)
@@ -123,9 +125,24 @@ FocusScope {
                 persianPreview: String(raw.persianPreview || ""),
                 bundled: false
             }
-            if (legacyFamily(entry.family))
+            if (legacyFamily(entry.family)) {
+                if (entry.variableInstance) {
+                    entry.key = entry.path
+                    var existing = -1
+                    for (var face = 0; face < compatibilityEntries.length; face++) {
+                        if (compatibilityEntries[face].path === entry.path) {
+                            existing = face
+                            break
+                        }
+                    }
+                    if (existing >= 0) {
+                        if (entry.defaultInstance)
+                            compatibilityEntries[existing] = entry
+                        continue
+                    }
+                }
                 compatibilityEntries.push(entry)
-            else
+            } else
                 unicodeEntries.push(entry)
         }
         unicodeFontEntries = unicodeEntries
@@ -160,7 +177,26 @@ FocusScope {
 
     function currentFontKey() {
         var path = currentFontPath()
-        return path === "" && exportMode === "unicode" ? "bundled:Vazirmatn" : path
+        if (path === "" && exportMode === "unicode")
+            return "bundled:Vazirmatn"
+        if (exportMode === "unicode" && controller.unicodeFontStyle !== "") {
+            var styledKey = path + "\n" + controller.unicodeFontStyle
+            if (entryForKey(styledKey))
+                return styledKey
+        }
+        if (exportMode === "unicode") {
+            for (var index = 0; index < unicodeFontEntries.length; index++) {
+                var entry = unicodeFontEntries[index]
+                if (entry.defaultInstance && entry.path === path)
+                    return entry.key
+            }
+            for (var fallback = 0; fallback < unicodeFontEntries.length; fallback++) {
+                var instance = unicodeFontEntries[fallback]
+                if (instance.variableInstance && instance.path === path)
+                    return instance.key
+            }
+        }
+        return path
     }
 
     function entryForKey(key) {
@@ -177,6 +213,7 @@ FocusScope {
             return
         if (exportMode === "unicode") {
             if (controller.unicodeFontPath !== "" && !entryForKey(controller.unicodeFontPath)
+                    && !entryForKey(currentFontKey())
                     && (!fileBridge || !fileBridge.fontPathExists(controller.unicodeFontPath)))
                 controller.setFontPath("unicode", "")
             return
@@ -201,7 +238,8 @@ FocusScope {
 
     function selectFont(entry) {
         if (!entry || !controller.setFontPath(exportMode,
-                entry.bundled && entry.key === "bundled:IranNastaliq" ? entry.key : String(entry.path)))
+                entry.bundled && entry.key === "bundled:IranNastaliq" ? entry.key : String(entry.path),
+                entry.style))
             return false
         return refreshFontValidation()
     }

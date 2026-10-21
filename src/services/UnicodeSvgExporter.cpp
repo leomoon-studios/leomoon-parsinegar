@@ -205,9 +205,10 @@ QVariantMap UnicodeSvgExporter::render(const QString &text, const QVariantMap &o
         return failure(QStringLiteral("INVALID_FONT"), QStringLiteral("The selected font could not be loaded."));
     if (!selectedFontPath.isEmpty() && !selectedFontPath.startsWith(QLatin1String("bundled:"))) {
         selectedFamily = expectedFont.familyName();
-        selectedStyle = expectedFont.styleName();
+        selectedStyle = expectedStyle;
         if (selectedFamily.compare(expectedFamily, Qt::CaseInsensitive) != 0
-            || selectedStyle.compare(expectedStyle, Qt::CaseInsensitive) != 0) {
+            || (expectedFont.styleName().compare(expectedStyle, Qt::CaseInsensitive) != 0
+                && !QFontDatabase::styles(selectedFamily).contains(expectedStyle, Qt::CaseInsensitive))) {
             return failure(QStringLiteral("INVALID_FONT"), QStringLiteral("The selected font changed after it was listed."));
         }
     }
@@ -241,6 +242,8 @@ QVariantMap UnicodeSvgExporter::render(const QString &text, const QVariantMap &o
         for (const QGlyphRun &run : layout.glyphRuns()) {
             const QRawFont rawFont = run.rawFont();
             if (!rawFont.isValid() || rawFont.familyName() != selectedFamily
+                || (!selectedStyle.isEmpty()
+                    && rawFont.styleName().compare(selectedStyle, Qt::CaseInsensitive) != 0)
                 || rawFont.fontTable("head") != expectedHead
                 || rawFont.fontTable("name") != expectedName) {
                 return failure(QStringLiteral("INVALID_FONT"),

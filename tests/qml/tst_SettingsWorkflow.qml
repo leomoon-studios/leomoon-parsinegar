@@ -224,7 +224,7 @@ TestCase {
             fill: "#12345678",
             axes: "400, 75"
         })
-        verify(controller.setFontPath("unicode", "/fonts/unicode.ttf"))
+        verify(controller.setFontPath("unicode", "/fonts/unicode.ttf", "Bold"))
         verify(controller.setFontPath("compatibility", "/fonts/compatibility.otf"))
 
         var saved = JSON.parse(settingsStoreMock.data)
@@ -235,6 +235,7 @@ TestCase {
         compare(saved.desktop.reverseWords, false)
         compare(saved.desktop.videoStudioPro, true)
         compare(saved.desktop.fontPaths.unicode, "/fonts/unicode.ttf")
+        compare(saved.desktop.unicodeFontStyle, "Bold")
         compare(saved.desktop.fontPaths.compatibility, "/fonts/compatibility.otf")
         compare(saved.settings.deleteTatweel, true)
         compare(saved.settings.ligatures["ARABIC LIGATURE AKBAR"], true)
@@ -295,6 +296,7 @@ TestCase {
         compare(restored.exportSettings.fill, "#12345678")
         compare(restored.exportSettings.axes, "400, 75")
         compare(restored.unicodeFontPath, "/fonts/unicode.ttf")
+        compare(restored.unicodeFontStyle, "Bold")
         compare(restored.compatibilityFontPath, "/fonts/compatibility.otf")
         compare(restored.sourceText, "")
         compare(restored.lastOutput, "")

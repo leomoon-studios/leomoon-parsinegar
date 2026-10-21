@@ -516,6 +516,7 @@ var CoreTestResults;
             keyboardDrawerOpen: true,
             accentPreset: "purple",
             fontPaths: { unicode: "/fonts/unicode.ttf", compatibility: "/fonts/maryam.otf" },
+            unicodeFontStyle: "",
             exportSettings: settings.desktopDefaults().exportSettings
         });
     });

@@ -1509,6 +1509,7 @@ var ReshaperSettings = (function () {
       keyboardDrawerOpen: false,
       accentPreset: "purple",
       fontPaths: { unicode: "", compatibility: "" },
+      unicodeFontStyle: "",
       exportSettings: {
         advancedVisible: false,
         automaticWidth: true,
@@ -1559,6 +1560,7 @@ var ReshaperSettings = (function () {
           result.fontPaths[mode] = value.fontPaths[mode];
       });
     }
+    result.unicodeFontStyle = savedText(value.unicodeFontStyle, "");
     result.exportSettings = sanitizeExportSettings(value.exportSettings);
     return result;
   }

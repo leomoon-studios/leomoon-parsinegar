@@ -1096,6 +1096,34 @@ TestCase {
         compare(fontSelector.selectedKey, "bundled:IranNastaliq")
     }
 
+    function test_variableFontStylesKeepDistinctSelections() {
+        var applicationWindow = createMainWindow()
+        var controller = applicationWindow.editorController
+        var exportPage = findChild(applicationWindow, "exportPage")
+        var fontSelector = findChild(applicationWindow, "exportFontSelector")
+        controller.openExport()
+        exportPage.applyFontCatalog([
+            { family: "Pinar-VF", style: "Light", path: "/fonts/pinar.ttf",
+              variableInstance: true, defaultInstance: true, display: "Pinar-VF — Light" },
+            { family: "Pinar-VF", style: "Bold", path: "/fonts/pinar.ttf",
+              variableInstance: true, display: "Pinar-VF — Bold" }
+        ])
+        compare(fontSelector.fonts.length, 4)
+        controller.setFontPath("unicode", "/fonts/pinar.ttf")
+        compare(fontSelector.selectedKey, "/fonts/pinar.ttf\nLight")
+        verify(exportPage.selectFont(fontSelector.fonts[2]))
+        compare(controller.unicodeFontPath, "/fonts/pinar.ttf")
+        compare(controller.unicodeFontStyle, "Light")
+        compare(fontSelector.selectedKey, "/fonts/pinar.ttf\nLight")
+        verify(exportPage.selectFont(fontSelector.fonts[3]))
+        compare(controller.unicodeFontPath, "/fonts/pinar.ttf")
+        compare(controller.unicodeFontStyle, "Bold")
+        compare(fontSelector.selectedKey, "/fonts/pinar.ttf\nBold")
+        compare(exportPage.fontDisplayName(), "Pinar-VF — Bold")
+        controller.setFontPath("unicode", "")
+        compare(controller.unicodeFontStyle, "")
+    }
+
     function test_exportPageNavigationAndResponsiveControls() {
         var applicationWindow = createMainWindow()
         var controller = applicationWindow.editorController

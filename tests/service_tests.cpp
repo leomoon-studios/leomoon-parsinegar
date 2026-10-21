@@ -45,6 +45,7 @@ private slots:
     void settingsReportsAtomicWriteFailure();
     void fileBridgeReadsExactFontBytes();
     void fileBridgeCatalogsInstalledFonts();
+    void variableFontInstancesAreSelectable();
     void fileBridgeRejectsInvalidAndOversizedFonts();
     void fileBridgeReadsAndWritesExactUtf8Documents();
     void fileBridgeRejectsUnsafeDocuments();
@@ -437,6 +438,64 @@ void ServiceTests::fileBridgeCatalogsInstalledFonts()
     QVERIFY(bridge.fontCatalogReady());
     QVERIFY(!bridge.fontCatalogScanning());
     QCOMPARE(bridge.fontCatalog(), fonts);
+}
+
+void ServiceTests::variableFontInstancesAreSelectable()
+{
+    const QString path = QStringLiteral("/usr/local/share/fonts/Pinar-VF[DSTY,KSHD,wght].ttf");
+    if (!QFile::exists(path))
+        QSKIP("The Pinar variable font is not installed on this test system");
+
+    FileBridge bridge;
+    QVERIFY(bridge.scanInstalledFontsAsync(QStringLiteral("Pinar سلام")));
+    QTRY_VERIFY_WITH_TIMEOUT(bridge.fontCatalogReady(), 10000);
+
+    QVariantMap light;
+    QVariantMap bold;
+    QVariantMap ds3Black;
+    int instanceCount = 0;
+    for (const QVariant &value : bridge.fontCatalog()) {
+        const QVariantMap entry = value.toMap();
+        if (entry.value(QStringLiteral("path")).toString() != path)
+            continue;
+        QVERIFY(entry.value(QStringLiteral("variableInstance")).toBool());
+        ++instanceCount;
+        const QString style = entry.value(QStringLiteral("style")).toString();
+        if (style == QLatin1String("Light")) light = entry;
+        if (style == QLatin1String("Bold")) bold = entry;
+        if (style == QLatin1String("DS3 Black")) ds3Black = entry;
+    }
+    QCOMPARE(instanceCount, 35);
+    QVERIFY(!light.isEmpty());
+    QVERIFY(!bold.isEmpty());
+    QVERIFY(!ds3Black.isEmpty());
+
+    const auto render = [path](const QVariantMap &entry) {
+        return UnicodeSvgExporter::render(QStringLiteral("Pinar سلام"), {}, path,
+            entry.value(QStringLiteral("family")).toString(),
+            entry.value(QStringLiteral("style")).toString());
+    };
+    const QVariantMap lightResult = render(light);
+    const QVariantMap boldResult = render(bold);
+    const QVariantMap ds3BlackResult = render(ds3Black);
+    QVERIFY2(succeeded(lightResult), qPrintable(lightResult.value(QStringLiteral("message")).toString()));
+    QVERIFY2(succeeded(boldResult), qPrintable(boldResult.value(QStringLiteral("message")).toString()));
+    QVERIFY2(succeeded(ds3BlackResult), qPrintable(ds3BlackResult.value(QStringLiteral("message")).toString()));
+    QVERIFY(lightResult.value(QStringLiteral("svg")) != boldResult.value(QStringLiteral("svg")));
+    QVERIFY(boldResult.value(QStringLiteral("svg")) != ds3BlackResult.value(QStringLiteral("svg")));
+    QCOMPARE(boldResult.value(QStringLiteral("font")).toMap().value(QStringLiteral("style")).toString(),
+             QStringLiteral("Bold"));
+
+    QSignalSpy rendered(&bridge, &FileBridge::unicodeSvgCompleted);
+    QVERIFY(bridge.renderUnicodeSvgAsync(7, QStringLiteral("Pinar سلام"), {}, path,
+        bold.value(QStringLiteral("family")).toString(), QStringLiteral("Bold")));
+    QTRY_COMPARE_WITH_TIMEOUT(rendered.count(), 1, 10000);
+    QCOMPARE(rendered.at(0).at(0).toInt(), 7);
+    const QVariantMap asyncResult = rendered.at(0).at(1).toMap();
+    QVERIFY2(succeeded(asyncResult), qPrintable(asyncResult.value(QStringLiteral("message")).toString()));
+    QCOMPARE(asyncResult.value(QStringLiteral("font")).toMap().value(QStringLiteral("style")).toString(),
+             QStringLiteral("Bold"));
+    QVERIFY(asyncResult.value(QStringLiteral("svg")) != lightResult.value(QStringLiteral("svg")));
 }
 
 void ServiceTests::fileBridgeRejectsInvalidAndOversizedFonts()

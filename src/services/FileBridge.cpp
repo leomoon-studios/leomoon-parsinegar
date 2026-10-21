@@ -12,6 +12,7 @@
 #include <QStandardPaths>
 #include <QStringConverter>
 #include <QtConcurrentRun>
+#include <QtEndian>
 
 #include <algorithm>
 
@@ -133,6 +134,66 @@ QString previewWithoutFallback(const QRawFont &font, const QString &sample)
     return result;
 }
 
+quint16 fontWord(const QByteArray &table, qsizetype offset)
+{
+    return qFromBigEndian<quint16>(reinterpret_cast<const uchar *>(table.constData() + offset));
+}
+
+QStringList namedInstanceStyles(const QRawFont &font)
+{
+    const QByteArray variations = font.fontTable("fvar");
+    const QByteArray names = font.fontTable("name");
+    if (variations.size() < 16 || names.size() < 6)
+        return {};
+
+    const qsizetype axesOffset = fontWord(variations, 4);
+    const qsizetype axisCount = fontWord(variations, 8);
+    const qsizetype axisSize = fontWord(variations, 10);
+    const qsizetype instanceCount = fontWord(variations, 12);
+    const qsizetype instanceSize = fontWord(variations, 14);
+    const qsizetype instancesOffset = axesOffset + axisCount * axisSize;
+    if (axisCount == 0 || axisSize < 20 || instanceSize < 4 + axisCount * 4
+        || instancesOffset > variations.size()
+        || instanceCount > (variations.size() - instancesOffset) / instanceSize)
+        return {};
+
+    const qsizetype nameCount = fontWord(names, 2);
+    const qsizetype stringsOffset = fontWord(names, 4);
+    if (nameCount > (names.size() - 6) / 12 || stringsOffset > names.size())
+        return {};
+
+    QStringList styles;
+    for (qsizetype instance = 0; instance < instanceCount; ++instance) {
+        const quint16 nameId = fontWord(variations, instancesOffset + instance * instanceSize);
+        QString style;
+        int bestLanguage = -1;
+        for (qsizetype record = 0; record < nameCount; ++record) {
+            const qsizetype position = 6 + record * 12;
+            const quint16 platform = fontWord(names, position);
+            const quint16 language = fontWord(names, position + 4);
+            if ((platform != 0 && platform != 3) || fontWord(names, position + 6) != nameId)
+                continue;
+            const qsizetype length = fontWord(names, position + 8);
+            const qsizetype offset = stringsOffset + fontWord(names, position + 10);
+            if (offset > names.size() || length > names.size() - offset || length % 2 != 0)
+                continue;
+            const int languageScore = language == 0x0409 ? 2 : platform == 0 ? 1 : 0;
+            if (languageScore < bestLanguage)
+                continue;
+            QStringDecoder decoder(QStringConverter::Utf16BE);
+            const QString candidate = QString(decoder.decode(
+                QByteArrayView(names.constData() + offset, length))).trimmed();
+            if (!candidate.isEmpty()) {
+                style = candidate;
+                bestLanguage = languageScore;
+            }
+        }
+        if (!style.isEmpty() && !styles.contains(style, Qt::CaseInsensitive))
+            styles.append(style);
+    }
+    return styles;
+}
+
 QVariantList buildFontCatalog(const QString &unicodePreview, const QString &compatibilityPreview)
 {
     QVariantList fonts;
@@ -161,25 +222,31 @@ QVariantList buildFontCatalog(const QString &unicodePreview, const QString &comp
             if (!font.isValid() || family.isEmpty()) {
                 continue;
             }
-            const QString style = font.styleName().trimmed();
-            const QString faceKey = family.toCaseFolded() + QLatin1Char('\n') + style.toCaseFolded();
-            if (faces.contains(faceKey)) {
-                continue;
+            const QStringList instances = namedInstanceStyles(font);
+            const QStringList styles = instances.isEmpty()
+                ? QStringList { font.styleName().trimmed() } : instances;
+            for (const QString &style : styles) {
+                const QString faceKey = family.toCaseFolded() + QLatin1Char('\n') + style.toCaseFolded();
+                if (faces.contains(faceKey))
+                    continue;
+                faces.insert(faceKey);
+                const QString display = style.isEmpty() || (instances.isEmpty()
+                    && style.compare(QStringLiteral("Regular"), Qt::CaseInsensitive) == 0)
+                    ? family : QStringLiteral("%1 — %2").arg(family, style);
+                fonts.append(QVariantMap {
+                    { QStringLiteral("family"), family },
+                    { QStringLiteral("style"), style },
+                    { QStringLiteral("display"), display },
+                    { QStringLiteral("path"), path },
+                    { QStringLiteral("variableInstance"), !instances.isEmpty() },
+                    { QStringLiteral("defaultInstance"), !instances.isEmpty()
+                        && style.compare(font.styleName(), Qt::CaseInsensitive) == 0 },
+                    { QStringLiteral("unicodePreview"), previewWithoutFallback(font, unicodePreview) },
+                    { QStringLiteral("englishPreview"), previewWithoutFallback(font, englishPreview) },
+                    { QStringLiteral("persianPreview"), previewWithoutFallback(font, persianPreview) },
+                    { QStringLiteral("compatibilityPreview"), previewWithoutFallback(font, compatibilityPreview) },
+                });
             }
-            faces.insert(faceKey);
-            const QString display = style.isEmpty() || style.compare(QStringLiteral("Regular"), Qt::CaseInsensitive) == 0
-                ? family
-                : QStringLiteral("%1 — %2").arg(family, style);
-            fonts.append(QVariantMap {
-                { QStringLiteral("family"), family },
-                { QStringLiteral("style"), style },
-                { QStringLiteral("display"), display },
-                { QStringLiteral("path"), path },
-                { QStringLiteral("unicodePreview"), previewWithoutFallback(font, unicodePreview) },
-                { QStringLiteral("englishPreview"), previewWithoutFallback(font, englishPreview) },
-                { QStringLiteral("persianPreview"), previewWithoutFallback(font, persianPreview) },
-                { QStringLiteral("compatibilityPreview"), previewWithoutFallback(font, compatibilityPreview) },
-            });
         }
     }
     std::sort(fonts.begin(), fonts.end(), [](const QVariant &left, const QVariant &right) {
